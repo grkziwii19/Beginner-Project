@@ -1,8 +1,9 @@
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next()
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,15 +11,11 @@ export async function middleware(request: NextRequest) {
     {
       cookies: {
         getAll() {
-          return request.cookies.getAll()
+          return req.cookies.getAll()
         },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+        setAll(cookies) {
+          cookies.forEach(({ name, value }) =>
+            res.cookies.set(name, value)
           )
         },
       },
@@ -27,30 +24,29 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const pathname = request.nextUrl.pathname
+  const path = req.nextUrl.pathname
 
-  const isAuthPage = pathname === '/login'
-  const isRegisterPage = pathname === '/register'
-  const isCallbackPage = pathname === '/auth/callback'
-  const isPublicPage = pathname === '/' || isAuthPage || isRegisterPage || isCallbackPage // ✅ fix
+  if (!user) return res
 
-  if (!user && !isPublicPage) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
+  // allow onboarding always
+  if (path.startsWith('/onboarding')) return res
+
+  // get profile
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('onboarding_completed')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.onboarding_completed) {
+    const url = req.nextUrl.clone()
+    url.pathname = '/onboarding'
     return NextResponse.redirect(url)
   }
 
-  if (user && isAuthPage) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/dashboard'
-    return NextResponse.redirect(url)
-  }
-
-  return supabaseResponse // ✅ fix
+  return res
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/dashboard/:path*', '/akun/:path*', '/((?!_next|auth).*)'],
 }
