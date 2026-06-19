@@ -33,6 +33,7 @@ export async function middleware(request: NextRequest) {
 
   const isAuthPage = pathname === '/login'
   const isRegisterPage = pathname === '/register'
+  const isCallbackPage = pathname === '/auth/callback'
   const isPublicPage = pathname === '/' || isAuthPage || isRegisterPage
 
   // ❌ kalau belum login → paksa ke login
