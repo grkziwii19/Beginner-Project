@@ -1,8 +1,9 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
-export async function createServerSupabaseClient() {
-  const cookieStore = await cookies()
+export async function createClient() {
+  // Tambahkan 'await' di sini karena cookies sekarang adalah Promise
+  const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -10,18 +11,19 @@ export async function createServerSupabaseClient() {
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll()
+          return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
-            )
-          } catch {
-            // Diabaikan di Server Components — hanya middleware yang perlu set cookie
+            );
+          } catch (error) {
+            // Error ini bisa diabaikan jika terjadi di Server Components
+            // karena cookies sudah dikirim ke browser.
           }
         },
       },
     }
-  )
+  );
 }
