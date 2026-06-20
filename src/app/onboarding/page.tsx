@@ -192,7 +192,9 @@ export default function OnboardingPage() {
               </div>
 
               <div>
-                <label className="label">Nama Sekolah</label>
+                <label className="label">
+                  Nama Sekolah <span className="text-red-500">*</span>
+                </label>
                 <input
                   className="input" placeholder="Contoh: SMA Negeri 1 Jakarta"
                   value={form.school}
