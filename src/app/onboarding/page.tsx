@@ -9,6 +9,7 @@ export default function OnboardingPage() {
   const router = useRouter()
 
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const [form, setForm] = useState({
     full_name: '',
@@ -20,20 +21,42 @@ export default function OnboardingPage() {
   })
 
   const handleSubmit = async () => {
+    setError('')
+
+    if (!form.full_name.trim()) {
+      setError('Nama Lengkap wajib diisi.')
+      return
+    }
+
     setLoading(true)
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) {
+      setError('Sesi login tidak ditemukan. Silakan login ulang.')
+      setLoading(false)
+      router.push('/login')
+      return
+    }
 
-    await supabase.from('profiles').upsert({
+    const { error: dbError } = await supabase.from('profiles').upsert({
       id: user.id,
       ...form,
       onboarding_completed: true,
       updated_at: new Date().toISOString(),
     })
 
+    if (dbError) {
+      // Ini bagian yang sebelumnya hilang — kalau insert gagal,
+      // sekarang errornya akan TERLIHAT, bukan diam-diam gagal
+      console.error('Gagal menyimpan profil:', dbError)
+      setError(`Gagal menyimpan profil: ${dbError.message}`)
+      setLoading(false)
+      return
+    }
+
     setLoading(false)
     router.push('/dashboard')
+    router.refresh()
   }
 
   return (
@@ -86,6 +109,12 @@ export default function OnboardingPage() {
         value={form.phone}
         onChange={e => setForm({ ...form, phone: e.target.value })}
       />
+
+      {error && (
+        <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          {error}
+        </div>
+      )}
 
       <button
         onClick={handleSubmit}
