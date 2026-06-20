@@ -8,6 +8,7 @@ export interface Student {
   user_id: string
   name: string
   nis: string
+  nisn?: string | null
   class_name: string
   gender: Gender
   photo?: string | null

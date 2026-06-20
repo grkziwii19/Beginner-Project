@@ -23,7 +23,7 @@ const TYPE_COLORS: Record<GradeType, string> = {
   uas: 'bg-orange-50 text-orange-700', proyek: 'bg-pink-50 text-pink-700',
 }
 
-const emptyStudentForm = { name: '', nis: '', gender: 'Laki-laki' as Gender }
+const emptyStudentForm = { name: '', nis: '', nisn: '', gender: 'Laki-laki' as Gender }
 const emptyGradeForm = { student_id: '', subject: 'Umum', type: 'tugas' as GradeType, score: '' }
 
 export default function ClassDetailPage() {
@@ -108,7 +108,7 @@ export default function ClassDetailPage() {
   const openAddStudent = () => { setEditStudent(null); setStudentForm(emptyStudentForm); setShowStudentModal(true) }
   const openEditStudent = (s: Student) => {
     setEditStudent(s)
-    setStudentForm({ name: s.name, nis: s.nis, gender: s.gender })
+    setStudentForm({ name: s.name, nis: s.nis, nisn: s.nisn ?? '', gender: s.gender })
     setShowStudentModal(true)
   }
 
@@ -118,11 +118,18 @@ export default function ClassDetailPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
+    const payload = {
+      name: studentForm.name,
+      nis: studentForm.nis,
+      nisn: studentForm.nisn || null,
+      gender: studentForm.gender,
+    }
+
     if (editStudent) {
-      await supabase.from('students').update(studentForm).eq('id', editStudent.id)
+      await supabase.from('students').update(payload).eq('id', editStudent.id)
     } else {
       await supabase.from('students').insert({
-        ...studentForm,
+        ...payload,
         class_name: classItem.name,
         user_id: user.id,
       })
@@ -285,6 +292,7 @@ export default function ClassDetailPage() {
                       <th className="table-header w-10">No</th>
                       <th className="table-header">Nama</th>
                       <th className="table-header">NIS</th>
+                      <th className="table-header">NISN</th>
                       <th className="table-header">Jenis Kelamin</th>
                       <th className="table-header w-24">Aksi</th>
                     </tr>
@@ -295,6 +303,7 @@ export default function ClassDetailPage() {
                         <td className="table-cell text-slate-400">{i + 1}</td>
                         <td className="table-cell font-medium text-slate-900">{s.name}</td>
                         <td className="table-cell text-slate-500">{s.nis}</td>
+                        <td className="table-cell text-slate-500">{s.nisn || '-'}</td>
                         <td className="table-cell text-slate-500">{s.gender}</td>
                         <td className="table-cell">
                           <div className="flex items-center gap-1">
@@ -524,10 +533,17 @@ export default function ClassDetailPage() {
                 <input className="input" placeholder="Nama siswa" value={studentForm.name}
                   onChange={e => setStudentForm({ ...studentForm, name: e.target.value })} autoFocus />
               </div>
-              <div>
-                <label className="label">NIS</label>
-                <input className="input" placeholder="Nomor Induk Siswa" value={studentForm.nis}
-                  onChange={e => setStudentForm({ ...studentForm, nis: e.target.value })} />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">NIS</label>
+                  <input className="input" placeholder="Nomor Induk Siswa" value={studentForm.nis}
+                    onChange={e => setStudentForm({ ...studentForm, nis: e.target.value })} />
+                </div>
+                <div>
+                  <label className="label">NISN</label>
+                  <input className="input" placeholder="Nomor Induk Siswa Nasional" value={studentForm.nisn}
+                    onChange={e => setStudentForm({ ...studentForm, nisn: e.target.value })} />
+                </div>
               </div>
               <div>
                 <label className="label">Jenis Kelamin</label>
