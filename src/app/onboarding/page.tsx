@@ -33,13 +33,15 @@ export default function OnboardingPage() {
     setPhotoPreview(URL.createObjectURL(file))
   }
 
-  const isValid = form.full_name.trim() !== ''
+  const isValid =
+  form.full_name.trim() !== '' &&
+  form.school.trim() !== ''
 
   const handleSubmit = async () => {
     if (!isValid) {
-      setError('Nama Lengkap wajib diisi.')
-      return
-    }
+  setError('Nama Lengkap dan Nama Sekolah wajib diisi.')
+  return
+}
     setError('')
     setLoading(true)
 
