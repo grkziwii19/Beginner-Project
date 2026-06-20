@@ -42,7 +42,11 @@ export default function SekolahPage() {
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+
+if (!user) {
+  setLoading(false)
+  return
+}
 
       const { data } = await supabase
         .from('school_profiles')

@@ -46,7 +46,11 @@ export default function AkunPage() {
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+      if (!user) {
+  setLoading(false)
+  router.push('/login')
+  return
+}
       setEmail(user.email ?? '')
 
       const { data } = await supabase
