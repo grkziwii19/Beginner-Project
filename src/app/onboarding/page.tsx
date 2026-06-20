@@ -96,17 +96,26 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-100 py-4">
-        <div className="flex items-center justify-center gap-2">
-          <GraduationCap className="w-5 h-5 text-indigo-600" />
-          <span className="font-bold text-slate-900 text-sm">GR Assistant</span>
+  <div className="min-h-screen bg-slate-50">
+    {/* Header */}
+  <div className="bg-gradient-to-r from-indigo-600 to-violet-600 py-5 shadow-sm">
+    <div className="flex items-center justify-center gap-3">
+        <div className="bg-white/20 p-3 rounded-2xl">
+          <GraduationCap className="w-10 h-10 text-white" />
         </div>
-      </div>
+        <div>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight">
+              GR Assistant
+          </h1>
+          <p className="text-indigo-100 text-sm">
+            Sistem Administrasi Guru Modern
+          </p>
+        </div>
+    </div>
+  </div>
 
       {/* Stepper */}
-      <div className="max-w-md mx-auto pt-8 pb-4 px-6">
+      <div className="max-w-5xl mx-auto pt-4 pb-2 px-6">
         <div className="flex items-center justify-between">
           {/* Step 1 - done */}
           <div className="flex flex-col items-center gap-1.5">
@@ -141,12 +150,12 @@ export default function OnboardingPage() {
       </div>
 
       {/* Content */}
-      <div className="max-w-md mx-auto px-6 pb-10">
+      <div className="max-w-5xl mx-auto px-6 pb-4">
         {step === 2 && (
-          <div className="card p-6">
-            <div className="text-center mb-6">
+          <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-6">
+            <div className="text-center mb-4">
               <h1 className="font-semibold text-slate-900">Lengkapi Profil Guru</h1>
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 Silakan isi data diri Anda untuk mempermudah manajemen kelas dan administrasi.
               </p>
             </div>
@@ -154,11 +163,11 @@ export default function OnboardingPage() {
             {/* Photo upload */}
             <div className="flex flex-col items-center mb-6">
               <div className="relative">
-                <div className="w-20 h-20 rounded-xl bg-slate-100 flex items-center justify-center overflow-hidden">
+                <div className="w-28 h-28 rounded-2xl border-4 border-indigo-100 shadow-md bg-slate-100 flex items-center justify-center overflow-hidden">
                   {photoPreview ? (
                     <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
-                    <User className="w-8 h-8 text-slate-400" />
+                    <User className="w-12 h-12 text-slate-400" />
                   )}
                 </div>
                 <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-indigo-600 rounded-full flex items-center justify-center cursor-pointer">
@@ -172,7 +181,7 @@ export default function OnboardingPage() {
               </label>
             </div>
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label">Nama Lengkap <span className="text-red-500">*</span></label>
                 <input
@@ -240,7 +249,7 @@ export default function OnboardingPage() {
                 </div>
               )}
 
-              <button onClick={handleSubmit} disabled={loading} className="btn-primary w-full justify-center py-2.5">
+              <button onClick={handleSubmit} disabled={loading} className="btn-primary col-span-2 w-full justify-center py-3 text-base font-semibold">
                 {loading ? 'Menyimpan...' : 'Lanjutkan'}
               </button>
             </div>
