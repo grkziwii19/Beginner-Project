@@ -21,31 +21,35 @@ export default function Topbar() {
   const [email, setEmail] = useState('')
   const [userName, setUserName] = useState('Guru')
   const [initials, setInitials] = useState('GU')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [showProfile, setShowProfile] = useState(false)
   const [showNotif, setShowNotif] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        setEmail(data.user.email ?? '')
-        const stored = localStorage.getItem(`profile_${data.user.id}`)
-        if (stored) {
-          try {
-            const p = JSON.parse(stored)
-            const full = [p.firstName, p.lastName].filter(Boolean).join(' ')
-            if (full) {
-              setUserName(full)
-              const parts = full.trim().split(' ')
-              setInitials(((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || 'GU')
-              return
-            }
-          } catch {}
-        }
-        const fallback = data.user.email?.split('@')[0] ?? 'Guru'
-        setUserName(fallback)
-        setInitials(fallback.slice(0, 2).toUpperCase())
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      setEmail(user.email ?? '')
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (profile?.full_name) {
+        setUserName(profile.full_name)
+        const parts = profile.full_name.trim().split(' ')
+        setInitials(((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || 'GU')
+        if (profile.avatar_url) setAvatarUrl(profile.avatar_url)
+        return
       }
-    })
+
+      const fallback = user.email?.split('@')[0] ?? 'Guru'
+      setUserName(fallback)
+      setInitials(fallback.slice(0, 2).toUpperCase())
+    }
+    load()
   }, [])
 
   const handleLogout = async () => {
@@ -120,8 +124,8 @@ export default function Topbar() {
             onClick={() => { setShowProfile(v => !v); setShowNotif(false) }}
             className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold">
-              {initials}
+            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden">
+              {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
             </div>
             <span className="hidden sm:block text-sm font-medium text-slate-700">{userName.split(' ')[0]}</span>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400" />

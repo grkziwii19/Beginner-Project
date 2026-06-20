@@ -26,29 +26,33 @@ export default function Sidebar() {
   const [userName, setUserName] = useState('Guru')
   const [userRole, setUserRole] = useState('')
   const [initials, setInitials] = useState('GU')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        const stored = localStorage.getItem(`profile_${data.user.id}`)
-        if (stored) {
-          try {
-            const p = JSON.parse(stored)
-            const full = [p.firstName, p.lastName].filter(Boolean).join(' ')
-            if (full) {
-              setUserName(full)
-              setUserRole(p.position || '')
-              const parts = full.trim().split(' ')
-              setInitials(((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || 'GU')
-              return
-            }
-          } catch {}
-        }
-        const fallback = data.user.email?.split('@')[0] ?? 'Guru'
-        setUserName(fallback)
-        setInitials(fallback.slice(0, 2).toUpperCase())
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, position, avatar_url')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (profile?.full_name) {
+        setUserName(profile.full_name)
+        setUserRole(profile.position || 'Guru')
+        const parts = profile.full_name.trim().split(' ')
+        setInitials(((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || 'GU')
+        if (profile.avatar_url) setAvatarUrl(profile.avatar_url)
+        return
       }
-    })
+
+      const fallback = user.email?.split('@')[0] ?? 'Guru'
+      setUserName(fallback)
+      setInitials(fallback.slice(0, 2).toUpperCase())
+    }
+    load()
   }, [])
 
   const handleLogout = async () => {
@@ -105,8 +109,8 @@ export default function Sidebar() {
           onClick={handleLogout}
           className="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors group"
         >
-          <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-            {initials}
+          <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden">
+            {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
           </div>
           <div className="flex-1 text-left min-w-0">
             <p className="text-sm font-medium text-white truncate">{userName}</p>

@@ -9,12 +9,12 @@ import {
 
 type SchoolTab = 'profil' | 'guru' | 'tahun' | 'dokumen'
 
-interface SchoolProfile {
+interface SchoolProfileForm {
   name: string
   npsn: string
   nss: string
   address: string
-  principal: string
+  principalName: string
   principalNip: string
   phone: string
   email: string
@@ -22,19 +22,20 @@ interface SchoolProfile {
   accreditation: string
 }
 
-const emptyProfile: SchoolProfile = {
-  name: '', npsn: '', nss: '', address: '', principal: '', principalNip: '',
+const emptyProfile: SchoolProfileForm = {
+  name: '', npsn: '', nss: '', address: '', principalName: '', principalNip: '',
   phone: '', email: '', website: '', accreditation: 'A',
 }
 
 export default function SekolahPage() {
   const supabase = createClient()
   const [tab, setTab] = useState<SchoolTab>('profil')
-  const [profile, setProfile] = useState<SchoolProfile>(emptyProfile)
+  const [profile, setProfile] = useState<SchoolProfileForm>(emptyProfile)
   const [editing, setEditing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
 
   const [stats, setStats] = useState({ students: 0, classes: 0 })
 
@@ -43,9 +44,25 @@ export default function SekolahPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const stored = localStorage.getItem(`school_profile_${user.id}`)
-      if (stored) {
-        try { setProfile(JSON.parse(stored)) } catch {}
+      const { data } = await supabase
+        .from('school_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (data) {
+        setProfile({
+          name: data.name ?? '',
+          npsn: data.npsn ?? '',
+          nss: data.nss ?? '',
+          address: data.address ?? '',
+          principalName: data.principal_name ?? '',
+          principalNip: data.principal_nip ?? '',
+          phone: data.phone ?? '',
+          email: data.email ?? '',
+          website: data.website ?? '',
+          accreditation: data.accreditation ?? 'A',
+        })
       }
 
       const [{ count: students }, { count: classes }] = await Promise.all([
@@ -60,11 +77,32 @@ export default function SekolahPage() {
   }, [])
 
   const handleSave = async () => {
+    setError('')
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    localStorage.setItem(`school_profile_${user.id}`, JSON.stringify(profile))
+    if (!user) { setSaving(false); return }
+
+    const { error: dbError } = await supabase.from('school_profiles').upsert({
+      user_id: user.id,
+      name: profile.name.trim(),
+      npsn: profile.npsn.trim() || null,
+      nss: profile.nss.trim() || null,
+      address: profile.address.trim() || null,
+      principal_name: profile.principalName.trim() || null,
+      principal_nip: profile.principalNip.trim() || null,
+      phone: profile.phone.trim() || null,
+      email: profile.email.trim() || null,
+      website: profile.website.trim() || null,
+      accreditation: profile.accreditation,
+    })
+
     setSaving(false)
+
+    if (dbError) {
+      setError('Gagal menyimpan: ' + dbError.message)
+      return
+    }
+
     setSaved(true)
     setEditing(false)
     setTimeout(() => setSaved(false), 2000)
@@ -140,7 +178,7 @@ export default function SekolahPage() {
                       <option>A</option><option>B</option><option>C</option><option>Belum Terakreditasi</option>
                     </select>
                   </div>
-                  <div><label className="label">Kepala Sekolah</label><input className="input" value={profile.principal} onChange={e => setProfile({ ...profile, principal: e.target.value })} /></div>
+                  <div><label className="label">Kepala Sekolah</label><input className="input" value={profile.principalName} onChange={e => setProfile({ ...profile, principalName: e.target.value })} /></div>
                   <div><label className="label">NIP Kepala Sekolah</label><input className="input" value={profile.principalNip} onChange={e => setProfile({ ...profile, principalNip: e.target.value })} /></div>
                 </div>
                 <div><label className="label">Alamat</label><input className="input" value={profile.address} onChange={e => setProfile({ ...profile, address: e.target.value })} /></div>
@@ -149,8 +187,15 @@ export default function SekolahPage() {
                   <div><label className="label">Email</label><input className="input" value={profile.email} onChange={e => setProfile({ ...profile, email: e.target.value })} /></div>
                 </div>
                 <div><label className="label">Website</label><input className="input" value={profile.website} onChange={e => setProfile({ ...profile, website: e.target.value })} /></div>
+
+                {error && (
+                  <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    {error}
+                  </div>
+                )}
+
                 <button onClick={handleSave} disabled={saving} className={`btn-primary w-full justify-center ${saved ? 'bg-emerald-600' : ''}`}>
-                  {saved ? <><CheckCircle className="w-4 h-4" /> Tersimpan!</> : <><Save className="w-4 h-4" /> Simpan Profil</>}
+                  {saved ? <><CheckCircle className="w-4 h-4" /> Tersimpan!</> : <><Save className="w-4 h-4" /> {saving ? 'Menyimpan...' : 'Simpan Profil'}</>}
                 </button>
               </div>
             ) : (
@@ -158,7 +203,7 @@ export default function SekolahPage() {
                 {[
                   ['NPSN', profile.npsn || '-'],
                   ['Akreditasi', profile.accreditation],
-                  ['Kepala Sekolah', profile.principal || '-'],
+                  ['Kepala Sekolah', profile.principalName || '-'],
                   ['NIP Kepala Sekolah', profile.principalNip || '-'],
                   ['Alamat', profile.address || '-'],
                   ['Telepon', profile.phone || '-'],
