@@ -104,24 +104,7 @@ export default function Sidebar() {
           )
         })}
       </nav>
-
-      {/* Profile chip (link ke Pusat Akun, tempat logout berada) */}
-      <div className="px-3">
-        <Link
-          href="/akun"
-          onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-slate-800 transition-colors"
-        >
-          <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden">
-            {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
-          </div>
-          <div className="flex-1 text-left min-w-0">
-            <p className="text-sm font-medium text-white truncate">{userName}</p>
-            <p className="text-xs text-slate-400 truncate">{userRole || 'Guru'}</p>
-          </div>
-        </Link>
-      </div>
-
+      
       {/* Info footer: Sekolah, Tahun Ajaran, Tanggal */}
       <div className="p-3 mt-1 border-t border-slate-800 space-y-2.5">
         <div className="flex items-center gap-2.5 px-1">
