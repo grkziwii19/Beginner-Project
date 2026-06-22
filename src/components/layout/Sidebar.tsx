@@ -4,18 +4,39 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
-  LayoutDashboard, BookOpen, Database, Building2, UserCircle,
-  GraduationCap, Menu, X, ChevronRight, Calendar
+  LayoutDashboard, BookOpen, ClipboardCheck, Award, FileBarChart,
+  Settings, GraduationCap, Menu, X, Calendar, Building2
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 
-const navItems = [
+interface NavLeaf {
+  href: string
+  label: string
+  icon: any
+}
+
+interface SectionLabel {
+  type: 'section'
+  label: string
+}
+
+type NavRow = NavLeaf | SectionLabel
+
+function isSection(row: NavRow): row is SectionLabel {
+  return 'type' in row && row.type === 'section'
+}
+
+// "Akademik" hanyalah judul pemisah bagian (section label), bukan tombol.
+// Kelas, Absensi, Nilai selalu tampil di bawahnya tanpa perlu expand/collapse.
+const navRows: NavRow[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/classes',   label: 'Kelas',     icon: BookOpen },
-  { href: '/students',  label: 'Kelola Data', icon: Database },
-  { href: '/sekolah',   label: 'Sekolah',   icon: Building2 },
-  { href: '/akun',      label: 'Pusat Akun', icon: UserCircle },
+  { type: 'section', label: 'Akademik' },
+  { href: '/classes', label: 'Kelas', icon: BookOpen },
+  { href: '/classes', label: 'Absensi', icon: ClipboardCheck },
+  { href: '/akademik/nilai', label: 'Nilai', icon: Award },
+  { href: '/laporan', label: 'Laporan', icon: FileBarChart },
+  { href: '/pengaturan', label: 'Pengaturan', icon: Settings },
 ]
 
 export default function Sidebar() {
@@ -55,12 +76,14 @@ export default function Sidebar() {
     }
     load()
 
-    // Update jam/tanggal setiap menit
     const interval = setInterval(() => setNow(new Date()), 60000)
     return () => clearInterval(interval)
   }, [])
 
-  const isActive = (href: string) => pathname.startsWith(href)
+  const isActive = (href: string) => {
+    const cleanHref = href.split('?')[0]
+    return pathname === cleanHref || (cleanHref !== '/' && pathname.startsWith(cleanHref))
+  }
 
   const dayLabel = now.toLocaleDateString('id-ID', { weekday: 'long' })
   const dateLabel = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -83,29 +106,54 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
-        {navItems.map(({ href, label, icon: Icon }) => {
-          const active = isActive(href)
+        {navRows.map((row, idx) => {
+          if (isSection(row)) {
+            return (
+              <p
+                key={`section-${idx}`}
+                className="px-3 pt-4 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 select-none"
+              >
+                {row.label}
+              </p>
+            )
+          }
+
+          const active = isActive(row.href)
           return (
             <Link
-              key={href}
-              href={href}
+              key={`${row.href}-${row.label}`}
+              href={row.href}
               onClick={() => setMobileOpen(false)}
               className={clsx(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                active
-                  ? 'bg-indigo-600 text-white'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                active ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
               )}
             >
-              <Icon className="w-4 h-4 shrink-0" />
-              <span className="flex-1">{label}</span>
-              {active && <ChevronRight className="w-3.5 h-3.5" />}
+              <row.icon className="w-4 h-4 shrink-0" />
+              {row.label}
             </Link>
           )
         })}
       </nav>
-      
-      {/* Info footer: Sekolah, Tahun Ajaran, Tanggal */}
+
+      {/* Profile chip */}
+      <div className="px-3">
+        <Link
+          href="/pengaturan"
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-slate-800 transition-colors"
+        >
+          <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden">
+            {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
+          </div>
+          <div className="flex-1 text-left min-w-0">
+            <p className="text-sm font-medium text-white truncate">{userName}</p>
+            <p className="text-xs text-slate-400 truncate">{userRole || 'Guru'}</p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Info footer */}
       <div className="p-3 mt-1 border-t border-slate-800 space-y-2.5">
         <div className="flex items-center gap-2.5 px-1">
           <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
@@ -129,16 +177,11 @@ export default function Sidebar() {
 
   return (
     <>
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-40 p-2 bg-white rounded-lg shadow-sm border border-slate-200 lg:hidden"
-      >
+      <button onClick={() => setMobileOpen(true)} className="fixed top-4 left-4 z-40 p-2 bg-white rounded-lg shadow-sm border border-slate-200 lg:hidden">
         <Menu className="w-5 h-5 text-slate-600" />
       </button>
 
-      {mobileOpen && (
-        <div className="fixed inset-0 bg-black/30 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
-      )}
+      {mobileOpen && <div className="fixed inset-0 bg-black/30 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
       <aside className={clsx(
         'fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto',
