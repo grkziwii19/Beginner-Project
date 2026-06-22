@@ -4,7 +4,6 @@ import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
-
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -21,32 +20,29 @@ export async function middleware(req: NextRequest) {
       },
     }
   )
-
   const { data: { user } } = await supabase.auth.getUser()
-
   const path = req.nextUrl.pathname
-
   if (!user) return res
-
   // allow onboarding always
   if (path.startsWith('/onboarding')) return res
-
   // get profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('onboarding_completed')
     .eq('id', user.id)
     .single()
-
   if (!profile?.onboarding_completed) {
     const url = req.nextUrl.clone()
     url.pathname = '/onboarding'
     return NextResponse.redirect(url)
   }
-
   return res
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/akun/:path*', '/((?!_next|auth).*)'],
+  matcher: [
+    '/dashboard/:path*',
+    '/akun/:path*',
+    '/((?!_next|auth|manifest\\.webmanifest|sw\\.js|offline\\.html|icons/|favicon).*)',
+  ],
 }
