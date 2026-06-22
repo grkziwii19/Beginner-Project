@@ -91,15 +91,24 @@ export default function Sidebar() {
   const NavContent = () => (
     <>
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-4 py-5">
-        <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0">
-          <GraduationCap className="w-5 h-5 text-white" />
+      <div className="flex items-center gap-3 px-4 py-6">
+        <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
+          <GraduationCap className="w-7 h-7 text-white" />
         </div>
-        <div>
-          <p className="font-bold text-white text-sm leading-tight">GR Assistant</p>
-          <p className="text-xs text-slate-400 leading-tight">Asisten Guru</p>
+
+        <div className="min-w-0">
+          <p className="font-bold text-white text-lg leading-tight">
+            GR Assistant
+          </p>
+          <p className="text-xs text-slate-400 leading-tight">
+            Platform Asisten Digital Guru
+          </p>
         </div>
-        <button onClick={() => setMobileOpen(false)} className="ml-auto p-1 text-slate-400 lg:hidden">
+
+        <button
+          onClick={() => setMobileOpen(false)}
+          className="ml-auto p-1 text-slate-400 lg:hidden"
+        >
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -136,25 +145,9 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Profile chip */}
-      <div className="px-3">
-        <Link
-          href="/pengaturan"
-          onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-slate-800 transition-colors"
-        >
-          <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden">
-            {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
-          </div>
-          <div className="flex-1 text-left min-w-0">
-            <p className="text-sm font-medium text-white truncate">{userName}</p>
-            <p className="text-xs text-slate-400 truncate">{userRole || 'Guru'}</p>
-          </div>
-        </Link>
-      </div>
-
+      
       {/* Info footer */}
-      <div className="p-3 mt-1 border-t border-slate-800 space-y-2.5">
+      <div className="p-3 mt-auto border-t border-slate-800 space-y-3">
         <div className="flex items-center gap-2.5 px-1">
           <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
           <p className="text-xs text-slate-300 truncate">{schoolName || 'Sekolah belum diatur'}</p>
