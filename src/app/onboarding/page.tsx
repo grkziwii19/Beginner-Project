@@ -103,7 +103,7 @@ export default function OnboardingPage() {
 
           <div className="w-5 h-5 overflow-hidden">
             <Image
-              src="/icons/icon-512x512.png"
+              src="/icons/logoGR.png"
               alt="GR Assistant"
               width={20}
               height={20}

@@ -14,17 +14,9 @@ export const metadata: Metadata = {
   },
 
   icons: {
-    icon: [
-      {
-        url: '/icons/favicon-32x32.svg',
-        type: 'image/svg+xml',
-      },
-      {
-        url: '/icons/favicon-16x16.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/icons/apple-touch-icon.png',
+    icon: '/icons/logoGR.png',
+    apple: '/icons/logoGR.png',
+    shortcut: '/icons/logoGR.png',
   },
 }
 

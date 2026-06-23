@@ -79,7 +79,7 @@ export default function Sidebar() {
       <div className="flex items-center gap-3 px-4 py-6">
         <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shrink-0 shadow-lg">
           <Image
-            src="/icons/icon-512x512.png"
+            src="/icons/logoGR.png"
             alt="GR Assistant"
             width={28}
             height={28}
