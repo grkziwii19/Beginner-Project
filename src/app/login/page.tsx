@@ -119,15 +119,13 @@ export default function LoginPage() {
         <div className="relative z-10 max-w-md">
 
           {/* LOGO REPLACED */}
-          <div className="w-16 h-16 bg-indigo-600/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <Image
+          <Image
               src="/icons/logoGR.png"
               alt="GR Assistant"
               width={40}
               height={40}
             />
-          </div>
-
+          
           <h1 className="text-3xl font-bold text-white leading-tight">
             Cerdaskan Bangsa Melalui Efisiensi Digital
           </h1>
@@ -155,15 +153,13 @@ export default function LoginPage() {
           <div className="lg:hidden text-center mb-8">
 
             {/* LOGO REPLACED */}
-            <div className="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 rounded-2xl mb-4">
-              <Image
+            <Image
                 src="/icons/logoGR.png"
                 alt="GR Assistant"
                 width={32}
                 height={32}
               />
-            </div>
-
+            
             <h1 className="text-2xl font-bold text-slate-900">
               GR Assistant
             </h1>

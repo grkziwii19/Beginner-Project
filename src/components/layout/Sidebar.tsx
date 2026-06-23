@@ -89,7 +89,7 @@ export default function Sidebar() {
             GR Assistant
           </p>
           <p className="text-xs text-slate-400 leading-tight">
-            Sistem Manajemen Akademik Digital
+            Platform Asisten Digital Guru
           </p>
         </div>
 
