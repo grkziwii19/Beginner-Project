@@ -19,9 +19,9 @@ export const metadata: Metadata = {
       { url: '/icons/iconapp512P.png', sizes: '512x512', type: 'image/png' },
     ],
 
-    apple: '/icons/iconapp192P.png',
+    apple: '/icons/apple-touch-icon.png',
 
-    shortcut: '/icons/iconapp192P.png',
+    shortcut: '/icons/apple-touch-icon.png',
   },
 }
 
