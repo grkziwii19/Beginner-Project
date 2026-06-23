@@ -14,9 +14,14 @@ export const metadata: Metadata = {
   },
 
   icons: {
-    icon: '/icons/logoGR.png',
-    apple: '/icons/logoGR.png',
-    shortcut: '/icons/logoGR.png',
+    icon: [
+      { url: '/icons/iconapp192P.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/iconapp512P.png', sizes: '512x512', type: 'image/png' },
+    ],
+
+    apple: '/icons/iconapp192P.png',
+
+    shortcut: '/icons/iconapp192P.png',
   },
 }
 

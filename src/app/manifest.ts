@@ -14,19 +14,19 @@ export default function manifest(): MetadataRoute.Manifest {
 
     icons: [
       {
-        src: '/icons/logoGR.png',
+        src: '/icons/iconapp192P.png',
         sizes: '192x192',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icons/logoGR.png',
+        src: '/icons/iconapp512P.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'any',
       },
       {
-        src: '/icons/logoGR.png',
+        src: '/icons/iconapp512P.png',
         sizes: '512x512',
         type: 'image/png',
         purpose: 'maskable',
