@@ -17,9 +17,10 @@ export async function createServerSupabaseClient() {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
             )
-          } catch {
-            // Diabaikan di Server Components — hanya middleware yang perlu set cookie
           }
+          catch (err) {
+  console.error('Cookie set error:', err)
+}
         },
       },
     }
