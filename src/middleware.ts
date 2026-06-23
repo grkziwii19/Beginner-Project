@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -13,29 +14,47 @@ export async function middleware(req: NextRequest) {
           return req.cookies.getAll()
         },
         setAll(cookies) {
-          cookies.forEach(({ name, value }) =>
-            res.cookies.set(name, value)
+          cookies.forEach(({ name, value, options }) =>
+            res.cookies.set(name, value, options)
           )
         },
       },
     }
   )
-  const { data: { user } } = await supabase.auth.getUser()
+
   const path = req.nextUrl.pathname
-  if (!user) return res
-  // allow onboarding always
+
+  // ⛔ skip onboarding page
   if (path.startsWith('/onboarding')) return res
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  // ✅ allow public routes (IMPORTANT FOR PWA)
+  const publicRoutes = ['/', '/login', '/register', '/manifest.webmanifest', '/sw.js']
+  if (publicRoutes.some(r => path.startsWith(r))) {
+    return res
+  }
+
+  // ⛔ no user → redirect login (instead of just return res)
+  if (!user) {
+    const url = req.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
+
   // get profile
   const { data: profile } = await supabase
     .from('profiles')
     .select('onboarding_completed')
     .eq('id', user.id)
     .single()
+
   if (!profile?.onboarding_completed) {
     const url = req.nextUrl.clone()
     url.pathname = '/onboarding'
     return NextResponse.redirect(url)
   }
+
   return res
 }
 
@@ -43,6 +62,5 @@ export const config = {
   matcher: [
     '/dashboard/:path*',
     '/akun/:path*',
-    '/((?!_next|auth|manifest\\.webmanifest|sw\\.js|offline\\.html|icons/|favicon).*)',
   ],
 }
