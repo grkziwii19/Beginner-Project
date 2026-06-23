@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'GR Assistant - Asisten Digital Guru',
+    name: 'GR Assistant - Platform Asisten Digital Guru',
     short_name: 'GR Assistant',
     description:
       'Sistem administrasi guru untuk absensi, nilai, dan data siswa yang cepat dan mudah.',
