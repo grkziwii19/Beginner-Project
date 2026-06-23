@@ -5,9 +5,8 @@ import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, BookOpen, ClipboardCheck, Award, FileBarChart,
-  Settings, Menu, X, Calendar, Building2
+  Settings, GraduationCap, Menu, X, Calendar, Building2
 } from 'lucide-react'
-import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
 
@@ -28,6 +27,8 @@ function isSection(row: NavRow): row is SectionLabel {
   return 'type' in row && row.type === 'section'
 }
 
+// "Akademik" hanyalah judul pemisah bagian (section label), bukan tombol.
+// Kelas, Absensi, Nilai selalu tampil di bawahnya tanpa perlu expand/collapse.
 const navRows: NavRow[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { type: 'section', label: 'Akademik' },
@@ -42,6 +43,10 @@ export default function Sidebar() {
   const pathname = usePathname()
   const supabase = createClient()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [userName, setUserName] = useState('Guru')
+  const [userRole, setUserRole] = useState('')
+  const [initials, setInitials] = useState('GU')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [schoolName, setSchoolName] = useState('')
   const [now, setNow] = useState(new Date())
 
@@ -50,15 +55,25 @@ export default function Sidebar() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: school } = await supabase
-        .from('school_profiles')
-        .select('name')
-        .eq('user_id', user.id)
-        .maybeSingle()
+      const [{ data: profile }, { data: school }] = await Promise.all([
+        supabase.from('profiles').select('full_name, position, avatar_url').eq('id', user.id).maybeSingle(),
+        supabase.from('school_profiles').select('name').eq('user_id', user.id).maybeSingle(),
+      ])
+
+      if (profile?.full_name) {
+        setUserName(profile.full_name)
+        setUserRole(profile.position || 'Guru')
+        const parts = profile.full_name.trim().split(' ')
+        setInitials(((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || 'GU')
+        if (profile.avatar_url) setAvatarUrl(profile.avatar_url)
+      } else {
+        const fallback = user.email?.split('@')[0] ?? 'Guru'
+        setUserName(fallback)
+        setInitials(fallback.slice(0, 2).toUpperCase())
+      }
 
       if (school?.name) setSchoolName(school.name)
     }
-
     load()
 
     const interval = setInterval(() => setNow(new Date()), 60000)
@@ -75,36 +90,21 @@ export default function Sidebar() {
 
   const NavContent = () => (
     <>
-      {/* LOGO */}
-      <div className="flex items-center gap-3 px-4 py-6">
-      <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center">
-  <Image
-    src="/icons/iconapp512P.png"
-    alt="GR Assistant"
-    width={18}
-    height={18}
-    className="object-contain"
-  />
-</div>
-        
-        <div className="min-w-0">
-          <p className="font-bold text-white text-lg leading-tight">
-            GR Assistant
-          </p>
-          <p className="text-xs text-slate-400 leading-tight">
-            Platform Asisten Digital Guru
-          </p>
+      {/* Logo */}
+      <div className="flex items-center gap-2.5 px-4 py-5">
+        <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+          <GraduationCap className="w-5 h-5 text-white" />
         </div>
-
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="ml-auto p-1 text-slate-400 lg:hidden"
-        >
+        <div>
+          <p className="font-bold text-white text-sm leading-tight">GR Assistant</p>
+          <p className="text-xs text-slate-400 leading-tight">Asisten Guru</p>
+        </div>
+        <button onClick={() => setMobileOpen(false)} className="ml-auto p-1 text-slate-400 lg:hidden">
           <X className="w-4 h-4" />
         </button>
       </div>
 
-      {/* NAV */}
+      {/* Nav */}
       <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
         {navRows.map((row, idx) => {
           if (isSection(row)) {
@@ -119,7 +119,6 @@ export default function Sidebar() {
           }
 
           const active = isActive(row.href)
-
           return (
             <Link
               key={`${row.href}-${row.label}`}
@@ -137,27 +136,34 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* FOOTER */}
-      <div className="p-3 mt-auto border-t border-slate-800 space-y-3">
+      {/* Profile chip */}
+      <div className="px-3">
+        <Link
+          href="/pengaturan"
+          onClick={() => setMobileOpen(false)}
+          className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-slate-800 transition-colors"
+        >
+          <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden">
+            {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
+          </div>
+          <div className="flex-1 text-left min-w-0">
+            <p className="text-sm font-medium text-white truncate">{userName}</p>
+            <p className="text-xs text-slate-400 truncate">{userRole || 'Guru'}</p>
+          </div>
+        </Link>
+      </div>
+
+      {/* Info footer */}
+      <div className="p-3 mt-1 border-t border-slate-800 space-y-2.5">
         <div className="flex items-center gap-2.5 px-1">
           <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
-          <p className="text-xs text-slate-300 truncate">
-            {schoolName || 'Sekolah belum diatur'}
-          </p>
+          <p className="text-xs text-slate-300 truncate">{schoolName || 'Sekolah belum diatur'}</p>
         </div>
-
         <div className="bg-slate-800 rounded-lg px-3 py-2">
-          <p className="text-[10px] text-slate-400 uppercase tracking-wide">
-            Tahun Ajaran Aktif
-          </p>
-          <p className="text-sm font-semibold text-white mt-0.5">
-            2024 / 2025
-          </p>
-          <p className="text-xs text-slate-400">
-            Semester Genap
-          </p>
+          <p className="text-[10px] text-slate-400 uppercase tracking-wide">Tahun Ajaran Aktif</p>
+          <p className="text-sm font-semibold text-white mt-0.5">2024 / 2025</p>
+          <p className="text-xs text-slate-400">Semester Genap</p>
         </div>
-
         <div className="flex items-center gap-2.5 px-1">
           <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
           <div className="leading-tight">
@@ -171,26 +177,16 @@ export default function Sidebar() {
 
   return (
     <>
-      <button
-        onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-40 p-2 bg-white rounded-lg shadow-sm border border-slate-200 lg:hidden"
-      >
+      <button onClick={() => setMobileOpen(true)} className="fixed top-4 left-4 z-40 p-2 bg-white rounded-lg shadow-sm border border-slate-200 lg:hidden">
         <Menu className="w-5 h-5 text-slate-600" />
       </button>
 
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 bg-black/30 z-40 lg:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
+      {mobileOpen && <div className="fixed inset-0 bg-black/30 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
-      <aside
-        className={clsx(
-          'fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full'
-        )}
-      >
+      <aside className={clsx(
+        'fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto',
+        mobileOpen ? 'translate-x-0' : '-translate-x-full'
+      )}>
         <NavContent />
       </aside>
     </>
