@@ -50,29 +50,63 @@ export default function LoginPage() {
     }
   }
 
-  const handleRegister = async () => {
-    if (loading) return
-    if (!email || !password) { setError('Isi email dan kata sandi terlebih dahulu.'); return }
-    setLoading(true)
-    setError('')
+  const handleGoogleLogin = async () => {
+  if (loading) return
 
-    try {
-      const { data, error } = await supabase.auth.signUp({ email: email.trim(), password })
-      if (error) { setError(error.message); return }
+  setLoading(true)
+  setError('')
 
-      // If email confirmation is disabled, session exists immediately
-      if (data.session) {
-        router.push('/onboarding')
-        router.refresh()
-      } else {
-        alert('Akun berhasil dibuat! Silakan cek email untuk verifikasi, lalu login.')
-      }
-    } catch {
-      setError('Terjadi kesalahan saat membuat akun.')
-    } finally {
-      setLoading(false)
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+
+    if (error) {
+      setError(error.message)
     }
+  } catch {
+    setError('Terjadi kesalahan saat login dengan Google.')
+  } finally {
+    setLoading(false)
   }
+}
+
+const handleRegister = async () => {
+  if (loading) return
+  if (!email || !password) {
+    setError('Isi email dan kata sandi terlebih dahulu.')
+    return
+  }
+
+  setLoading(true)
+  setError('')
+
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+    })
+
+    if (error) {
+      setError(error.message)
+      return
+    }
+
+    if (data.session) {
+      router.push('/onboarding')
+      router.refresh()
+    } else {
+      alert('Akun berhasil dibuat! Silakan cek email untuk verifikasi, lalu login.')
+    }
+  } catch {
+    setError('Terjadi kesalahan saat membuat akun.')
+  } finally {
+    setLoading(false)
+  }
+}
 
   return (
     <div className="min-h-screen flex">
@@ -158,6 +192,36 @@ export default function LoginPage() {
             <button type="submit" className="btn-primary w-full justify-center py-2.5" disabled={loading}>
               {loading ? 'Masuk...' : 'Masuk'}
             </button>
+            <div className="relative my-4">
+  <div className="absolute inset-0 flex items-center">
+    <div className="w-full border-t border-slate-200"></div>
+  </div>
+  <div className="relative flex justify-center text-xs uppercase">
+    <span className="bg-white px-2 text-slate-400">
+      atau
+    </span>
+  </div>
+</div>
+
+<button
+  type="button"
+  onClick={handleGoogleLogin}
+  disabled={loading}
+  className="w-full flex items-center justify-center gap-3 border border-slate-300 rounded-lg px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 48 48"
+    className="w-5 h-5"
+  >
+    <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.655 32.657 29.195 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.27 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"/>
+    <path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.27 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"/>
+    <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.145 35.091 26.671 36 24 36c-5.174 0-9.623-3.329-11.275-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z"/>
+    <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-1.058 3.092-3.251 5.525-6.084 6.57l.003-.002l6.19 5.238C34.971 39.48 44 33 44 24c0-1.341-.138-2.65-.389-3.917z"/>
+  </svg>
+
+  Masuk dengan Google
+</button>
           </form>
 
           <div className="mt-4 pt-4 border-t border-slate-100 text-center">
