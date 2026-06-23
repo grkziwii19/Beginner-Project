@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: 'GR Assistant',
     description:
       'Sistem administrasi guru untuk absensi, nilai, dan data siswa yang cepat dan mudah.',
-    start_url: '/',
+    start_url: '/dashboard',
     display: 'standalone',
     background_color: '#0f172a',
     theme_color: '#4f46e5',
