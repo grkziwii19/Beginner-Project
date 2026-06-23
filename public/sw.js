@@ -9,8 +9,8 @@ const OFFLINE_URL = '/offline.html';
 const PRECACHE_ASSETS = [
   '/',
   '/offline.html',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
+  '/icons/iconapp192P.png',
+  '/icons/iconapp512P.png',
 ];
 
 self.addEventListener('install', (event) => {
