@@ -24,18 +24,18 @@ export async function middleware(req: NextRequest) {
 
   const path = req.nextUrl.pathname
 
-  // ⛔ skip onboarding page
+  // skip onboarding page
   if (path.startsWith('/onboarding')) return res
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // ✅ allow public routes (IMPORTANT FOR PWA)
-  const publicRoutes = ['/', '/login', '/register', '/manifest.webmanifest', '/sw.js']
+  // allow public routes (IMPORTANT FOR PWA)
+  const publicRoutes = ['/login', '/register', '/manifest.webmanifest', '/sw.js', '/offline.html']
   if (publicRoutes.some(r => path.startsWith(r))) {
     return res
   }
 
-  // ⛔ no user → redirect login (instead of just return res)
+  // no user -> redirect login
   if (!user) {
     const url = req.nextUrl.clone()
     url.pathname = '/login'
@@ -60,7 +60,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
-    '/akun/:path*',
+    '/((?!_next|auth|icons|favicon|manifest\\.webmanifest|sw\\.js|offline\\.html).*)',
   ],
 }
