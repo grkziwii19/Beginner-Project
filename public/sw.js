@@ -2,7 +2,7 @@
 // Pendekatan manual sederhana (tanpa library) agar kompatibel dengan
 // Next.js 15 App Router + Turbopack tanpa konflik konfigurasi build.
 
-const CACHE_NAME = 'gr-assistant-v1';
+const CACHE_NAME = 'gr-assistant-v2'; // versi dinaikkan agar cache lama dibersihkan
 const OFFLINE_URL = '/offline.html';
 
 // Aset statis penting yang di-precache saat install
@@ -40,6 +40,19 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
+
+  // KRITIS: Jangan sentuh sama sekali request terkait autentikasi.
+  // Service worker tidak boleh ikut campur pada alur OAuth/session,
+  // karena bisa menyajikan cache lama dan merusak redirect setelah login.
+  if (
+    url.pathname.startsWith('/auth/') ||
+    url.pathname === '/login' ||
+    url.pathname === '/onboarding' ||
+    url.searchParams.has('code') ||   // parameter OAuth callback
+    url.searchParams.has('state')     // parameter OAuth callback
+  ) {
+    return; // biarkan request langsung ke network, tanpa intercept
+  }
 
   // Jangan cache request ke Supabase (data harus selalu real-time/fresh)
   if (url.hostname.includes('supabase.co')) {
