@@ -1,11 +1,12 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, BookOpen, ClipboardCheck, Award, FileBarChart,
-  Settings, GraduationCap, Menu, X, Calendar, Building2
+  Settings, Menu, X, Calendar, Building2
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
@@ -31,10 +32,13 @@ function isSection(row: NavRow): row is SectionLabel {
 // Kelas, Absensi, Nilai selalu tampil di bawahnya tanpa perlu expand/collapse.
 const navRows: NavRow[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+
   { type: 'section', label: 'Akademik' },
+
   { href: '/classes', label: 'Kelas', icon: BookOpen },
-  { href: '/classes', label: 'Absensi', icon: ClipboardCheck },
+  { href: '/absensi', label: 'Absensi', icon: ClipboardCheck },
   { href: '/akademik/nilai', label: 'Nilai', icon: Award },
+
   { href: '/laporan', label: 'Laporan', icon: FileBarChart },
   { href: '/pengaturan', label: 'Pengaturan', icon: Settings },
 ]
@@ -43,47 +47,43 @@ export default function Sidebar() {
   const pathname = usePathname()
   const supabase = createClient()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [userName, setUserName] = useState('Guru')
-  const [userRole, setUserRole] = useState('')
-  const [initials, setInitials] = useState('GU')
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  
   const [schoolName, setSchoolName] = useState('')
   const [now, setNow] = useState(new Date())
 
   useEffect(() => {
-    const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
+  const load = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
 
-      const [{ data: profile }, { data: school }] = await Promise.all([
-        supabase.from('profiles').select('full_name, position, avatar_url').eq('id', user.id).maybeSingle(),
-        supabase.from('school_profiles').select('name').eq('user_id', user.id).maybeSingle(),
-      ])
+    if (!user) return
 
-      if (profile?.full_name) {
-        setUserName(profile.full_name)
-        setUserRole(profile.position || 'Guru')
-        const parts = profile.full_name.trim().split(' ')
-        setInitials(((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || 'GU')
-        if (profile.avatar_url) setAvatarUrl(profile.avatar_url)
-      } else {
-        const fallback = user.email?.split('@')[0] ?? 'Guru'
-        setUserName(fallback)
-        setInitials(fallback.slice(0, 2).toUpperCase())
-      }
+    const { data: school } = await supabase
+      .from('school_profiles')
+      .select('name')
+      .eq('user_id', user.id)
+      .maybeSingle()
 
-      if (school?.name) setSchoolName(school.name)
+    if (school?.name) {
+      setSchoolName(school.name)
     }
-    load()
+  }
 
-    const interval = setInterval(() => setNow(new Date()), 60000)
-    return () => clearInterval(interval)
-  }, [])
+  load()
+
+  const interval = setInterval(() => setNow(new Date()), 60000)
+
+  return () => clearInterval(interval)
+}, [])
 
   const isActive = (href: string) => {
-    const cleanHref = href.split('?')[0]
-    return pathname === cleanHref || (cleanHref !== '/' && pathname.startsWith(cleanHref))
+  if (href === '/dashboard') {
+    return pathname === '/dashboard'
   }
+
+  return pathname === href || pathname.startsWith(`${href}/`)
+}
 
   const dayLabel = now.toLocaleDateString('id-ID', { weekday: 'long' })
   const dateLabel = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -92,12 +92,19 @@ export default function Sidebar() {
     <>
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-5">
-        <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0">
-          <GraduationCap className="w-5 h-5 text-white" />
-        </div>
+        <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0 p-1">
+  <Image
+    src="/icons/icon512P.png"
+    alt="GR Assistant"
+    width={36}
+    height={36}
+    className="w-full h-full object-contain"
+    priority
+  />
+</div>
         <div>
           <p className="font-bold text-white text-sm leading-tight">GR Assistant</p>
-          <p className="text-xs text-slate-400 leading-tight">Asisten Guru</p>
+          <p className="text-xs text-slate-400 leading-tight">Asisten Digital Guru</p>
         </div>
         <button onClick={() => setMobileOpen(false)} className="ml-auto p-1 text-slate-400 lg:hidden">
           <X className="w-4 h-4" />
@@ -136,23 +143,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Profile chip */}
-      <div className="px-3">
-        <Link
-          href="/pengaturan"
-          onClick={() => setMobileOpen(false)}
-          className="flex items-center gap-3 px-2 py-2.5 rounded-lg hover:bg-slate-800 transition-colors"
-        >
-          <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shrink-0 overflow-hidden">
-            {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
-          </div>
-          <div className="flex-1 text-left min-w-0">
-            <p className="text-sm font-medium text-white truncate">{userName}</p>
-            <p className="text-xs text-slate-400 truncate">{userRole || 'Guru'}</p>
-          </div>
-        </Link>
-      </div>
-
+      
       {/* Info footer */}
       <div className="p-3 mt-1 border-t border-slate-800 space-y-2.5">
         <div className="flex items-center gap-2.5 px-1">

@@ -172,7 +172,7 @@ export default function LoginPage() {
           <h2 className="text-2xl font-bold text-slate-900">Selamat Datang</h2>
 
           <p className="text-slate-500 text-sm mt-1 mb-7">
-            Silakan masuk ke akun Anda untuk melanjutkan pengelolaan data sekolah.
+            Silakan masuk ke akun Anda untuk melanjutkan.
           </p>
 
           <form onSubmit={handleLogin} className="space-y-4">
