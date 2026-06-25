@@ -2,6 +2,7 @@ export type Gender = 'Laki-laki' | 'Perempuan'
 export type AttendanceStatus = 'hadir' | 'sakit' | 'izin' | 'alpha'
 export type GradeType = 'tugas' | 'uts' | 'uas' | 'proyek'
 export type ClassStatus = 'aktif' | 'arsip'
+export type FieldType = 'text' | 'date' | 'number' | 'select'
 
 export interface Student {
   id: string
@@ -12,7 +13,21 @@ export interface Student {
   class_name: string
   gender: Gender
   photo?: string | null
+
+  // ── Biodata lengkap ──
+  photo_url?: string | null
+  birth_place?: string | null
+  birth_date?: string | null
+  religion?: string | null
+  address?: string | null
+  phone?: string | null
+  father_name?: string | null
+  mother_name?: string | null
+  parent_phone?: string | null
+  custom_fields?: Record<string, string>
+
   created_at: string
+  updated_at?: string
 }
 
 export interface Attendance {
@@ -44,6 +59,21 @@ export interface ClassItem {
   status: ClassStatus
   created_at: string
 }
+
+// ── Kategori biodata kustom (field dinamis per guru) ──
+export interface FieldDefinition {
+  id: string
+  user_id: string
+  field_key: string
+  field_label: string
+  field_type: FieldType
+  field_group: string
+  options?: string[] | null
+  sort_order: number
+  created_at: string
+}
+
+export const RELIGION_OPTIONS = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu', 'Lainnya']
 
 export function getStatusLabel(status: AttendanceStatus): string {
   const map: Record<AttendanceStatus, string> = {
@@ -77,4 +107,18 @@ export function getPredicateColor(predicate: string): string {
     D: 'bg-red-50 text-red-700',
   }
   return map[predicate] ?? 'bg-slate-100 text-slate-600'
+}
+
+export function formatDateID(dateStr?: string | null): string {
+  if (!dateStr) return '-'
+  return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+export function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map(w => w[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 }
