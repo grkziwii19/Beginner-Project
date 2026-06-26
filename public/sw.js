@@ -1,21 +1,23 @@
-// sw.js (SAFE NEXT.JS PWA - NO ROUTE INTERCEPT)
-
 const CACHE_NAME = 'gr-assistant-v1'
 
-// file static saja
+// hanya file yang PASTI ADA
 const STATIC_ASSETS = [
-  '/',
-  '/favicon.ico',
-  '/manifest.json'
+  '/favicon.ico'
 ]
 
-// INSTALL
+// INSTALL (SAFE)
 self.addEventListener('install', (event) => {
   self.skipWaiting()
 
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS)
+    caches.open(CACHE_NAME).then(async (cache) => {
+      for (const asset of STATIC_ASSETS) {
+        try {
+          await cache.add(asset)
+        } catch (err) {
+          console.log('[SW] skip cache failed:', asset)
+        }
+      }
     })
   )
 })
@@ -37,38 +39,33 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
-// FETCH (SAFE MODE)
+// FETCH (ULTRA SAFE)
 self.addEventListener('fetch', (event) => {
-  const { request } = event
+  const req = event.request
 
-  // ❌ JANGAN INTERCEPT NEXT.JS INTERNAL REQUEST
   if (
-    request.url.includes('/_next/') ||
-    request.url.includes('/api/') ||
-    request.url.includes('?rsc=') ||
-    request.method !== 'GET'
+    req.method !== 'GET' ||
+    req.url.includes('/_next/') ||
+    req.url.includes('/api/') ||
+    req.url.includes('?rsc=')
   ) {
     return
   }
 
   event.respondWith(
-    fetch(request)
-      .then((response) => {
-        // clone response only if valid
-        if (!response || response.status !== 200) {
-          return response
-        }
+    fetch(req)
+      .then((res) => {
+        // hanya cache response valid
+        if (!res || res.status !== 200) return res
 
-        const responseClone = response.clone()
+        const clone = res.clone()
 
         caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, responseClone)
+          cache.put(req, clone).catch(() => {})
         })
 
-        return response
+        return res
       })
-      .catch(() => {
-        return caches.match(request)
-      })
+      .catch(() => caches.match(req))
   )
 })
