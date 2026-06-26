@@ -241,7 +241,7 @@ export default function StudentsArchivePage() {
           </div>
 
           <div className="bg-indigo-50 border border-indigo-100 rounded-lg px-4 py-3 text-sm text-indigo-700">
-            Untuk menambah, mengubah, atau menghapus siswa, buka halaman <Link href="/classes" className="font-medium underline">Kelas</Link> lalu pilih kelas yang sesuai.
+            Untuk menambah, mengubah, atau menghapus siswa, buka halaman <Link href="/data-siswa" className="font-medium underline">Kelas</Link> lalu pilih kelas yang sesuai.
           </div>
 
           {loading ? (

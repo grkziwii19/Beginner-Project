@@ -13,7 +13,7 @@ const PRECACHE_ASSETS = [
   '/',
   '/offline.html',
   '/dashboard',
-  '/classes',
+  '/data-siswa',
   '/absensi',
   '/akademik/nilai',
   '/icons/icon-192x192.png',
