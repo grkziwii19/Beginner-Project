@@ -1,12 +1,12 @@
-export function normalizeClassName(name: string): string {
-  let normalized = name
+export function normalizeClassName(input: string): string {
+  let value = input
     .trim()
     .toUpperCase()
 
-  // Hilangkan kata "KELAS" di depan
-  normalized = normalized.replace(/^KELAS\s+/, '')
+  // Hilangkan kata KELAS
+  value = value.replace(/^KELAS\s+/, '')
 
-  // Konversi angka Romawi ke angka
+  // Angka Romawi -> Arab
   const romanMap: Record<string, string> = {
     XII: '12',
     XI: '11',
@@ -23,14 +23,20 @@ export function normalizeClassName(name: string): string {
   }
 
   Object.entries(romanMap).forEach(([roman, arabic]) => {
-    normalized = normalized.replace(
+    value = value.replace(
       new RegExp(`\\b${roman}\\b`, 'g'),
       arabic
     )
   })
 
-  // Hapus spasi, -, _, ., /
-  normalized = normalized.replace(/[\s\-_.\/]/g, '')
+  // Hilangkan pemisah
+  value = value.replace(/[\s\-_.\/]/g, '')
 
-  return normalized
+  return value
+}
+
+export function isValidClassName(input: string): boolean {
+  const value = normalizeClassName(input)
+
+  return /^(1|2|3|4|5|6|7|8|9|10|11|12)([A-Z])?$/.test(value)
 }

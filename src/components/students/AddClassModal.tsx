@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import ClassForm, { type ClassFormData } from './ClassForm'
+import { isValidClassName } from '@/lib/normalizeClassName'
 
 interface Props {
   onClose: () => void
@@ -23,29 +24,39 @@ export default function AddClassModal({ onClose, onAdd }: Props) {
   const [classExists, setClassExists] = useState(false)
 
   const handleSubmit = async () => {
-    if (!form.name.trim()) {
-      setError('Nama kelas wajib diisi.')
-      return
-    }
-
-    if (classExists) {
-      setError('Nama kelas sudah ada.')
-      return
-    }
-
-    setSaving(true)
-    setError('')
-
-    const result = await onAdd(form)
-
-    if (result.error) {
-      setError(result.error)
-      setSaving(false)
-      return
-    }
-
-    onClose()
+  if (!form.name.trim()) {
+    setError('Nama kelas wajib diisi.')
+    return
   }
+
+  if (!isValidClassName(form.name)) {
+    setError('Format nama kelas tidak valid. Contoh: VI A, 6A, atau Kelas VI A.')
+    return
+  }
+
+  if (!form.homeroomTeacher.trim()) {
+    setError('Nama wali kelas wajib diisi.')
+    return
+  }
+
+  if (classExists) {
+    setError('Nama kelas sudah ada.')
+    return
+  }
+
+  setSaving(true)
+  setError('')
+
+  const result = await onAdd(form)
+
+  if (result.error) {
+    setError(result.error)
+    setSaving(false)
+    return
+  }
+
+  onClose()
+}
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">

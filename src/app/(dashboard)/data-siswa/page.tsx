@@ -63,20 +63,20 @@ export default function StudentsPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Tidak terautentikasi' }
 
-    const trimmed = form.name.trim()
-const normalized = normalizeClassName(trimmed)
+    const normalized = normalizeClassName(form.name)
+const displayName = normalized
 
 const { data: inserted, error } = await supabase
   .from('classes')
   .insert({
-    user_id: user.id,
-    name: trimmed,
-    normalized_name: normalized,
-    status: 'aktif',
-    subjects: form.subjects,
-    homeroom_teacher: form.homeroomTeacher.trim() || null,
-    is_homeroom_only: form.isHomeroomOnly,
-  })
+  user_id: user.id,
+  name: displayName,
+  normalized_name: normalized,
+  status: 'aktif',
+  subjects: form.subjects,
+  homeroom_teacher: form.homeroomTeacher.trim(),
+  is_homeroom_only: form.isHomeroomOnly,
+})
       .select()
       .single()
 
@@ -91,19 +91,19 @@ const { data: inserted, error } = await supabase
 
   // Edit kelas yang sudah ada
   const handleEditClass = async (id: string, form: ClassFormData) => {
-    const trimmed = form.name.trim()
-    const normalized = normalizeClassName(trimmed)
+    const normalized = normalizeClassName(form.name)
+const displayName = normalized
     const oldClass = classes.find(c => c.id === id)
 
     const { error } = await supabase
       .from('classes')
       .update({
-      name: trimmed,
-      normalized_name: normalized,
-      subjects: form.subjects,
-      homeroom_teacher: form.homeroomTeacher.trim() || null,
-      is_homeroom_only: form.isHomeroomOnly,
-    })
+  name: displayName,
+  normalized_name: normalized,
+  subjects: form.subjects,
+  homeroom_teacher: form.homeroomTeacher.trim(),
+  is_homeroom_only: form.isHomeroomOnly,
+})
       .eq('id', id)
 
     if (error) {
@@ -112,9 +112,14 @@ const { data: inserted, error } = await supabase
 
     // Jika nama kelas berubah, sinkronkan class_name di tabel students
     // (relasi siswa-kelas masih berbasis pencocokan nama teks, bukan FK)
-    if (oldClass && oldClass.name !== trimmed) {
-      await supabase.from('students').update({ class_name: trimmed }).eq('class_name', oldClass.name)
-    }
+    if (oldClass && oldClass.name !== displayName) {
+  await supabase
+    .from('students')
+    .update({
+      class_name: displayName,
+    })
+    .eq('class_name', oldClass.name)
+}
 
     await fetchClasses()
     await fetchStudents()
