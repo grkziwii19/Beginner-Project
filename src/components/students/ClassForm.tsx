@@ -1,7 +1,7 @@
 'use client'
 
 
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react'
+import { Dispatch, SetStateAction, useEffect, useMemo, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { normalizeClassName } from '@/lib/normalizeClassName'
 import SubjectInput from './SubjectInput'
@@ -29,6 +29,11 @@ export default function ClassForm({
   const supabase = createClient()
 
   const [classNames, setClassNames] = useState<string[]>([])
+   const nameInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    nameInputRef.current?.focus()
+  }, [])
 
   const set = (patch: Partial<ClassFormData>) =>
     onChange({ ...data, ...patch })
@@ -94,8 +99,9 @@ if (!Array.isArray(classNames)) return null
   Nama Kelas <span className="text-red-500">*</span>
 </label>
 
+        
         <input
-          className={`input ${
+                    className={`input ${
             classExists
               ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
               : ''
