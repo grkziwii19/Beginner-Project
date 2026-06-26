@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { type AttendanceStatus, getStatusColor, getStatusLabel } from '@/types'
 import {
   ChevronLeft, ChevronRight, BookOpen, Search, Users,
-  Save, CheckCircle, AlertCircle, ArrowLeft
+  Save, CheckCircle, AlertCircle, ArrowLeft, GraduationCap
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -13,6 +13,8 @@ interface ClassOption {
   id: string
   name: string
   studentCount: number
+  subjects: string[]
+  isHomeroomOnly: boolean
 }
 
 interface StudentRow {
@@ -22,16 +24,25 @@ interface StudentRow {
 
 const STATUSES: AttendanceStatus[] = ['hadir', 'sakit', 'izin', 'alpha']
 
+// Nilai khusus untuk merepresentasikan "tanpa mapel spesifik" — ditujukan
+// untuk wali kelas (umumnya guru SD) yang mengajar semua mata pelajaran
+// sendiri di kelasnya, sehingga tidak perlu memilih mapel satu per satu
+// saat mengabsen. Disimpan sebagai subject = NULL di database.
+const UMUM_VALUE = '__umum__'
+
+type Step = 'pilih-kelas' | 'pilih-mapel' | 'absen'
+
 export default function AbsensiPage() {
   const supabase = createClient()
 
-  const [step, setStep] = useState<'pilih-kelas' | 'absen'>('pilih-kelas')
+  const [step, setStep] = useState<Step>('pilih-kelas')
   const [classes, setClasses] = useState<ClassOption[]>([])
   const [loadingClasses, setLoadingClasses] = useState(true)
   const [errorClasses, setErrorClasses] = useState('')
   const [search, setSearch] = useState('')
 
   const [selectedClass, setSelectedClass] = useState<ClassOption | null>(null)
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null) // null = umum
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [students, setStudents] = useState<StudentRow[]>([])
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({})
@@ -49,7 +60,7 @@ export default function AbsensiPage() {
         if (userError || !user) { if (!cancelled) setErrorClasses('Sesi tidak valid. Silakan login ulang.'); return }
 
         const [{ data: classData, error: classError }, { data: studentsData }] = await Promise.all([
-          supabase.from('classes').select('id, name').eq('user_id', user.id).order('name'),
+          supabase.from('classes').select('id, name, subjects, is_homeroom_only').eq('user_id', user.id).order('name'),
           supabase.from('students').select('id, class_name').eq('user_id', user.id),
         ])
 
@@ -59,7 +70,13 @@ export default function AbsensiPage() {
         studentsData?.forEach(s => { counts[s.class_name] = (counts[s.class_name] ?? 0) + 1 })
 
         if (!cancelled) {
-          setClasses((classData ?? []).map(c => ({ id: c.id, name: c.name, studentCount: counts[c.name] ?? 0 })))
+          setClasses((classData ?? []).map(c => ({
+            id: c.id,
+            name: c.name,
+            studentCount: counts[c.name] ?? 0,
+            subjects: c.subjects ?? [],
+            isHomeroomOnly: c.is_homeroom_only ?? false,
+          })))
         }
       } catch (err) {
         console.error(err)
@@ -72,17 +89,25 @@ export default function AbsensiPage() {
     return () => { cancelled = true }
   }, [])
 
-  // --- Load siswa + absensi saat kelas/tanggal dipilih ---
-  const loadStudentsAndAttendance = async (cls: ClassOption, selectedDate: string) => {
+  // --- Load siswa + absensi saat kelas/mapel/tanggal dipilih ---
+  const loadStudentsAndAttendance = async (cls: ClassOption, subject: string | null, selectedDate: string) => {
     setLoadingStudents(true)
     setErrorStudents('')
     try {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user) { setErrorStudents('Sesi tidak valid.'); return }
 
+      let attQuery = supabase
+        .from('attendance')
+        .select('student_id, status')
+        .eq('user_id', user.id)
+        .eq('date', selectedDate)
+
+      attQuery = subject ? attQuery.eq('subject', subject) : attQuery.is('subject', null)
+
       const [{ data: studentsData, error: studentsError }, { data: attData }] = await Promise.all([
         supabase.from('students').select('id, name').eq('user_id', user.id).eq('class_name', cls.name).order('name'),
-        supabase.from('attendance').select('student_id, status').eq('user_id', user.id).eq('date', selectedDate),
+        attQuery,
       ])
 
       if (studentsError) throw studentsError
@@ -103,8 +128,22 @@ export default function AbsensiPage() {
 
   const selectClass = (cls: ClassOption) => {
     setSelectedClass(cls)
+    if (cls.isHomeroomOnly) {
+      // Wali kelas yang mengajar semua mapel sendiri — langsung masuk ke
+      // absensi tanpa perlu memilih mata pelajaran.
+      setSelectedSubject(null)
+      setStep('absen')
+      loadStudentsAndAttendance(cls, null, date)
+    } else {
+      setStep('pilih-mapel')
+    }
+  }
+
+  const selectSubject = (subjectValue: string) => {
+    const subject = subjectValue === UMUM_VALUE ? null : subjectValue
+    setSelectedSubject(subject)
     setStep('absen')
-    loadStudentsAndAttendance(cls, date)
+    if (selectedClass) loadStudentsAndAttendance(selectedClass, subject, date)
   }
 
   const changeDate = (delta: number) => {
@@ -112,12 +151,12 @@ export default function AbsensiPage() {
     d.setDate(d.getDate() + delta)
     const newDate = d.toISOString().split('T')[0]
     setDate(newDate)
-    if (selectedClass) loadStudentsAndAttendance(selectedClass, newDate)
+    if (selectedClass) loadStudentsAndAttendance(selectedClass, selectedSubject, newDate)
   }
 
   const handleDateInput = (newDate: string) => {
     setDate(newDate)
-    if (selectedClass) loadStudentsAndAttendance(selectedClass, newDate)
+    if (selectedClass) loadStudentsAndAttendance(selectedClass, selectedSubject, newDate)
   }
 
   const setStatus = (studentId: string, status: AttendanceStatus) => {
@@ -140,10 +179,16 @@ export default function AbsensiPage() {
       if (!user) { setErrorStudents('Sesi tidak valid.'); return }
 
       const records = Object.entries(attendance).map(([student_id, status]) => ({
-        user_id: user.id, student_id, date, status,
+        user_id: user.id, student_id, date, status, subject: selectedSubject,
       }))
 
-      const { error: saveError } = await supabase.from('attendance').upsert(records, { onConflict: 'student_id,date' })
+      // onConflict berbeda tergantung ada/tidaknya subject, karena pakai
+      // partial unique index. Supabase upsert tetap bisa pakai kolom
+      // (student_id, date, subject) — baris dengan subject NULL otomatis
+      // tertangani oleh index parsial yang sudah dibuat di migration.
+      const { error: saveError } = await supabase
+        .from('attendance')
+        .upsert(records, { onConflict: 'student_id,date,subject' })
       if (saveError) throw saveError
 
       setSaved(true)
@@ -159,6 +204,20 @@ export default function AbsensiPage() {
   const backToClassSelect = () => {
     setStep('pilih-kelas')
     setSelectedClass(null)
+    setSelectedSubject(null)
+    setStudents([])
+    setAttendance({})
+    setErrorStudents('')
+  }
+
+  const backToSubjectSelect = () => {
+    if (selectedClass?.isHomeroomOnly) {
+      // Kelas ini tidak punya langkah pilih mapel, jadi kembali ke pilih kelas
+      backToClassSelect()
+      return
+    }
+    setStep('pilih-mapel')
+    setSelectedSubject(null)
     setStudents([])
     setAttendance({})
     setErrorStudents('')
@@ -167,6 +226,7 @@ export default function AbsensiPage() {
   const filteredClasses = classes.filter(c => c.name.toLowerCase().includes(search.toLowerCase()))
   const filledCount = students.filter(s => attendance[s.id]).length
   const dateLabel = new Date(date).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  const subjectLabel = selectedSubject ?? 'Semua Mapel (Wali Kelas)'
 
   const summary = {
     hadir: students.filter(s => attendance[s.id] === 'hadir').length,
@@ -180,7 +240,7 @@ export default function AbsensiPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Absensi</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Input kehadiran siswa secara cepat.</p>
+        <p className="text-sm text-slate-500 mt-0.5">Input kehadiran siswa per mata pelajaran.</p>
       </div>
 
       {/* STEP 1: Pilih Kelas */}
@@ -207,7 +267,7 @@ export default function AbsensiPage() {
             <div className="card p-12 text-center">
               <BookOpen className="w-10 h-10 text-slate-200 mx-auto mb-3" />
               <h3 className="font-semibold text-slate-700">{classes.length === 0 ? 'Belum ada kelas' : 'Tidak ada kelas yang cocok'}</h3>
-              <p className="text-sm text-slate-400 mt-1">{classes.length === 0 ? 'Buat kelas terlebih dahulu di menu Kelas.' : 'Coba kata kunci lain.'}</p>
+              <p className="text-sm text-slate-400 mt-1">{classes.length === 0 ? 'Buat kelas terlebih dahulu di menu Data Siswa.' : 'Coba kata kunci lain.'}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -231,11 +291,61 @@ export default function AbsensiPage() {
         </>
       )}
 
-      {/* STEP 2: Absen Siswa */}
-      {step === 'absen' && selectedClass && (
+      {/* STEP 2: Pilih Mapel */}
+      {step === 'pilih-mapel' && selectedClass && (
         <div className="space-y-5">
           <button onClick={backToClassSelect} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-indigo-600 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Pilih kelas lain
+          </button>
+
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-indigo-50 rounded-lg flex items-center justify-center shrink-0">
+              <BookOpen className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h2 className="font-semibold text-slate-900 text-lg">{selectedClass.name}</h2>
+              <p className="text-xs text-slate-400">Pilih mata pelajaran untuk absensi ini</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {selectedClass.subjects.length === 0 ? (
+              <div className="col-span-full card p-6 text-center">
+                <p className="text-sm text-slate-500">Kelas ini belum memiliki mata pelajaran. Tambahkan mapel di menu Data Siswa.</p>
+              </div>
+            ) : (
+              selectedClass.subjects.map(subject => (
+                <button
+                  key={subject}
+                  onClick={() => selectSubject(subject)}
+                  className="card p-4 text-left hover:border-indigo-300 hover:shadow-md transition-all"
+                >
+                  <p className="font-medium text-slate-900 text-sm">{subject}</p>
+                </button>
+              ))
+            )}
+
+            {/* Opsi untuk wali kelas yang mengajar semua mapel sendiri */}
+            <button
+              onClick={() => selectSubject(UMUM_VALUE)}
+              className="card p-4 text-left border-dashed hover:border-indigo-300 hover:shadow-md transition-all bg-slate-50"
+            >
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-4 h-4 text-slate-400" />
+                <p className="font-medium text-slate-600 text-sm">Semua Mapel (Wali Kelas)</p>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">Untuk guru yang mengajar semua pelajaran di kelas ini sendiri</p>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 3: Absen Siswa */}
+      {step === 'absen' && selectedClass && (
+        <div className="space-y-5">
+          <button onClick={backToSubjectSelect} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-indigo-600 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            {selectedClass.isHomeroomOnly ? 'Pilih kelas lain' : 'Ganti mata pelajaran'}
           </button>
 
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -245,7 +355,9 @@ export default function AbsensiPage() {
               </div>
               <div>
                 <h2 className="font-semibold text-slate-900 text-lg">{selectedClass.name}</h2>
-                <p className="text-xs text-slate-400">{students.length} siswa</p>
+                <p className="text-xs text-slate-400">
+                  {selectedClass.isHomeroomOnly ? `${students.length} siswa` : `${subjectLabel} · ${students.length} siswa`}
+                </p>
               </div>
             </div>
 
@@ -289,7 +401,7 @@ export default function AbsensiPage() {
             <div className="card p-12 text-center">
               <Users className="w-10 h-10 text-slate-200 mx-auto mb-3" />
               <h3 className="font-semibold text-slate-700">Belum ada siswa di kelas ini</h3>
-              <p className="text-sm text-slate-400 mt-1">Tambahkan siswa lewat menu Kelas terlebih dahulu.</p>
+              <p className="text-sm text-slate-400 mt-1">Tambahkan siswa lewat menu Data Siswa terlebih dahulu.</p>
             </div>
           ) : (
             <>

@@ -2,7 +2,6 @@ export type Gender = 'Laki-laki' | 'Perempuan'
 export type AttendanceStatus = 'hadir' | 'sakit' | 'izin' | 'alpha'
 export type GradeType = 'tugas' | 'uts' | 'uas' | 'proyek'
 export type ClassStatus = 'aktif' | 'arsip'
-export type FieldType = 'text' | 'date' | 'number' | 'select'
 
 export interface Student {
   id: string
@@ -36,6 +35,7 @@ export interface Attendance {
   student_id: string
   date: string
   status: AttendanceStatus
+  subject?: string | null // null = absensi umum (upacara, ekskul, dll)
   created_at: string
 }
 
@@ -57,18 +57,42 @@ export interface ClassItem {
   room?: string | null
   schedule_days?: string | null
   status: ClassStatus
+  subjects?: string[] | null
+  is_homeroom_only?: boolean
   created_at: string
 }
 
-// ── Kategori biodata kustom (field dinamis per guru) ──
-export interface FieldDefinition {
+// Daftar mata pelajaran umum sebagai saran/autocomplete saat menambah kelas.
+// Guru tetap bisa mengetik nama mapel custom yang tidak ada di daftar ini.
+export const COMMON_SUBJECTS = [
+  'Matematika',
+  'Bahasa Indonesia',
+  'Bahasa Inggris',
+  'IPA',
+  'IPS',
+  'Pendidikan Agama',
+  'PPKn',
+  'Seni Budaya',
+  'Pendidikan Jasmani (PJOK)',
+  'Prakarya',
+  'Informatika / TIK',
+  'Bahasa Daerah',
+  'Matematika Wajib',
+  'Fisika',
+  'Kimia',
+  'Biologi',
+  'Ekonomi',
+  'Sejarah',
+  'Geografi',
+  'Sosiologi',
+]
+
+// ── Kolom data kustom — versi sederhana, semua bertipe teks bebas ──
+export interface CustomFieldDefinition {
   id: string
   user_id: string
   field_key: string
   field_label: string
-  field_type: FieldType
-  field_group: string
-  options?: string[] | null
   sort_order: number
   created_at: string
 }

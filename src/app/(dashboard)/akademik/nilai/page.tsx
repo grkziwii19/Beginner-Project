@@ -83,7 +83,7 @@ export default function NilaiPage() {
             <div className="flex-1">
               <p className={`text-sm font-medium ${hasAnyClass ? 'text-slate-700' : 'text-slate-500'}`}>Buat minimal 1 kelas</p>
               {!hasAnyClass && (
-                <Link href="/classes" className="text-xs text-indigo-600 hover:underline inline-flex items-center gap-1 mt-1">
+                <Link href="/data-siswa" className="text-xs text-indigo-600 hover:underline inline-flex items-center gap-1 mt-1">
                   Buat kelas sekarang <ArrowRight className="w-3 h-3" />
                 </Link>
               )}
@@ -95,7 +95,7 @@ export default function NilaiPage() {
             <div className="flex-1">
               <p className={`text-sm font-medium ${hasAnyClassWithStudents ? 'text-slate-700' : 'text-slate-500'}`}>Tambahkan siswa ke kelas</p>
               {hasAnyClass && !hasAnyClassWithStudents && (
-                <Link href="/classes" className="text-xs text-indigo-600 hover:underline inline-flex items-center gap-1 mt-1">
+                <Link href="/data-siswa" className="text-xs text-indigo-600 hover:underline inline-flex items-center gap-1 mt-1">
                   Tambah siswa <ArrowRight className="w-3 h-3" />
                 </Link>
               )}
@@ -106,7 +106,13 @@ export default function NilaiPage() {
             {hasAnyClassWithSubjects ? <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" /> : <Circle className="w-5 h-5 text-slate-300 shrink-0 mt-0.5" />}
             <div className="flex-1">
               <p className={`text-sm font-medium ${hasAnyClassWithSubjects ? 'text-slate-700' : 'text-slate-500'}`}>Tambahkan mata pelajaran ke kelas</p>
-              <p className="text-xs text-slate-400 mt-0.5">Mata pelajaran diatur di halaman Detail Kelas.</p>
+              {hasAnyClass && !hasAnyClassWithSubjects ? (
+                <Link href="/data-siswa" className="text-xs text-indigo-600 hover:underline inline-flex items-center gap-1 mt-1">
+                  Atur mata pelajaran <ArrowRight className="w-3 h-3" />
+                </Link>
+              ) : (
+                <p className="text-xs text-slate-400 mt-0.5">Mata pelajaran diatur di halaman Data Siswa, saat menambah kelas.</p>
+              )}
             </div>
           </div>
 

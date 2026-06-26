@@ -3,15 +3,15 @@
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
-  type Student, type FieldDefinition,
+  type Student, type CustomFieldDefinition,
   RELIGION_OPTIONS, getInitials,
 } from '@/types'
 import { X, Camera, Pencil, Save, User } from 'lucide-react'
 
 interface Props {
   student: Student | null // null = mode tambah baru
-  className: string       // nama kelas saat ini (dari classItem.name)
-  customFields: FieldDefinition[]
+  className: string       // nama kelas yang sedang dipilih
+  customFields: CustomFieldDefinition[]
   onClose: () => void
   onSaved: () => void
 }
@@ -135,12 +135,6 @@ export default function StudentDetailModal({ student, className, customFields, o
     onClose()
   }
 
-  const fieldsByGroup = customFields.reduce<Record<string, FieldDefinition[]>>((acc, f) => {
-    acc[f.field_group] = acc[f.field_group] ?? []
-    acc[f.field_group].push(f)
-    return acc
-  }, {})
-
   const Row = ({ label, value, children }: { label: string; value?: string | null; children?: React.ReactNode }) => (
     <div>
       <p className="text-xs font-medium text-slate-400 mb-1">{label}</p>
@@ -261,35 +255,23 @@ export default function StudentDetailModal({ student, className, customFields, o
             </div>
           </div>
 
-          {/* Kategori kustom */}
-          {Object.entries(fieldsByGroup).map(([group, fieldsInGroup]) => (
-            <div key={group}>
-              <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">{group}</h3>
+          {/* Kolom kustom — sederhana, semua teks bebas */}
+          {customFields.length > 0 && (
+            <div>
+              <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Data Tambahan</h3>
               <div className="grid grid-cols-2 gap-4">
-                {fieldsInGroup.map(f => (
+                {customFields.map(f => (
                   <Row key={f.id} label={f.field_label} value={customValues[f.field_key]}>
-                    {f.field_type === 'select' ? (
-                      <select
-                        className="input"
-                        value={customValues[f.field_key] ?? ''}
-                        onChange={e => setCustomValues(prev => ({ ...prev, [f.field_key]: e.target.value }))}
-                      >
-                        <option value="">-- Pilih --</option>
-                        {(f.options ?? []).map(o => <option key={o}>{o}</option>)}
-                      </select>
-                    ) : (
-                      <input
-                        type={f.field_type === 'date' ? 'date' : f.field_type === 'number' ? 'number' : 'text'}
-                        className="input"
-                        value={customValues[f.field_key] ?? ''}
-                        onChange={e => setCustomValues(prev => ({ ...prev, [f.field_key]: e.target.value }))}
-                      />
-                    )}
+                    <input
+                      className="input"
+                      value={customValues[f.field_key] ?? ''}
+                      onChange={e => setCustomValues(prev => ({ ...prev, [f.field_key]: e.target.value }))}
+                    />
                   </Row>
                 ))}
               </div>
             </div>
-          ))}
+          )}
 
           {error && (
             <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</div>

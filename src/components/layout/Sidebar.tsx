@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
-  LayoutDashboard, BookOpen, ClipboardCheck, Award, FileBarChart,
-  Settings, Menu, X, Calendar, Building2
+  LayoutDashboard, ClipboardCheck, Award, FileBarChart,
+  Settings, Menu, X, Calendar, Building2, IdCard
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
@@ -29,13 +29,15 @@ function isSection(row: NavRow): row is SectionLabel {
 }
 
 // "Akademik" hanyalah judul pemisah bagian (section label), bukan tombol.
-// Kelas, Absensi, Nilai selalu tampil di bawahnya tanpa perlu expand/collapse.
+// Data Siswa, Absensi, Nilai selalu tampil di bawahnya tanpa perlu expand/collapse.
+// Menu "Kelas" terpisah sudah dihapus — manajemen kelas (buat/pilih kelas)
+// sekarang berada di dalam halaman Data Siswa.
 const navRows: NavRow[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 
   { type: 'section', label: 'Akademik' },
 
-  { href: '/classes', label: 'Kelas', icon: BookOpen },
+  { href: '/data-siswa', label: 'Data Siswa', icon: IdCard },
   { href: '/absensi', label: 'Absensi', icon: ClipboardCheck },
   { href: '/akademik/nilai', label: 'Nilai', icon: Award },
 
