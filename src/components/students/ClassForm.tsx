@@ -47,9 +47,11 @@ export default function ClassForm({
         .eq('user_id', user.id)
         .order('name')
 
-      setClassNames(classes?.map(c => c.name) ?? [])
+setClassNames(Array.isArray(classes) ? classes.map(c => c.name) : [])
+if (!data) return null
+if (!Array.isArray(classNames)) return null
     }
-
+{/* <SubjectInput /> */}
     loadClasses()
   }, [supabase])
 
