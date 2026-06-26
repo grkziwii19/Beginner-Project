@@ -9,6 +9,7 @@ import AddCustomFieldModal from '@/components/students/AddCustomFieldModal'
 import AddClassModal from '@/components/students/AddClassModal'
 import EditClassModal from '@/components/students/EditClassModal'
 import { type ClassFormData } from '@/components/students/ClassForm'
+import { normalizeClassName } from '@/lib/normalizeClassName'
 import {
   Plus, Search, Users, Trash2, IdCard, Tags, Filter,
   PieChart, List, ChevronDown, Pencil,
@@ -63,16 +64,19 @@ export default function StudentsPage() {
     if (!user) return { error: 'Tidak terautentikasi' }
 
     const trimmed = form.name.trim()
-    const { data: inserted, error } = await supabase
-      .from('classes')
-      .insert({
-        user_id: user.id,
-        name: trimmed,
-        status: 'aktif',
-        subjects: form.subjects,
-        homeroom_teacher: form.homeroomTeacher.trim() || null,
-        is_homeroom_only: form.isHomeroomOnly,
-      })
+const normalized = normalizeClassName(trimmed)
+
+const { data: inserted, error } = await supabase
+  .from('classes')
+  .insert({
+    user_id: user.id,
+    name: trimmed,
+    normalized_name: normalized,
+    status: 'aktif',
+    subjects: form.subjects,
+    homeroom_teacher: form.homeroomTeacher.trim() || null,
+    is_homeroom_only: form.isHomeroomOnly,
+  })
       .select()
       .single()
 
@@ -88,16 +92,18 @@ export default function StudentsPage() {
   // Edit kelas yang sudah ada
   const handleEditClass = async (id: string, form: ClassFormData) => {
     const trimmed = form.name.trim()
+    const normalized = normalizeClassName(trimmed)
     const oldClass = classes.find(c => c.id === id)
 
     const { error } = await supabase
       .from('classes')
       .update({
-        name: trimmed,
-        subjects: form.subjects,
-        homeroom_teacher: form.homeroomTeacher.trim() || null,
-        is_homeroom_only: form.isHomeroomOnly,
-      })
+      name: trimmed,
+      normalized_name: normalized,
+      subjects: form.subjects,
+      homeroom_teacher: form.homeroomTeacher.trim() || null,
+      is_homeroom_only: form.isHomeroomOnly,
+    })
       .eq('id', id)
 
     if (error) {
