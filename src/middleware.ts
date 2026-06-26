@@ -5,51 +5,66 @@ import { createServerClient } from '@supabase/ssr'
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next()
 
+  const path = req.nextUrl.pathname
+
+  // ✅ skip next internals + static files + pwa
+  if (
+    path.startsWith('/_next') ||
+    path.startsWith('/icons') ||
+    path.startsWith('/favicon') ||
+    path.startsWith('/manifest') ||
+    path === '/sw.js' ||
+    path === '/offline.html'
+  ) {
+    return res
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return req.cookies.getAll()
-        },
-        setAll(cookies) {
-          cookies.forEach(({ name, value, options }) =>
+        getAll: () => req.cookies.getAll(),
+        setAll: (cookies) => {
+          cookies.forEach(({ name, value, options }) => {
             res.cookies.set(name, value, options)
-          )
+          })
         },
       },
     }
   )
 
-  const path = req.nextUrl.pathname
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  // skip onboarding page
-  if (path.startsWith('/onboarding')) return res
+  // ✅ public routes (STRICT match, bukan startsWith)
+  const publicRoutes = ['/login', '/register']
 
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // allow public routes (IMPORTANT FOR PWA)
-  const publicRoutes = ['/login', '/register', '/manifest.webmanifest', '/sw.js', '/offline.html']
-  if (publicRoutes.some(r => path.startsWith(r))) {
+  if (publicRoutes.includes(path)) {
     return res
   }
 
-  // no user -> redirect login
+  // allow unauthenticated for auth callback
+  if (path.startsWith('/auth')) {
+    return res
+  }
+
+  // ❌ no user → login
   if (!user) {
     const url = req.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // get profile
+  // onboarding check (safe guard)
   const { data: profile } = await supabase
     .from('profiles')
     .select('onboarding_completed')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
-  if (!profile?.onboarding_completed) {
+  if (profile && !profile.onboarding_completed) {
     const url = req.nextUrl.clone()
     url.pathname = '/onboarding'
     return NextResponse.redirect(url)
@@ -59,7 +74,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    '/((?!_next|auth|icons|favicon|manifest\\.webmanifest|sw\\.js|offline\\.html).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image).*)'],
 }
