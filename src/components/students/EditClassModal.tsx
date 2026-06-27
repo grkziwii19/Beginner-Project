@@ -134,7 +134,7 @@ export default function EditClassModal({ classItem, onClose, onSave, onDelete }:
           </button>
 
           <button onClick={handleSubmit} disabled={saving || classExists} className="btn-primary flex-1">
-            {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+            {saving ? 'Menyimpan...' : 'Simpan'}
           </button>
         </div>
       </div>

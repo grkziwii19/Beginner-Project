@@ -264,7 +264,7 @@ export default function AkunPage() {
               )}
 
               <button onClick={handleSaveProfile} disabled={saving} className={`btn-primary w-full justify-center mt-5 ${saved ? 'bg-emerald-600' : ''}`}>
-                {saved ? <><CheckCircle className="w-4 h-4" /> Tersimpan!</> : <><Save className="w-4 h-4" /> {saving ? 'Menyimpan...' : 'Simpan Perubahan'}</>}
+                {saved ? <><CheckCircle className="w-4 h-4" /> Tersimpan!</> : <><Save className="w-4 h-4" /> {saving ? 'Menyimpan...' : 'Simpan'}</>}
               </button>
             </div>
           )}
