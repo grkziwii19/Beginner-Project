@@ -17,6 +17,25 @@ interface Props {
   onSaved: () => void
 }
 
+// ✅ Didefinisikan di luar komponen agar tidak di-recreate setiap render
+function Row({
+  label, value, editMode, children,
+}: {
+  label: string
+  value?: string | null
+  editMode: boolean
+  children?: React.ReactNode
+}) {
+  return (
+    <div>
+      <p className="text-xs font-medium text-slate-400 mb-1">{label}</p>
+      {editMode
+        ? children
+        : <p className="text-sm text-slate-800">{value || <span className="text-slate-300">—</span>}</p>}
+    </div>
+  )
+}
+
 export default function StudentDetailModal({ open, student, className, customFields, onClose, onSaved }: Props) {
   const supabase = createClient()
   const isNew = !student
@@ -155,13 +174,6 @@ export default function StudentDetailModal({ open, student, className, customFie
     onClose()
   }
 
-  const Row = ({ label, value, children }: { label: string; value?: string | null; children?: React.ReactNode }) => (
-    <div>
-      <p className="text-xs font-medium text-slate-400 mb-1">{label}</p>
-      {editMode ? children : <p className="text-sm text-slate-800">{value || <span className="text-slate-300">—</span>}</p>}
-    </div>
-  )
-
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
@@ -208,10 +220,10 @@ export default function StudentDetailModal({ open, student, className, customFie
               <input ref={fileRef} type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
             </div>
             <div className="flex-1 grid grid-cols-2 gap-3">
-              <Row label="Nama Lengkap" value={form.name}>
+              <Row label="Nama Lengkap" value={form.name} editMode={editMode}>
                 <input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
               </Row>
-              <Row label="Kelas" value={className}>
+              <Row label="Kelas" value={className} editMode={editMode}>
                 <input className="input bg-slate-50" value={className} disabled />
               </Row>
             </div>
@@ -221,28 +233,28 @@ export default function StudentDetailModal({ open, student, className, customFie
           <div>
             <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Identitas</h3>
             <div className="grid grid-cols-2 gap-4">
-              <Row label="NIS" value={form.nis}>
+              <Row label="NIS" value={form.nis} editMode={editMode}>
                 <input className="input" value={form.nis} onChange={e => setForm({ ...form, nis: e.target.value })} />
               </Row>
-              <Row label="NISN" value={form.nisn}>
+              <Row label="NISN" value={form.nisn} editMode={editMode}>
                 <input className="input" value={form.nisn} onChange={e => setForm({ ...form, nisn: e.target.value })} />
               </Row>
-              <Row label="Jenis Kelamin" value={form.gender}>
+              <Row label="Jenis Kelamin" value={form.gender} editMode={editMode}>
                 <select className="input" value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })}>
                   <option>Laki-laki</option>
                   <option>Perempuan</option>
                 </select>
               </Row>
-              <Row label="Agama" value={form.religion}>
+              <Row label="Agama" value={form.religion} editMode={editMode}>
                 <select className="input" value={form.religion} onChange={e => setForm({ ...form, religion: e.target.value })}>
                   <option value="">-- Pilih --</option>
                   {RELIGION_OPTIONS.map(r => <option key={r}>{r}</option>)}
                 </select>
               </Row>
-              <Row label="Tempat Lahir" value={form.birth_place}>
+              <Row label="Tempat Lahir" value={form.birth_place} editMode={editMode}>
                 <input className="input" value={form.birth_place} onChange={e => setForm({ ...form, birth_place: e.target.value })} />
               </Row>
-              <Row label="Tanggal Lahir" value={form.birth_date ? new Date(form.birth_date).toLocaleDateString('id-ID') : null}>
+              <Row label="Tanggal Lahir" value={form.birth_date ? new Date(form.birth_date).toLocaleDateString('id-ID') : null} editMode={editMode}>
                 <input type="date" className="input" value={form.birth_date} onChange={e => setForm({ ...form, birth_date: e.target.value })} />
               </Row>
             </div>
@@ -252,10 +264,10 @@ export default function StudentDetailModal({ open, student, className, customFie
           <div>
             <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Kontak & Alamat</h3>
             <div className="grid grid-cols-2 gap-4">
-              <Row label="No. HP Siswa" value={form.phone}>
+              <Row label="No. HP Siswa" value={form.phone} editMode={editMode}>
                 <input className="input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
               </Row>
-              <Row label="Alamat" value={form.address}>
+              <Row label="Alamat" value={form.address} editMode={editMode}>
                 <input className="input" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} />
               </Row>
             </div>
@@ -265,13 +277,13 @@ export default function StudentDetailModal({ open, student, className, customFie
           <div>
             <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Orang Tua</h3>
             <div className="grid grid-cols-2 gap-4">
-              <Row label="Nama Ayah" value={form.father_name}>
+              <Row label="Nama Ayah" value={form.father_name} editMode={editMode}>
                 <input className="input" value={form.father_name} onChange={e => setForm({ ...form, father_name: e.target.value })} />
               </Row>
-              <Row label="Nama Ibu" value={form.mother_name}>
+              <Row label="Nama Ibu" value={form.mother_name} editMode={editMode}>
                 <input className="input" value={form.mother_name} onChange={e => setForm({ ...form, mother_name: e.target.value })} />
               </Row>
-              <Row label="No. HP Orang Tua" value={form.parent_phone}>
+              <Row label="No. HP Orang Tua" value={form.parent_phone} editMode={editMode}>
                 <input className="input" value={form.parent_phone} onChange={e => setForm({ ...form, parent_phone: e.target.value })} />
               </Row>
             </div>
@@ -283,7 +295,7 @@ export default function StudentDetailModal({ open, student, className, customFie
               <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Data Tambahan</h3>
               <div className="grid grid-cols-2 gap-4">
                 {customFields.map(f => (
-                  <Row key={f.id} label={f.field_label} value={customValues[f.field_key]}>
+                  <Row key={f.id} label={f.field_label} value={customValues[f.field_key]} editMode={editMode}>
                     <input
                       className="input"
                       value={customValues[f.field_key] ?? ''}
