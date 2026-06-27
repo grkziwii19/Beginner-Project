@@ -47,7 +47,6 @@ export default function AddCustomFieldModal({ onClose, onAdd }: Props) {
             value={label}
             onChange={e => setLabel(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-            
             autoFocus
           />
           <p className="text-xs text-slate-400 mt-1.5">

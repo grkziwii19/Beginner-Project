@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { X, Trash2 } from 'lucide-react'
 import { type ClassItem } from '@/types'
 import ClassForm, { type ClassFormData } from './ClassForm'
-import { isValidClassName, normalizeClassName } from '@/lib/normalizeClassName'
+import { isValidClassName } from '@/lib/normalizeClassName'
 
 interface Props {
   classItem: ClassItem
@@ -13,12 +13,7 @@ interface Props {
   onDelete: (id: string) => Promise<void>
 }
 
-export default function EditClassModal({
-  classItem,
-  onClose,
-  onSave,
-  onDelete,
-}: Props) {
+export default function EditClassModal({ classItem, onClose, onSave, onDelete }: Props) {
   const [form, setForm] = useState<ClassFormData>({
     name: classItem.name,
     subjects: classItem.subjects ?? [],
@@ -31,35 +26,32 @@ export default function EditClassModal({
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  // dari ClassForm
+  // classExists sudah dihitung di dalam ClassForm dengan memperhitungkan
+  // currentClassName (supaya kelas yang sedang diedit tidak dianggap
+  // duplikat dari dirinya sendiri). Modal ini TIDAK menghitung ulang
+  // perbandingan normalisasi sendiri — itu sebabnya versi sebelumnya
+  // punya logika ganda (isSameClass) yang sebenarnya tidak diperlukan,
+  // karena ClassForm sudah menangani kasus itu dengan benar.
   const [classExists, setClassExists] = useState(false)
 
   const handleSubmit = async () => {
     setError('')
 
-    // 1. validasi kosong
     if (!form.name.trim()) {
       setError('Nama kelas wajib diisi.')
       return
     }
 
-    // 2. validasi format
     if (!isValidClassName(form.name)) {
       setError('Format nama kelas tidak valid. Contoh: VI A, 6A, atau Kelas VI A.')
       return
     }
 
-    // 3. validasi duplicate (dari ClassForm)
-    const isSameClass =
-      normalizeClassName(form.name) ===
-      normalizeClassName(classItem.name)
-
-    if (classExists && !isSameClass) {
+    if (classExists) {
       setError('Nama kelas sudah digunakan.')
       return
     }
 
-    // 4. validasi wali kelas
     if (!form.homeroomTeacher.trim()) {
       setError('Nama wali kelas wajib diisi.')
       return
@@ -96,17 +88,10 @@ export default function EditClassModal({
             Siswa di kelas ini tidak ikut terhapus, namun perlu dipindahkan ke kelas lain secara manual.
           </p>
           <div className="flex gap-3">
-            <button
-              onClick={() => setDeleteConfirm(false)}
-              className="btn-secondary flex-1 justify-center"
-            >
+            <button onClick={() => setDeleteConfirm(false)} className="btn-secondary flex-1 justify-center">
               Batal
             </button>
-            <button
-              onClick={handleDelete}
-              disabled={deleting}
-              className="btn-danger flex-1 justify-center"
-            >
+            <button onClick={handleDelete} disabled={deleting} className="btn-danger flex-1 justify-center">
               {deleting ? 'Menghapus...' : 'Hapus'}
             </button>
           </div>
@@ -118,8 +103,6 @@ export default function EditClassModal({
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col">
-
-        {/* HEADER */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0">
           <h2 className="font-semibold text-slate-900">Edit Kelas</h2>
           <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600">
@@ -127,7 +110,6 @@ export default function EditClassModal({
           </button>
         </div>
 
-        {/* FORM */}
         <div className="p-5 overflow-y-auto flex-1">
           <ClassForm
             data={form}
@@ -136,12 +118,9 @@ export default function EditClassModal({
             currentClassName={classItem.name}
           />
 
-          {error && (
-            <p className="text-xs text-red-500 mt-3">{error}</p>
-          )}
+          {error && <p className="text-xs text-red-500 mt-3">{error}</p>}
         </div>
 
-        {/* FOOTER */}
         <div className="flex items-center gap-3 p-5 border-t border-slate-100 shrink-0">
           <button
             onClick={() => setDeleteConfirm(true)}
@@ -154,15 +133,10 @@ export default function EditClassModal({
             Batal
           </button>
 
-          <button
-            onClick={handleSubmit}
-            disabled={saving}
-            className="btn-primary flex-1"
-          >
+          <button onClick={handleSubmit} disabled={saving || classExists} className="btn-primary flex-1">
             {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
           </button>
         </div>
-
       </div>
     </div>
   )

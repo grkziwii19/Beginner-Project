@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { normalizeClassName, formatClassName } from '@/lib/normalizeClassName'
 import { createClient } from '@/lib/supabase/client'
 import { type Student, type ClassItem, getInitials, formatDateID } from '@/types'
 import { useCustomFields } from '@/hooks/useCustomFields'
@@ -9,11 +10,11 @@ import AddCustomFieldModal from '@/components/students/AddCustomFieldModal'
 import AddClassModal from '@/components/students/AddClassModal'
 import EditClassModal from '@/components/students/EditClassModal'
 import { type ClassFormData } from '@/components/students/ClassForm'
-import { normalizeClassName } from '@/lib/normalizeClassName'
 import {
   Plus, Search, Users, Trash2, IdCard, Tags, Filter,
   PieChart, List, ChevronDown, Pencil,
 } from 'lucide-react'
+
 
 type TabType = 'daftar' | 'statistik'
 
@@ -60,71 +61,66 @@ export default function StudentsPage() {
 
   // Tambah kelas baru
   const handleAddClass = async (form: ClassFormData) => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return { error: 'Tidak terautentikasi' }
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Tidak terautentikasi' }
 
-    const normalized = normalizeClassName(form.name)
-const displayName = normalized
+  const formatted = formatClassName(form.name.trim())   // ← untuk disimpan & ditampilkan, mis. "7 A"
+  const normalized = normalizeClassName(form.name.trim()) // ← untuk deteksi duplikat, mis. "7A"
 
-const { data: inserted, error } = await supabase
-  .from('classes')
-  .insert({
-  user_id: user.id,
-  name: displayName,
-  normalized_name: normalized,
-  status: 'aktif',
-  subjects: form.subjects,
-  homeroom_teacher: form.homeroomTeacher.trim(),
-  is_homeroom_only: form.isHomeroomOnly,
-})
-      .select()
-      .single()
+  const { data: inserted, error } = await supabase
+    .from('classes')
+    .insert({
+      user_id: user.id,
+      name: formatted,             // ← pakai hasil yang sudah dirapikan
+      normalized_name: normalized, // ← tetap tanpa spasi untuk pembanding
+      status: 'aktif',
+      subjects: form.subjects,
+      homeroom_teacher: form.homeroomTeacher.trim() || null,
+      is_homeroom_only: form.isHomeroomOnly,
+    })
+    .select()
+    .single()
 
-    if (error) {
-      return { error: error.code === '23505' ? 'Nama kelas sudah ada.' : 'Gagal menambahkan kelas.' }
-    }
-
-    await fetchClasses()
-    if (inserted) setSelectedClassId(inserted.id)
-    return { error: null }
+  if (error) {
+    return { error: error.code === '23505' ? 'Nama kelas sudah ada.' : 'Gagal menambahkan kelas.' }
   }
 
-  // Edit kelas yang sudah ada
-  const handleEditClass = async (id: string, form: ClassFormData) => {
-    const normalized = normalizeClassName(form.name)
-const displayName = normalized
-    const oldClass = classes.find(c => c.id === id)
-
-    const { error } = await supabase
-      .from('classes')
-      .update({
-  name: displayName,
-  normalized_name: normalized,
-  subjects: form.subjects,
-  homeroom_teacher: form.homeroomTeacher.trim(),
-  is_homeroom_only: form.isHomeroomOnly,
-})
-      .eq('id', id)
-
-    if (error) {
-      return { error: error.code === '23505' ? 'Nama kelas sudah ada.' : 'Gagal menyimpan perubahan.' }
-    }
-
-    // Jika nama kelas berubah, sinkronkan class_name di tabel students
-    // (relasi siswa-kelas masih berbasis pencocokan nama teks, bukan FK)
-    if (oldClass && oldClass.name !== displayName) {
-  await supabase
-    .from('students')
-    .update({
-      class_name: displayName,
-    })
-    .eq('class_name', oldClass.name)
+  await fetchClasses()
+  if (inserted) setSelectedClassId(inserted.id)
+  return { error: null }
 }
 
-    await fetchClasses()
-    await fetchStudents()
-    return { error: null }
+// ── Edit kelas yang sudah ada ──
+const handleEditClass = async (id: string, form: ClassFormData) => {
+  const formatted = formatClassName(form.name.trim())
+  const normalized = normalizeClassName(form.name.trim())
+  const oldClass = classes.find(c => c.id === id)
+
+  const { error } = await supabase
+    .from('classes')
+    .update({
+      name: formatted,
+      normalized_name: normalized,
+      subjects: form.subjects,
+      homeroom_teacher: form.homeroomTeacher.trim() || null,
+      is_homeroom_only: form.isHomeroomOnly,
+    })
+    .eq('id', id)
+
+  if (error) {
+    return { error: error.code === '23505' ? 'Nama kelas sudah ada.' : 'Gagal menyimpan perubahan.' }
   }
+
+  // Jika nama kelas berubah, sinkronkan class_name di tabel students
+  // (pakai 'formatted', supaya siswa juga ikut tampil dengan format rapi)
+  if (oldClass && oldClass.name !== formatted) {
+    await supabase.from('students').update({ class_name: formatted }).eq('class_name', oldClass.name)
+  }
+
+  await fetchClasses()
+  await fetchStudents()
+  return { error: null }
+}
 
   // Hapus kelas
   const handleDeleteClass = async (id: string) => {

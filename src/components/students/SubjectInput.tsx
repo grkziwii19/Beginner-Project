@@ -7,6 +7,7 @@ import { COMMON_SUBJECTS } from '@/types'
 interface Props {
   value: string[]
   onChange: (subjects: string[]) => void
+  disabled?: boolean  // ← tambahkan ini
 }
 
 export default function SubjectInput({ value, onChange }: Props) {

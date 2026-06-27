@@ -1,9 +1,8 @@
 'use client'
 
-
 import { Dispatch, SetStateAction, useEffect, useMemo, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { normalizeClassName } from '@/lib/normalizeClassName'
+import { normalizeClassName, isValidClassName } from '@/lib/normalizeClassName'
 import SubjectInput from './SubjectInput'
 
 export interface ClassFormData {
@@ -29,7 +28,7 @@ export default function ClassForm({
   const supabase = createClient()
 
   const [classNames, setClassNames] = useState<string[]>([])
-   const nameInputRef = useRef<HTMLInputElement>(null)
+  const nameInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     nameInputRef.current?.focus()
@@ -38,12 +37,12 @@ export default function ClassForm({
   const set = (patch: Partial<ClassFormData>) =>
     onChange({ ...data, ...patch })
 
+  // Ambil daftar kelas yang sudah ada — dipakai untuk cek duplikat
+  // (dibandingkan via normalizeClassName, bukan perbandingan string biasa)
+  // dan untuk saran autocomplete.
   useEffect(() => {
     const loadClasses = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
       const { data: classes } = await supabase
@@ -52,70 +51,82 @@ export default function ClassForm({
         .eq('user_id', user.id)
         .order('name')
 
-setClassNames(Array.isArray(classes) ? classes.map(c => c.name) : [])
-if (!data) return null
-if (!Array.isArray(classNames)) return null
+      setClassNames(Array.isArray(classes) ? classes.map(c => c.name) : [])
     }
-{/* <SubjectInput /> */}
+
     loadClasses()
   }, [supabase])
 
+  // currentClassName dinormalisasi sekali saja, dipakai berkali-kali di bawah
+  const normalizedCurrent = currentClassName ? normalizeClassName(currentClassName) : null
+
   const classExists = useMemo(() => {
-  const normalized = normalizeClassName(data.name)
+    const normalizedInput = normalizeClassName(data.name)
+    if (!normalizedInput) return false
 
-  const isEditing = !!currentClassName
+    return classNames.some(c => {
+      const normalizedExisting = normalizeClassName(c)
+      const isSameAsInput = normalizedExisting === normalizedInput
 
-  return classNames.some(c => {
-    const same = normalizeClassName(c) === normalized
+      if (!isSameAsInput) return false
 
-    if (!isEditing) return same
+      // Saat mode edit: kelas yang namanya sama dengan nama ASLI kelas
+      // yang sedang diedit bukan dianggap duplikat (karena itu kelas
+      // itu sendiri, belum tentu berubah nama).
+      if (normalizedCurrent && normalizedExisting === normalizedCurrent) {
+        return false
+      }
 
-    return same && normalizeClassName(c) !== normalizeClassName(currentClassName!)
-  })
-}, [classNames, data.name, currentClassName])
+      return true
+    })
+  }, [classNames, data.name, normalizedCurrent])
 
   useEffect(() => {
-    onClassExistsChange?.(classExists)
+    onClassExistsChange(classExists)
   }, [classExists, onClassExistsChange])
 
   const suggestions = useMemo(() => {
     const keyword = data.name.trim().toLowerCase()
-
     if (!keyword) return []
 
-    const normalized = normalizeClassName(data.name)
+    const normalizedInput = normalizeClassName(data.name)
 
     return classNames
-      .filter(c => normalizeClassName(c) !== normalized)
+      .filter(c => normalizeClassName(c) !== normalizedInput)
       .filter(c => c.toLowerCase().includes(keyword))
       .slice(0, 8)
   }, [classNames, data.name])
+
+  const showFormatWarning = data.name.trim().length > 0 && !isValidClassName(data.name)
 
   return (
     <div className="space-y-4">
       {/* Nama kelas */}
       <div className="relative">
         <label className="label">
-  Nama Kelas <span className="text-red-500">*</span>
-</label>
+          Nama Kelas <span className="text-red-500">*</span>
+        </label>
 
-        
         <input
-                    className={`input ${
-            classExists
-              ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-              : ''
+          ref={nameInputRef}
+          className={`input ${
+            classExists ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
           }`}
           placeholder="Contoh: VI A, 8 A"
           value={data.name}
           autoComplete="off"
-          autoFocus
           onChange={e => set({ name: e.target.value })}
         />
 
         {classExists && (
           <p className="mt-1 text-xs text-red-500">
-            Nama kelas sudah digunakan.
+            Nama kelas sudah digunakan (termasuk variasi penulisan seperti spasi, tanda hubung, atau angka Romawi).
+          </p>
+        )}
+
+        {!classExists && showFormatWarning && (
+          <p className="mt-1 text-xs text-amber-500">
+            Format belum dikenali. Contoh yang valid: VI A, 6A, atau Kelas VI A.
           </p>
         )}
 
@@ -138,64 +149,61 @@ if (!Array.isArray(classNames)) return null
       </div>
 
       {/* Wali kelas mengajar semua */}
-<label className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 hover:border-indigo-200 cursor-pointer transition-colors">
-  <input
-    type="checkbox"
-    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-    checked={data.isHomeroomOnly}
-    onChange={e => {
-      const isChecked = e.target.checked
-      set({
-        isHomeroomOnly: isChecked,
-        // Jika dicentang, otomatis kosongkan array subjects agar data clean
-        subjects: isChecked ? [] : data.subjects 
-      })
-    }}
-  />
-  <div>
-    <p className="text-sm font-medium text-slate-700">
-      Wali kelas mengajar semua mata pelajaran
-    </p>
-    <p className="mt-0.5 text-xs text-slate-400">
-      Cocok untuk guru SD. Jika dicentang, menu Absensi dan Nilai akan langsung menggunakan kelas ini tanpa memilih mata pelajaran.
-    </p>
-  </div>
-</label>
+      <label className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 hover:border-indigo-200 cursor-pointer transition-colors">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+          checked={data.isHomeroomOnly}
+          onChange={e => {
+            const isChecked = e.target.checked
+            set({
+              isHomeroomOnly: isChecked,
+              subjects: isChecked ? [] : data.subjects,
+            })
+          }}
+        />
+        <div>
+          <p className="text-sm font-medium text-slate-700">
+            Wali kelas mengajar semua mata pelajaran
+          </p>
+          <p className="mt-0.5 text-xs text-slate-400">
+            Cocok untuk guru SD. Jika dicentang, menu Absensi dan Nilai akan
+            langsung menggunakan kelas ini tanpa memilih mata pelajaran.
+          </p>
+        </div>
+      </label>
 
       {/* Mata pelajaran */}
-      <div className={data.isHomeroomOnly ? 'opacity-50' : ''}>
+      <div>
         <label className="label">
           Mata Pelajaran{' '}
           {data.isHomeroomOnly && (
-            <span className="font-normal text-slate-400">
-              (opsional)
-            </span>
+            <span className="font-normal text-slate-400">(tidak diperlukan)</span>
           )}
         </label>
 
         <SubjectInput
           value={data.subjects}
-          onChange={subjects =>
-            set({ subjects })
-          }
+          onChange={subjects => set({ subjects })}
+          disabled={data.isHomeroomOnly}
         />
       </div>
 
       {/* Wali kelas */}
       <div>
         <label className="label">
-  Nama Wali Kelas <span className="text-red-500">*</span>
-</label>
+          Nama Wali Kelas <span className="text-red-500">*</span>
+        </label>
 
         <input
-          className="input"
+          className={`input ${
+            !data.homeroomTeacher.trim() && data.name.trim()
+              ? '' // jangan tampilkan error sebelum user mulai mengetik nama kelas
+              : ''
+          }`}
           placeholder="Contoh: Ibu Siti Aminah, S.Pd."
           value={data.homeroomTeacher}
-          onChange={e =>
-            set({
-              homeroomTeacher: e.target.value,
-            })
-          }
+          onChange={e => set({ homeroomTeacher: e.target.value })}
         />
       </div>
     </div>
