@@ -7,10 +7,10 @@ import { COMMON_SUBJECTS } from '@/types'
 interface Props {
   value: string[]
   onChange: (subjects: string[]) => void
-  disabled?: boolean  // ← tambahkan ini
+  disabled?: boolean
 }
 
-export default function SubjectInput({ value, onChange }: Props) {
+export default function SubjectInput({ value, onChange, disabled = false }: Props) {
   const [query, setQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -20,6 +20,7 @@ export default function SubjectInput({ value, onChange }: Props) {
   ).slice(0, 6)
 
   const addSubject = (subject: string) => {
+    if (disabled) return
     const trimmed = subject.trim()
     if (!trimmed || value.includes(trimmed)) return
     onChange([...value, trimmed])
@@ -29,10 +30,12 @@ export default function SubjectInput({ value, onChange }: Props) {
   }
 
   const removeSubject = (subject: string) => {
+    if (disabled) return
     onChange(value.filter(s => s !== subject))
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled) return
     if (e.key === 'Enter') {
       e.preventDefault()
       if (query.trim()) addSubject(query)
@@ -42,16 +45,18 @@ export default function SubjectInput({ value, onChange }: Props) {
   }
 
   return (
-    <div>
+    <div className={disabled ? 'opacity-50 pointer-events-none select-none' : ''}>
       {/* Chips mapel yang sudah dipilih */}
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2">
           {value.map(subject => (
             <span key={subject} className="badge bg-indigo-50 text-indigo-700 gap-1.5 py-1.5 px-2.5">
               {subject}
-              <button onClick={() => removeSubject(subject)} className="hover:text-red-500">
-                <X className="w-3 h-3" />
-              </button>
+              {!disabled && (
+                <button onClick={() => removeSubject(subject)} className="hover:text-red-500">
+                  <X className="w-3 h-3" />
+                </button>
+              )}
             </span>
           ))}
         </div>
@@ -62,15 +67,16 @@ export default function SubjectInput({ value, onChange }: Props) {
         <input
           ref={inputRef}
           className="input"
-          placeholder="Ketik nama mapel, contoh: Matematika"
+          placeholder={disabled ? 'Tidak diperlukan' : 'Ketik nama mapel, contoh: Matematika'}
           value={query}
+          disabled={disabled}
           onChange={e => { setQuery(e.target.value); setShowSuggestions(true) }}
-          onFocus={() => setShowSuggestions(true)}
+          onFocus={() => !disabled && setShowSuggestions(true)}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
           onKeyDown={handleKeyDown}
         />
 
-        {showSuggestions && suggestions.length > 0 && (
+        {!disabled && showSuggestions && suggestions.length > 0 && (
           <div className="absolute z-10 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
             {suggestions.map(s => (
               <button
@@ -84,9 +90,12 @@ export default function SubjectInput({ value, onChange }: Props) {
           </div>
         )}
       </div>
-      <p className="text-xs text-slate-400 mt-1.5">
-        Pilih dari saran atau ketik nama baru, lalu tekan Enter untuk menambahkan.
-      </p>
+
+      {!disabled && (
+        <p className="text-xs text-slate-400 mt-1.5">
+          Ketik lalu pilih Mata Pelajaran.
+        </p>
+      )}
     </div>
   )
 }

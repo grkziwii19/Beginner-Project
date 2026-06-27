@@ -15,10 +15,8 @@ import {
   PieChart, List, ChevronDown, Pencil,
 } from 'lucide-react'
 
-
 type TabType = 'daftar' | 'statistik'
 
-// Filter tampilan kolom tambahan di tabel
 const PRESET_VIEWS = [
   { key: 'default', label: 'Tampilan Standar' },
   { key: 'orang_tua', label: 'Orang Tua' },
@@ -48,7 +46,6 @@ export default function StudentsPage() {
 
   const selectedClass = classes.find(c => c.id === selectedClassId) ?? null
 
-  // Ambil daftar kelas
   const fetchClasses = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -59,77 +56,71 @@ export default function StudentsPage() {
 
   useEffect(() => { fetchClasses() }, [])
 
-  // Tambah kelas baru
   const handleAddClass = async (form: ClassFormData) => {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Tidak terautentikasi' }
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Tidak terautentikasi' }
 
-  const formatted = formatClassName(form.name.trim())   // ← untuk disimpan & ditampilkan, mis. "7 A"
-  const normalized = normalizeClassName(form.name.trim()) // ← untuk deteksi duplikat, mis. "7A"
+    const formatted = formatClassName(form.name.trim())
+    const normalized = normalizeClassName(form.name.trim())
 
-  const { data: inserted, error } = await supabase
-    .from('classes')
-    .insert({
-      user_id: user.id,
-      name: formatted,             // ← pakai hasil yang sudah dirapikan
-      normalized_name: normalized, // ← tetap tanpa spasi untuk pembanding
-      status: 'aktif',
-      subjects: form.subjects,
-      homeroom_teacher: form.homeroomTeacher.trim() || null,
-      is_homeroom_only: form.isHomeroomOnly,
-    })
-    .select()
-    .single()
+    const { data: inserted, error } = await supabase
+      .from('classes')
+      .insert({
+        user_id: user.id,
+        name: formatted,
+        normalized_name: normalized,
+        status: 'aktif',
+        subjects: form.subjects,
+        homeroom_teacher: form.homeroomTeacher.trim() || null,
+        is_homeroom_only: form.isHomeroomOnly,
+      })
+      .select()
+      .single()
 
-  if (error) {
-    return { error: error.code === '23505' ? 'Nama kelas sudah ada.' : 'Gagal menambahkan kelas.' }
+    if (error) {
+      return { error: error.code === '23505' ? 'Nama kelas sudah ada.' : 'Gagal menambahkan kelas.' }
+    }
+
+    await fetchClasses()
+    if (inserted) setSelectedClassId(inserted.id)
+    return { error: null }
   }
 
-  await fetchClasses()
-  if (inserted) setSelectedClassId(inserted.id)
-  return { error: null }
-}
+  const handleEditClass = async (id: string, form: ClassFormData) => {
+    const formatted = formatClassName(form.name.trim())
+    const normalized = normalizeClassName(form.name.trim())
+    const oldClass = classes.find(c => c.id === id)
 
-// ── Edit kelas yang sudah ada ──
-const handleEditClass = async (id: string, form: ClassFormData) => {
-  const formatted = formatClassName(form.name.trim())
-  const normalized = normalizeClassName(form.name.trim())
-  const oldClass = classes.find(c => c.id === id)
+    const { error } = await supabase
+      .from('classes')
+      .update({
+        name: formatted,
+        normalized_name: normalized,
+        subjects: form.subjects,
+        homeroom_teacher: form.homeroomTeacher.trim() || null,
+        is_homeroom_only: form.isHomeroomOnly,
+      })
+      .eq('id', id)
 
-  const { error } = await supabase
-    .from('classes')
-    .update({
-      name: formatted,
-      normalized_name: normalized,
-      subjects: form.subjects,
-      homeroom_teacher: form.homeroomTeacher.trim() || null,
-      is_homeroom_only: form.isHomeroomOnly,
-    })
-    .eq('id', id)
+    if (error) {
+      return { error: error.code === '23505' ? 'Nama kelas sudah ada.' : 'Gagal menyimpan perubahan.' }
+    }
 
-  if (error) {
-    return { error: error.code === '23505' ? 'Nama kelas sudah ada.' : 'Gagal menyimpan perubahan.' }
+    if (oldClass && oldClass.name !== formatted) {
+      await supabase.from('students').update({ class_name: formatted }).eq('class_name', oldClass.name)
+    }
+
+    await fetchClasses()
+    await fetchStudents()
+    return { error: null }
   }
 
-  // Jika nama kelas berubah, sinkronkan class_name di tabel students
-  // (pakai 'formatted', supaya siswa juga ikut tampil dengan format rapi)
-  if (oldClass && oldClass.name !== formatted) {
-    await supabase.from('students').update({ class_name: formatted }).eq('class_name', oldClass.name)
-  }
-
-  await fetchClasses()
-  await fetchStudents()
-  return { error: null }
-}
-
-  // Hapus kelas
   const handleDeleteClass = async (id: string) => {
     await supabase.from('classes').delete().eq('id', id)
     if (selectedClassId === id) setSelectedClassId('')
     await fetchClasses()
   }
 
-  // Ambil siswa setiap kali kelas yang dipilih berubah
   const fetchStudents = async () => {
     if (!selectedClass) { setStudents([]); return }
     setLoadingStudents(true)
@@ -191,7 +182,6 @@ const handleEditClass = async (id: string, form: ClassFormData) => {
     return null
   }
 
-  // ── Statistik sederhana ──
   const stats = {
     total: students.length,
     laki: students.filter(s => s.gender === 'Laki-laki').length,
@@ -203,34 +193,41 @@ const handleEditClass = async (id: string, form: ClassFormData) => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Data Siswa</h1>
         <p className="text-sm text-slate-500 mt-0.5">Biodata lengkap siswa per kelas</p>
       </div>
 
-      {/* Pilih Kelas */}
-      <div className="card p-5">
-        <div className="flex items-center justify-between mb-1">
-          <label className="label mb-0">Pilih Kelas</label>
-          <button onClick={() => setShowAddClassModal(true)} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
+      {/* ── Header: Tambah Kelas + Pilih Kelas + Info ── */}
+      <div className="card p-4 space-y-3">
+
+        {/* Baris 1: tombol Tambah Kelas */}
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Kelas</span>
+          <button
+            onClick={() => setShowAddClassModal(true)}
+            className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
+          >
             <Plus className="w-3.5 h-3.5" /> Tambah Kelas
           </button>
         </div>
+
+        {/* Baris 2: dropdown kelas + tombol edit */}
         {loadingClasses ? (
           <p className="text-sm text-slate-400">Memuat daftar kelas...</p>
         ) : classes.length === 0 ? (
-          <div className="text-center py-4">
-            <p className="text-sm text-slate-500 mb-3">Belum ada kelas. Buat kelas pertama Anda untuk mulai menambahkan siswa.</p>
+          <div className="text-center py-3">
+            <p className="text-sm text-slate-500 mb-2">Belum ada kelas.</p>
             <button onClick={() => setShowAddClassModal(true)} className="btn-primary mx-auto">
               <Plus className="w-4 h-4" /> Tambah Kelas
             </button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <div className="relative max-w-sm flex-1">
+            <div className="relative flex-1">
               <select
-                className="input appearance-none pr-9"
+                className="input appearance-none pr-9 py-2 text-sm"
                 value={selectedClassId}
                 onChange={e => setSelectedClassId(e.target.value)}
               >
@@ -242,41 +239,46 @@ const handleEditClass = async (id: string, form: ClassFormData) => {
             {selectedClass && (
               <button
                 onClick={() => setShowEditClassModal(true)}
-                className="btn-secondary px-3"
+                className="btn-secondary px-2.5 py-2"
                 title="Edit kelas ini"
               >
-                <Pencil className="w-4 h-4" />
+                <Pencil className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
         )}
 
-        {/* Info kelas terpilih: wali kelas + mapel */}
+        {/* Baris 3: info wali kelas + mapel (compact) */}
         {selectedClass && (
-          <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-start gap-6">
-            <div>
-              <p className="text-xs text-slate-400 font-medium mb-1">Wali Kelas</p>
-              <p className="text-sm text-slate-700">{selectedClass.homeroom_teacher || '-'}</p>
+          <div className="flex flex-wrap items-start gap-x-6 gap-y-1 pt-1 border-t border-slate-100">
+            {/* Wali kelas */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-slate-400">Wali Kelas:</span>
+              <span className="text-xs font-medium text-slate-700">
+                {selectedClass.homeroom_teacher || '-'}
+              </span>
             </div>
-            <div className="flex-1 min-w-[200px]">
-              <p className="text-xs text-slate-400 font-medium mb-1">Mata Pelajaran</p>
-              {selectedClass.is_homeroom_only ? (
-                <span className="badge bg-emerald-50 text-emerald-700">Wali kelas mengajar semua mapel</span>
-              ) : selectedClass.subjects && selectedClass.subjects.length > 0 ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedClass.subjects.map(s => (
-                    <span key={s} className="badge bg-slate-100 text-slate-600">{s}</span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-400">Belum ada mapel ditambahkan</p>
-              )}
-            </div>
+
+            {/* Mata pelajaran — disembunyikan jika wali kelas mengajar semua */}
+            {!selectedClass.is_homeroom_only && (
+              <div className="flex items-start gap-1.5 flex-1 min-w-0">
+                <span className="text-xs text-slate-400 shrink-0 mt-0.5">Mapel:</span>
+                {selectedClass.subjects && selectedClass.subjects.length > 0 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {selectedClass.subjects.map(s => (
+                      <span key={s} className="badge bg-slate-100 text-slate-600 text-[11px] px-1.5 py-0.5">{s}</span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-xs text-slate-400">Belum ada</span>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Konten setelah kelas dipilih */}
+      {/* ── Konten setelah kelas dipilih ── */}
       {selectedClass && (
         <>
           {/* Tabs */}
@@ -289,7 +291,9 @@ const handleEditClass = async (id: string, form: ClassFormData) => {
                 key={t.id}
                 onClick={() => setActiveTab(t.id as TabType)}
                 className={`flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === t.id ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'
+                  activeTab === t.id
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               >
                 <t.icon className="w-4 h-4" /> {t.label}
@@ -299,34 +303,40 @@ const handleEditClass = async (id: string, form: ClassFormData) => {
 
           {/* TAB: Daftar */}
           {activeTab === 'daftar' && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between flex-wrap gap-3">
-                <p className="text-sm text-slate-500">{students.length} siswa di kelas {selectedClass.name}</p>
+            <div className="space-y-3">
+
+              {/* Toolbar: jumlah siswa + aksi */}
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <p className="text-sm text-slate-500">{students.length} siswa</p>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setShowFieldModal(true)} className="btn-secondary">
-                    <Tags className="w-4 h-4" /> Tambah Kolom
+                  <button onClick={() => setShowFieldModal(true)} className="btn-secondary text-xs px-3 py-1.5">
+                    <Tags className="w-3.5 h-3.5" /> Kolom
                   </button>
-                  <button onClick={() => setShowAddModal(true)} className="btn-primary">
-                    <Plus className="w-4 h-4" /> Tambah Siswa
+                  <button onClick={() => setShowAddModal(true)} className="btn-primary text-xs px-3 py-1.5">
+                    <Plus className="w-3.5 h-3.5" /> Tambah Siswa
                   </button>
                 </div>
               </div>
 
-              {/* Filter & Search */}
+              {/* Search + Filter — satu baris, kompak */}
               {students.length > 0 && (
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                     <input
-                      className="input pl-9"
-                      placeholder="Cari nama, NIS, NISN, atau orang tua..."
+                      className="input pl-8 py-1.5 text-sm"
+                      placeholder="Cari nama, NIS, NISN, orang tua..."
                       value={search}
                       onChange={e => setSearch(e.target.value)}
                     />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-slate-400" />
-                    <select className="input w-auto" value={viewFilter} onChange={e => setViewFilter(e.target.value)}>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Filter className="w-3.5 h-3.5 text-slate-400" />
+                    <select
+                      className="input py-1.5 text-sm w-auto"
+                      value={viewFilter}
+                      onChange={e => setViewFilter(e.target.value)}
+                    >
                       {viewOptions.map(v => <option key={v.key} value={v.key}>{v.label}</option>)}
                     </select>
                   </div>
@@ -335,10 +345,10 @@ const handleEditClass = async (id: string, form: ClassFormData) => {
 
               {/* Kolom kustom chips */}
               {customFields.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs text-slate-400 font-medium">Kolom tambahan:</span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-slate-400">Kolom tambahan:</span>
                   {customFields.map(f => (
-                    <span key={f.id} className="badge bg-slate-100 text-slate-600 gap-1.5">
+                    <span key={f.id} className="badge bg-slate-100 text-slate-600 gap-1">
                       {f.field_label}
                       <button onClick={() => removeField(f.id)} className="hover:text-red-500">
                         <Trash2 className="w-3 h-3" />
@@ -348,7 +358,7 @@ const handleEditClass = async (id: string, form: ClassFormData) => {
                 </div>
               )}
 
-              {/* Table */}
+              {/* Tabel */}
               <div className="card overflow-hidden">
                 {loadingStudents ? (
                   <div className="p-10 text-center text-slate-400 text-sm">Memuat data...</div>
@@ -363,7 +373,7 @@ const handleEditClass = async (id: string, form: ClassFormData) => {
                 ) : filtered.length === 0 ? (
                   <div className="p-10 text-center">
                     <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                    <p className="text-slate-500 text-sm">Tidak ada siswa yang cocok dengan pencarian.</p>
+                    <p className="text-slate-500 text-sm">Tidak ada siswa yang cocok.</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -460,7 +470,7 @@ const handleEditClass = async (id: string, form: ClassFormData) => {
         </>
       )}
 
-      {/* Empty state: belum pilih kelas */}
+      {/* Empty state */}
       {!selectedClass && !loadingClasses && classes.length > 0 && (
         <div className="card p-10 text-center">
           <IdCard className="w-10 h-10 text-slate-300 mx-auto mb-3" />
@@ -470,24 +480,24 @@ const handleEditClass = async (id: string, form: ClassFormData) => {
       )}
 
       {/* Modal: Detail/Edit Siswa */}
-<StudentDetailModal
-  open={!!selectedStudent && !!selectedClass}
-  student={selectedStudent}
-  className={selectedClass?.name ?? ''}
-  customFields={customFields}
-  onClose={() => setSelectedStudent(null)}
-  onSaved={fetchStudents}
-/>
+      <StudentDetailModal
+        open={!!selectedStudent && !!selectedClass}
+        student={selectedStudent}
+        className={selectedClass?.name ?? ''}
+        customFields={customFields}
+        onClose={() => setSelectedStudent(null)}
+        onSaved={fetchStudents}
+      />
 
-{/* Modal: Tambah Siswa */}
-<StudentDetailModal
-  open={showAddModal && !!selectedClass}
-  student={null}
-  className={selectedClass?.name ?? ''}
-  customFields={customFields}
-  onClose={() => setShowAddModal(false)}
-  onSaved={fetchStudents}
-/>
+      {/* Modal: Tambah Siswa */}
+      <StudentDetailModal
+        open={showAddModal && !!selectedClass}
+        student={null}
+        className={selectedClass?.name ?? ''}
+        customFields={customFields}
+        onClose={() => setShowAddModal(false)}
+        onSaved={fetchStudents}
+      />
 
       {/* Modal: Tambah Kolom */}
       {showFieldModal && (
@@ -509,7 +519,7 @@ const handleEditClass = async (id: string, form: ClassFormData) => {
         />
       )}
 
-      {/* Modal: Delete confirm */}
+      {/* Modal: Konfirmasi Hapus */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">

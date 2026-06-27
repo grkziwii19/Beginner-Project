@@ -164,11 +164,10 @@ export default function ClassForm({
         />
         <div>
           <p className="text-sm font-medium text-slate-700">
-            Wali kelas mengajar semua mata pelajaran
+            Wali Kelas
           </p>
           <p className="mt-0.5 text-xs text-slate-400">
-            Cocok untuk guru SD. Jika dicentang, menu Absensi dan Nilai akan
-            langsung menggunakan kelas ini tanpa memilih mata pelajaran.
+            Pilih Wali Kelas jika Anda mengajar seluruh Mata Pelajaran di kelas ini.
           </p>
         </div>
       </label>
@@ -201,7 +200,7 @@ export default function ClassForm({
               ? '' // jangan tampilkan error sebelum user mulai mengetik nama kelas
               : ''
           }`}
-          placeholder="Contoh: Ibu Siti Aminah, S.Pd."
+          placeholder="Contoh: Sudirman, S.Pd."
           value={data.homeroomTeacher}
           onChange={e => set({ homeroomTeacher: e.target.value })}
         />
