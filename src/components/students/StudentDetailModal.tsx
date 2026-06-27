@@ -9,14 +9,15 @@ import {
 import { X, Camera, Pencil, Save, User } from 'lucide-react'
 
 interface Props {
-  student: Student | null // null = mode tambah baru
-  className: string       // nama kelas yang sedang dipilih
+  open: boolean
+  student: Student | null
+  className: string
   customFields: CustomFieldDefinition[]
   onClose: () => void
   onSaved: () => void
 }
 
-export default function StudentDetailModal({ student, className, customFields, onClose, onSaved }: Props) {
+export default function StudentDetailModal({ open, student, className, customFields, onClose, onSaved }: Props) {
   const supabase = createClient()
   const isNew = !student
   const [editMode, setEditMode] = useState(isNew)
@@ -26,31 +27,50 @@ export default function StudentDetailModal({ student, className, customFields, o
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [form, setForm] = useState<Record<string, string>>({
-    name: student?.name ?? '',
-    nis: student?.nis ?? '',
-    nisn: student?.nisn ?? '',
-    gender: student?.gender ?? 'Laki-laki',
-    birth_place: student?.birth_place ?? '',
-    birth_date: student?.birth_date ?? '',
-    religion: student?.religion ?? '',
-    address: student?.address ?? '',
-    phone: student?.phone ?? '',
-    father_name: student?.father_name ?? '',
-    mother_name: student?.mother_name ?? '',
-    parent_phone: student?.parent_phone ?? '',
+    name: '', nis: '', nisn: '', gender: 'Laki-laki',
+    birth_place: '', birth_date: '', religion: '',
+    address: '', phone: '', father_name: '', mother_name: '', parent_phone: '',
   })
-  const [customValues, setCustomValues] = useState<Record<string, string>>(student?.custom_fields ?? {})
-  const [photoUrl, setPhotoUrl] = useState<string | null>(student?.photo_url ?? null)
+  const [customValues, setCustomValues] = useState<Record<string, string>>({})
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [photoPreview, setPhotoPreview] = useState<string | null>(student?.photo_url ?? null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
 
+  // Reset semua state saat modal dibuka
   useEffect(() => {
-    if (photoFile) {
-      const url = URL.createObjectURL(photoFile)
-      setPhotoPreview(url)
-      return () => URL.revokeObjectURL(url)
-    }
+    if (!open) return
+    setEditMode(!student)
+    setError('')
+    setPhotoFile(null)
+    setForm({
+      name: student?.name ?? '',
+      nis: student?.nis ?? '',
+      nisn: student?.nisn ?? '',
+      gender: student?.gender ?? 'Laki-laki',
+      birth_place: student?.birth_place ?? '',
+      birth_date: student?.birth_date ?? '',
+      religion: student?.religion ?? '',
+      address: student?.address ?? '',
+      phone: student?.phone ?? '',
+      father_name: student?.father_name ?? '',
+      mother_name: student?.mother_name ?? '',
+      parent_phone: student?.parent_phone ?? '',
+    })
+    setCustomValues(student?.custom_fields ?? {})
+    setPhotoUrl(student?.photo_url ?? null)
+    setPhotoPreview(student?.photo_url ?? null)
+  }, [open, student])
+
+  // Preview foto lokal
+  useEffect(() => {
+    if (!photoFile) return
+    const url = URL.createObjectURL(photoFile)
+    setPhotoPreview(url)
+    return () => URL.revokeObjectURL(url)
   }, [photoFile])
+
+  // Guard — harus setelah semua hooks
+  if (!open) return null
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -145,6 +165,7 @@ export default function StudentDetailModal({ student, className, customFields, o
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-slate-100 shrink-0">
           <h2 className="font-semibold text-slate-900">
@@ -164,12 +185,13 @@ export default function StudentDetailModal({ student, className, customFields, o
 
         {/* Body */}
         <div className="p-5 overflow-y-auto flex-1 space-y-6">
-          {/* Photo + basic */}
+
+          {/* Photo + Nama + Kelas */}
           <div className="flex items-center gap-4">
             <div className="relative shrink-0">
               <div className="w-20 h-20 rounded-full bg-indigo-100 overflow-hidden flex items-center justify-center text-indigo-700 font-bold text-lg">
                 {photoPreview ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={photoPreview} alt={form.name} className="w-full h-full object-cover" />
                 ) : (
                   form.name ? getInitials(form.name) : <User className="w-8 h-8" />
@@ -226,7 +248,7 @@ export default function StudentDetailModal({ student, className, customFields, o
             </div>
           </div>
 
-          {/* Kontak */}
+          {/* Kontak & Alamat */}
           <div>
             <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Kontak & Alamat</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -239,7 +261,7 @@ export default function StudentDetailModal({ student, className, customFields, o
             </div>
           </div>
 
-          {/* Orang tua */}
+          {/* Orang Tua */}
           <div>
             <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Orang Tua</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -255,7 +277,7 @@ export default function StudentDetailModal({ student, className, customFields, o
             </div>
           </div>
 
-          {/* Kolom kustom — sederhana, semua teks bebas */}
+          {/* Kolom Kustom */}
           {customFields.length > 0 && (
             <div>
               <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Data Tambahan</h3>
@@ -293,6 +315,7 @@ export default function StudentDetailModal({ student, className, customFields, o
             </button>
           </div>
         )}
+
       </div>
     </div>
   )

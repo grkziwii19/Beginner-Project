@@ -470,26 +470,24 @@ const handleEditClass = async (id: string, form: ClassFormData) => {
       )}
 
       {/* Modal: Detail/Edit Siswa */}
-      {selectedStudent && selectedClass && (
-        <StudentDetailModal
-          student={selectedStudent}
-          className={selectedClass.name}
-          customFields={customFields}
-          onClose={() => setSelectedStudent(null)}
-          onSaved={fetchStudents}
-        />
-      )}
+<StudentDetailModal
+  open={!!selectedStudent && !!selectedClass}
+  student={selectedStudent}
+  className={selectedClass?.name ?? ''}
+  customFields={customFields}
+  onClose={() => setSelectedStudent(null)}
+  onSaved={fetchStudents}
+/>
 
-      {/* Modal: Tambah Siswa */}
-      {showAddModal && selectedClass && (
-        <StudentDetailModal
-          student={null}
-          className={selectedClass.name}
-          customFields={customFields}
-          onClose={() => setShowAddModal(false)}
-          onSaved={fetchStudents}
-        />
-      )}
+{/* Modal: Tambah Siswa */}
+<StudentDetailModal
+  open={showAddModal && !!selectedClass}
+  student={null}
+  className={selectedClass?.name ?? ''}
+  customFields={customFields}
+  onClose={() => setShowAddModal(false)}
+  onSaved={fetchStudents}
+/>
 
       {/* Modal: Tambah Kolom */}
       {showFieldModal && (
