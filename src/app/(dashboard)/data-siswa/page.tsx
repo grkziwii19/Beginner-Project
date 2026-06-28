@@ -216,11 +216,12 @@ export default function StudentsPage() {
             </button>
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
-              <div>
-                <p className="text-xs text-slate-400 font-medium mb-1">Pilih Kelas</p>
-                <div className="relative">
+          <div className="space-y-3">
+            {/* Kelas + Wali Kelas: 2 baris terpisah di HP, 1 baris sejajar di desktop */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-slate-600 shrink-0">Kelas</label>
+                <div className="relative flex-1 sm:max-w-xs">
                   <select
                     className="input appearance-none pr-9"
                     value={selectedClassId}
@@ -234,32 +235,31 @@ export default function StudentsPage() {
               </div>
 
               {selectedClass && (
-                <div>
-                  <p className="text-xs text-slate-400 font-medium mb-1">Wali Kelas</p>
-                  <p className="text-sm text-slate-700 truncate" style={{ lineHeight: '36px' }}>
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-medium text-slate-600 shrink-0">Wali Kelas</label>
+                  <p className="text-sm text-slate-700">
                     {selectedClass.homeroom_teacher || '-'}
                   </p>
                 </div>
               )}
             </div>
 
+            {/* Mata Pelajaran: selalu baris sendiri, di bawah */}
             {selectedClass && (
-              <div className="mt-3 pt-3 border-t border-slate-100">
-                <p className="text-xs text-slate-400 font-medium mb-1.5">Mata Pelajaran</p>
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-slate-600 shrink-0">Mata Pelajaran</label>
                 {selectedClass.is_homeroom_only ? (
                   <span className="badge bg-emerald-50 text-emerald-700">Wali kelas mengajar semua mapel</span>
                 ) : selectedClass.subjects && selectedClass.subjects.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedClass.subjects.map(s => (
-                      <span key={s} className="badge bg-slate-100 text-slate-600">{s}</span>
-                    ))}
-                  </div>
+                  <p className="text-sm text-slate-700">
+                    {selectedClass.subjects.join(' • ')}
+                  </p>
                 ) : (
                   <p className="text-sm text-slate-400">Belum ada mapel ditambahkan</p>
                 )}
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
@@ -344,7 +344,7 @@ export default function StudentsPage() {
 
                           {viewFilter === 'identitas' && (
                             <>
-                              <th className="table-header">L/P</th>
+                              <th className="table-header">JK</th>
                               <th className="table-header">Agama</th>
                               <th className="table-header">Tempat Lahir</th>
                               <th className="table-header">Tanggal Lahir</th>
