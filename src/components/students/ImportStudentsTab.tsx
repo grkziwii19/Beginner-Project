@@ -262,7 +262,7 @@ export default function ImportStudentsTab({ className, onImported }: Props) {
                     <th className="table-header w-8">#</th>
                     <th className="table-header">Nama</th>
                     <th className="table-header">NIS</th>
-                    <th className="table-header">JK</th>
+                    <th className="table-header">L/P</th>
                     <th className="table-header">Status</th>
                   </tr>
                 </thead>

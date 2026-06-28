@@ -189,7 +189,7 @@ export default function ClassForm({
 
         <input
           className="input"
-          placeholder="Contoh: Sudirman, S.Pd."
+          placeholder="Contoh: Budi Badai, S.Pd."
           value={data.homeroomTeacher}
           onChange={e => set({ homeroomTeacher: e.target.value })}
         />

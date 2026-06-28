@@ -23,7 +23,6 @@ export default function LoginPage() {
     } else {
       router.push('/onboarding')
     }
-    router.refresh()
   }
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -98,7 +97,6 @@ export default function LoginPage() {
 
       if (data.session) {
         router.push('/onboarding')
-        router.refresh()
       } else {
         alert('Akun berhasil dibuat! Silakan cek email untuk verifikasi, lalu login.')
       }

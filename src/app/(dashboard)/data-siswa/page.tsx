@@ -344,7 +344,7 @@ export default function StudentsPage() {
 
                           {viewFilter === 'identitas' && (
                             <>
-                              <th className="table-header">JK</th>
+                              <th className="table-header">L/P</th>
                               <th className="table-header">Agama</th>
                               <th className="table-header">Tempat Lahir</th>
                               <th className="table-header">Tanggal Lahir</th>
