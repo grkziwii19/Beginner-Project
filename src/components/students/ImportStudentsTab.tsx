@@ -53,6 +53,9 @@ export default function ImportStudentsTab({ className, onImported }: Props) {
     return str
   }
 
+  // Validasi bahwa string hanya berisi angka (boleh kosong untuk NISN)
+  const isNumeric = (value: string) => /^\d+$/.test(value)
+
   const processFile = async (file: File) => {
     const buffer = await file.arrayBuffer()
     const workbook = new ExcelJS.Workbook()
@@ -80,6 +83,7 @@ export default function ImportStudentsTab({ className, onImported }: Props) {
 
       const name = get('Nama')
       const nis = get('NIS')
+      const nisn = get('NISN')
       const genderRaw = get('Jenis Kelamin')
       const gender: Gender = genderRaw.toLowerCase().startsWith('p') ? 'Perempuan' : 'Laki-laki'
 
@@ -91,11 +95,13 @@ export default function ImportStudentsTab({ className, onImported }: Props) {
       const errors: string[] = []
       if (!name) errors.push('Nama kosong')
       if (!nis) errors.push('NIS kosong')
+      else if (!isNumeric(nis)) errors.push('NIS harus berupa angka')
+      if (nisn && !isNumeric(nisn)) errors.push('NISN harus berupa angka')
 
       return {
         name,
         nis,
-        nisn: get('NISN'),
+        nisn,
         gender,
         religion: get('Agama'),
         birth_place: get('Tempat Lahir'),
@@ -164,6 +170,10 @@ export default function ImportStudentsTab({ className, onImported }: Props) {
 
     sheet.columns = HEADERS.map(h => ({ header: h, key: h, width: 20 }))
 
+    // Paksa kolom NIS dan NISN sebagai teks agar angka panjang tidak diubah ke notasi ilmiah
+    sheet.getColumn('NIS').numFmt = '@'
+    sheet.getColumn('NISN').numFmt = '@'
+
     sheet.addRow({
       'Nama': 'Ahmad Fauzi',
       'NIS': '2024001',
@@ -198,6 +208,11 @@ export default function ImportStudentsTab({ className, onImported }: Props) {
         <button onClick={downloadTemplate} className="btn-secondary">
           <Download className="w-4 h-4" /> Download Template
         </button>
+      </div>
+
+      {/* Catatan format */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+        <strong>Perhatian:</strong> Kolom <strong>NIS</strong> wajib diisi dan harus berupa angka. Kolom <strong>NISN</strong> opsional, tetapi jika diisi harus berupa angka. Pastikan kolom tersebut diformat sebagai <em>Teks</em> di Excel agar angka awal (misal 0) tidak hilang.
       </div>
 
       {/* Upload Area */}
@@ -262,6 +277,7 @@ export default function ImportStudentsTab({ className, onImported }: Props) {
                     <th className="table-header w-8">#</th>
                     <th className="table-header">Nama</th>
                     <th className="table-header">NIS</th>
+                    <th className="table-header">NISN</th>
                     <th className="table-header">L/P</th>
                     <th className="table-header">Status</th>
                   </tr>
@@ -272,6 +288,7 @@ export default function ImportStudentsTab({ className, onImported }: Props) {
                       <td className="table-cell text-slate-400">{i + 1}</td>
                       <td className="table-cell font-medium text-slate-900">{r.name || <span className="text-red-400 italic">kosong</span>}</td>
                       <td className="table-cell text-slate-500">{r.nis || '-'}</td>
+                      <td className="table-cell text-slate-500">{r.nisn || '-'}</td>
                       <td className="table-cell text-slate-500 text-xs">{r.gender === 'Laki-laki' ? 'L' : 'P'}</td>
                       <td className="table-cell">
                         {r.valid
