@@ -165,6 +165,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
+                suppressHydrationWarning
                 required
               />
             </div>
@@ -179,12 +180,14 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
+                  suppressHydrationWarning
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(v => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  suppressHydrationWarning
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -198,6 +201,7 @@ export default function LoginPage() {
                   checked={remember}
                   onChange={e => setRemember(e.target.checked)}
                   className="w-4 h-4 accent-indigo-600 rounded"
+                  suppressHydrationWarning
                 />
                 Ingat saya di perangkat ini
               </label>
@@ -209,6 +213,7 @@ export default function LoginPage() {
             <button
               type="submit"
               className="btn-primary w-full justify-center py-2.5"
+              suppressHydrationWarning
               disabled={loading}
             >
               {loading ? 'Memproses...' : 'Masuk'}
@@ -228,6 +233,7 @@ export default function LoginPage() {
             onClick={handleGoogleLogin}
             disabled={loading}
             className="w-full border border-slate-300 rounded-lg px-4 py-2.5 flex items-center justify-center gap-2 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            suppressHydrationWarning
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20">
               <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 3l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
@@ -251,6 +257,7 @@ export default function LoginPage() {
               onClick={handleRegister}
               disabled={loading}
               className="btn-secondary w-full justify-center"
+              suppressHydrationWarning
             >
               Daftar Sekarang
             </button>

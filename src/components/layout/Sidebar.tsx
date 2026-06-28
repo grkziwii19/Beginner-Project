@@ -52,7 +52,11 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   
   const [schoolName, setSchoolName] = useState('')
-  const [now, setNow] = useState(new Date())
+  // ⚠️ PENTING: Jangan pakai useState(new Date()) langsung!
+  // Server render menggunakan waktu UTC, browser menggunakan waktu lokal (WIB).
+  // Perbedaan ini menyebabkan React error #418 (hydration mismatch).
+  // Solusi: mulai dengan null, baru set setelah komponen mount di browser.
+  const [now, setNow] = useState<Date | null>(null)
 
   useEffect(() => {
   const load = async () => {
@@ -75,6 +79,8 @@ export default function Sidebar() {
 
   load()
 
+  // Set waktu sekarang setelah mount (hanya berjalan di browser, bukan server)
+  setNow(new Date())
   const interval = setInterval(() => setNow(new Date()), 60000)
 
   return () => clearInterval(interval)
@@ -88,8 +94,9 @@ export default function Sidebar() {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-  const dayLabel = now.toLocaleDateString('id-ID', { weekday: 'long' })
-  const dateLabel = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+  // now bisa null saat server render / sebelum mount — tampilkan string kosong dulu
+  const dayLabel = now ? now.toLocaleDateString('id-ID', { weekday: 'long' }) : ''
+  const dateLabel = now ? now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
 
   const NavContent = () => (
     <>
