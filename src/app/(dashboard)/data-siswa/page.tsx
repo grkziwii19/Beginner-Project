@@ -190,7 +190,6 @@ export default function StudentsPage() {
       {/* Pilih Kelas */}
       <div className="card p-4 sm:p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-slate-700">Kelas</h2>
           <div className="flex items-center gap-2">
             <button onClick={() => setShowAddClassModal(true)} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
               <Plus className="w-3.5 h-3.5" /> Tambah
