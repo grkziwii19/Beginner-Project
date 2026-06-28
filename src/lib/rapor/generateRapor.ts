@@ -174,7 +174,12 @@ function buildHalamanUtama(d: RaporSiswa): Paragraph[] {
   // Info identitas
   ch.push(new Table({
     width: { size: CW, type: WidthType.DXA }, columnWidths: [2800, 200, 7106],
-    borders: { top: B_NONE, bottom: B_NONE, left: B_NONE, right: B_NONE, insideH: B_NONE, insideV: B_NONE },
+    borders: {
+  top: B_NONE,
+  bottom: B_NONE,
+  left: B_NONE,
+  right: B_NONE,
+},
     rows: [
       infoRow('Nama Peserta Didik', d.nama),
       infoRow('NIS/NISN', `${d.nis} / ${d.nisn ?? '-'}`),
@@ -268,7 +273,12 @@ function buildHalamanUtama(d: RaporSiswa): Paragraph[] {
   ]})
   ch.push(new Table({
     width: { size: 5300, type: WidthType.DXA }, columnWidths: [3000, 300, 2000],
-    borders: { top: B_NONE, bottom: B_NONE, left: B_NONE, right: B_NONE, insideH: B_NONE, insideV: B_NONE },
+    borders: {
+  top: B_NONE,
+  bottom: B_NONE,
+  left: B_NONE,
+  right: B_NONE,
+},
     rows: [
       noB('Ketidakhadiran', ''),
       noB('- Sakit', `${d.sakit} hari`, true),
@@ -289,7 +299,12 @@ function buildHalamanUtama(d: RaporSiswa): Paragraph[] {
 
   ch.push(new Table({
     width: { size: CW, type: WidthType.DXA }, columnWidths: [3300, 500, 3300, 3006],
-    borders: { top: B_NONE, bottom: B_NONE, left: B_NONE, right: B_NONE, insideH: B_NONE, insideV: B_NONE },
+    borders: {
+  top: B_NONE,
+  bottom: B_NONE,
+  left: B_NONE,
+  right: B_NONE,
+},
     rows: [
       new TableRow({ children: [
         new TableCell({ borders: NO_B, width: { size: 3300, type: WidthType.DXA }, children: [pc(t('Orang Tua/Wali'))] }),
@@ -357,13 +372,19 @@ export async function generateRaporDocx(siswaList: RaporSiswa[]): Promise<Uint8A
 
 // ── Helper: download di browser ──
 export function downloadDocx(buffer: Uint8Array, filename: string) {
-  const blob = new Blob([buffer], {
+  // Salin ke ArrayBuffer biasa
+  const arrayBuffer = new Uint8Array(buffer).slice().buffer as ArrayBuffer
+
+  const blob = new Blob([arrayBuffer], {
     type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   })
+
   const url = URL.createObjectURL(blob)
+
   const a = document.createElement('a')
   a.href = url
   a.download = filename
   a.click()
+
   URL.revokeObjectURL(url)
 }
