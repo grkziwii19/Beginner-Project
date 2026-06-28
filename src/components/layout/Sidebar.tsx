@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, ClipboardCheck, Award, FileBarChart,
-  Settings, Menu, X, Calendar, Building2, IdCard
+  Settings, Menu, X, Calendar, Building2, IdCard,
+  BookOpen
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
@@ -39,7 +40,7 @@ const navRows: NavRow[] = [
 
   { href: '/data-siswa', label: 'Data Siswa', icon: IdCard },
   { href: '/absensi', label: 'Absensi', icon: ClipboardCheck },
-  { href: '/akademik/nilai', label: 'Nilai', icon: Award },
+  { href: '/akademik/nilai', label: 'Nilai', icon: BookOpen },
 
   { href: '/laporan', label: 'Laporan', icon: FileBarChart },
   { href: '/pengaturan', label: 'Pengaturan', icon: Settings },
