@@ -25,7 +25,13 @@ export default function ClassForm({
   onClassExistsChange,
   currentClassName,
 }: Props) {
-  const supabase = createClient()
+  // PERBAIKAN: createClient() di-panggil lewat useState lazy initializer,
+  // bukan dipanggil langsung di body komponen. Ini memastikan instance
+  // supabase HANYA dibuat sekali (saat mount pertama), bukan dibuat ulang
+  // setiap kali komponen ini re-render — yang sebelumnya menjadi pemicu
+  // utama bug "tidak bisa tambah mata pelajaran" (lihat komentar di
+  // useEffect loadClasses di bawah).
+  const [supabase] = useState(() => createClient())
 
   const [classNames, setClassNames] = useState<string[]>([])
   const nameInputRef = useRef<HTMLInputElement>(null)
@@ -37,6 +43,17 @@ export default function ClassForm({
   const set = (patch: Partial<ClassFormData>) =>
     onChange({ ...data, ...patch })
 
+  // PERBAIKAN: dependency array dikosongkan ([]), bukan [supabase].
+  // createClient() membuat instance baru setiap render, sehingga
+  // dependency [supabase] menyebabkan efek ini (dan fetch ke Supabase
+  // di dalamnya) berjalan ULANG setiap kali komponen re-render —
+  // termasuk setiap kali pengguna mengetik atau menambah mata pelajaran.
+  // Fetch berulang ini berlomba dengan update state form, dan dalam
+  // kondisi normal (tanpa DevTools memperlambat browser), hasil fetch
+  // yang telat itu bisa "menimpa balik" perubahan yang baru saja dibuat
+  // pengguna — inilah sebabnya menambah mapel tampak gagal kecuali
+  // DevTools terbuka (yang membuat timing fetch jadi lebih lambat,
+  // sehingga tidak lagi sempat menimpa).
   useEffect(() => {
     const loadClasses = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -52,7 +69,8 @@ export default function ClassForm({
     }
 
     loadClasses()
-  }, [supabase])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const normalizedCurrent = currentClassName ? normalizeClassName(currentClassName) : null
 
@@ -189,7 +207,7 @@ export default function ClassForm({
 
         <input
           className="input"
-          placeholder="Contoh: Budi Badai, S.Pd."
+          placeholder="Contoh: Sudirman, S.Pd."
           value={data.homeroomTeacher}
           onChange={e => set({ homeroomTeacher: e.target.value })}
         />
