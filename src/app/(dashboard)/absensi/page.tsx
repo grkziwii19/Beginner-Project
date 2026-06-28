@@ -97,13 +97,19 @@ export default function AbsensiPage() {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       if (userError || !user) { setErrorStudents('Sesi tidak valid.'); return }
 
-      let attQuery = supabase
+      // PERBAIKAN: subject di DATABASE tidak pernah NULL — selalu berisi
+      // nama mapel atau nilai sentinel UMUM_VALUE. Representasi `null` di
+      // sini (parameter `subject`) hanya dipakai di level state React
+      // untuk menandai "wali kelas, semua mapel"; saat bicara ke Supabase,
+      // dikonversi dulu ke UMUM_VALUE supaya kolom subject selalu terisi
+      // dan unique constraint biasa (tanpa partial index) bisa dipakai.
+      const subjectForQuery = subject ?? UMUM_VALUE
+      const attQuery = supabase
         .from('attendance')
         .select('student_id, status')
         .eq('user_id', user.id)
         .eq('date', selectedDate)
-
-      attQuery = subject ? attQuery.eq('subject', subject) : attQuery.is('subject', null)
+        .eq('subject', subjectForQuery)
 
       const [{ data: studentsData, error: studentsError }, { data: attData }] = await Promise.all([
         supabase.from('students').select('id, name').eq('user_id', user.id).eq('class_name', cls.name).order('name'),
@@ -178,14 +184,16 @@ export default function AbsensiPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setErrorStudents('Sesi tidak valid.'); return }
 
+      // PERBAIKAN: kirim UMUM_VALUE ke database, bukan null — supaya
+      // unique constraint biasa (student_id, date, subject) bisa
+      // mencocokkan ON CONFLICT dengan benar (lihat catatan migration
+      // supabase-migration-fix-absensi-constraint.sql untuk detail).
+      const subjectForSave = selectedSubject ?? UMUM_VALUE
+
       const records = Object.entries(attendance).map(([student_id, status]) => ({
-        user_id: user.id, student_id, date, status, subject: selectedSubject,
+        user_id: user.id, student_id, date, status, subject: subjectForSave,
       }))
 
-      // onConflict berbeda tergantung ada/tidaknya subject, karena pakai
-      // partial unique index. Supabase upsert tetap bisa pakai kolom
-      // (student_id, date, subject) — baris dengan subject NULL otomatis
-      // tertangani oleh index parsial yang sudah dibuat di migration.
       const { error: saveError } = await supabase
         .from('attendance')
         .upsert(records, { onConflict: 'student_id,date,subject' })

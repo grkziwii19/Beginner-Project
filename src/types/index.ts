@@ -95,8 +95,8 @@ export const COMMON_SUBJECTS = [
   'Ilmu Pengetahuan Alam dan Sosial (IPAS)',
 
   // ── Khas SMP ──
-  'Ilmu Pengetahuan Alam (IPA)',
-  'Ilmu Pengetahuan Sosial (IPS)',
+  'IPA',
+  'IPS',
 
   // ── Peminatan MIPA (SMA) ──
   'Matematika Tingkat Lanjut',
@@ -114,6 +114,7 @@ export const COMMON_SUBJECTS = [
   // ── Peminatan Bahasa & Budaya (SMA) ──
   'Bahasa dan Sastra Indonesia',
   'Bahasa dan Sastra Inggris',
+  'Bahasa Inggris',
   'Bahasa Mandarin',
   'Bahasa Arab',
   'Bahasa Jepang',
