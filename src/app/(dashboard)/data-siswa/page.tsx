@@ -1,32 +1,30 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { normalizeClassName, formatClassName } from '@/lib/normalizeClassName'
 import { createClient } from '@/lib/supabase/client'
-import { type Student, type ClassItem, getInitials, formatDateID } from '@/types'
-import { useCustomFields } from '@/hooks/useCustomFields'
+import { type Student, type ClassItem, getInitials, formatDateShort } from '@/types'
 import StudentDetailModal from '@/components/students/StudentDetailModal'
-import AddCustomFieldModal from '@/components/students/AddCustomFieldModal'
 import AddClassModal from '@/components/students/AddClassModal'
 import EditClassModal from '@/components/students/EditClassModal'
+import ImportStudentsTab from '@/components/students/ImportStudentsTab'
 import { type ClassFormData } from '@/components/students/ClassForm'
+import { normalizeClassName, formatClassName } from '@/lib/normalizeClassName'
 import {
-  Plus, Search, Users, Trash2, IdCard, Tags,
-  PieChart, List, ChevronDown, Pencil,
+  Plus, Search, Users, Trash2, IdCard, Filter,
+  PieChart, List, ChevronDown, Pencil, Upload,
 } from 'lucide-react'
 
-type TabType = 'daftar' | 'statistik'
+type TabType = 'daftar' | 'statistik' | 'import'
+type ViewFilter = 'identitas' | 'akademik' | 'orang_tua'
 
-const PRESET_VIEWS = [
-  { key: 'default', label: 'Tampilan Standar' },
+const VIEW_OPTIONS: { key: ViewFilter; label: string }[] = [
+  { key: 'identitas', label: 'Identitas' },
+  { key: 'akademik', label: 'Akademik' },
   { key: 'orang_tua', label: 'Orang Tua' },
-  { key: 'tanggal_lahir', label: 'Tanggal Lahir' },
-  { key: 'kontak', label: 'Kontak' },
 ]
 
 export default function StudentsPage() {
   const supabase = createClient()
-  const { fields: customFields, addField, removeField } = useCustomFields()
 
   const [classes, setClasses] = useState<ClassItem[]>([])
   const [selectedClassId, setSelectedClassId] = useState('')
@@ -36,16 +34,16 @@ export default function StudentsPage() {
 
   const [activeTab, setActiveTab] = useState<TabType>('daftar')
   const [search, setSearch] = useState('')
-  const [viewFilter, setViewFilter] = useState('default')
+  const [viewFilter, setViewFilter] = useState<ViewFilter>('identitas')
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [showFieldModal, setShowFieldModal] = useState(false)
+  const [showStudentModal, setShowStudentModal] = useState(false)
   const [showAddClassModal, setShowAddClassModal] = useState(false)
   const [showEditClassModal, setShowEditClassModal] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<Student | null>(null)
 
   const selectedClass = classes.find(c => c.id === selectedClassId) ?? null
 
+  // ── Ambil daftar kelas ──
   const fetchClasses = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
@@ -56,6 +54,25 @@ export default function StudentsPage() {
 
   useEffect(() => { fetchClasses() }, [])
 
+  // ── Ambil siswa setiap kali kelas yang dipilih berubah ──
+  const fetchStudents = async () => {
+    if (!selectedClass) { setStudents([]); return }
+    setLoadingStudents(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase
+      .from('students')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('class_name', selectedClass.name)
+      .order('name')
+    setStudents(data ?? [])
+    setLoadingStudents(false)
+  }
+
+  useEffect(() => { fetchStudents() }, [selectedClassId])
+
+  // ── Tambah kelas baru ──
   const handleAddClass = async (form: ClassFormData) => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Tidak terautentikasi' }
@@ -86,6 +103,7 @@ export default function StudentsPage() {
     return { error: null }
   }
 
+  // ── Edit kelas yang sudah ada ──
   const handleEditClass = async (id: string, form: ClassFormData) => {
     const formatted = formatClassName(form.name.trim())
     const normalized = normalizeClassName(form.name.trim())
@@ -115,38 +133,31 @@ export default function StudentsPage() {
     return { error: null }
   }
 
+  // ── Hapus kelas ──
   const handleDeleteClass = async (id: string) => {
     await supabase.from('classes').delete().eq('id', id)
     if (selectedClassId === id) setSelectedClassId('')
     await fetchClasses()
   }
 
-  const fetchStudents = async () => {
-    if (!selectedClass) { setStudents([]); return }
-    setLoadingStudents(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const { data } = await supabase
-      .from('students')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('class_name', selectedClass.name)
-      .order('name')
-    setStudents(data ?? [])
-    setLoadingStudents(false)
-  }
-
-  useEffect(() => { fetchStudents() }, [selectedClassId])
-
+  // ── Hapus siswa ──
   const handleDelete = async (s: Student) => {
     await supabase.from('students').delete().eq('id', s.id)
     setDeleteConfirm(null)
     await fetchStudents()
   }
 
-  const viewOptions = PRESET_VIEWS
-  const extraColumnLabel = () => viewOptions.find(v => v.key === viewFilter)?.label ?? ''
+  const openAddStudent = () => {
+    setSelectedStudent(null)
+    setShowStudentModal(true)
+  }
 
+  const openEditStudent = (s: Student) => {
+    setSelectedStudent(s)
+    setShowStudentModal(true)
+  }
+
+  // ── Search ──
   const filtered = students.filter(s => {
     const q = search.toLowerCase()
     if (!q) return true
@@ -154,123 +165,105 @@ export default function StudentsPage() {
       s.name.toLowerCase().includes(q) ||
       s.nis.toLowerCase().includes(q) ||
       (s.nisn ?? '').toLowerCase().includes(q) ||
-      (s.father_name ?? '').toLowerCase().includes(q) ||
-      (s.mother_name ?? '').toLowerCase().includes(q)
+      (s.parent_name ?? '').toLowerCase().includes(q)
     )
   })
 
-  const renderExtraColumn = (s: Student) => {
-    if (viewFilter === 'orang_tua') {
-      return (
-        <td className="table-cell">
-          <p className="text-slate-700">{s.father_name || '-'}</p>
-          <p className="text-slate-400 text-xs">{s.mother_name || '-'}</p>
-        </td>
-      )
-    }
-    if (viewFilter === 'tanggal_lahir') {
-      return <td className="table-cell text-slate-600">{formatDateID(s.birth_date)}</td>
-    }
-    if (viewFilter === 'kontak') {
-      return (
-        <td className="table-cell">
-          <p className="text-slate-700">{s.phone || '-'}</p>
-          <p className="text-slate-400 text-xs">Ortu: {s.parent_phone || '-'}</p>
-        </td>
-      )
-    }
-    return null
-  }
-
+  // ── Statistik sederhana ──
   const stats = {
     total: students.length,
     laki: students.filter(s => s.gender === 'Laki-laki').length,
     perempuan: students.filter(s => s.gender === 'Perempuan').length,
     lengkapBiodata: students.filter(s =>
-      s.birth_date && s.address && s.father_name && s.mother_name
+      s.birth_date && s.address && s.parent_name
     ).length,
     adaFoto: students.filter(s => s.photo_url).length,
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Data Siswa</h1>
         <p className="text-sm text-slate-500 mt-0.5">Biodata lengkap siswa per kelas</p>
       </div>
 
-      {/* ── Header: Pilih Kelas + Info ── */}
-      <div className="card p-4 space-y-2.5">
-
-        {/* Baris: Tambah Kelas (pojok kanan) */}
-        <div className="flex justify-end">
-          <button
-            onClick={() => setShowAddClassModal(true)}
-            className="text-xs text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"
-          >
-            <Plus className="w-3.5 h-3.5" /> Tambah Kelas
-          </button>
+      {/* Pilih Kelas */}
+      <div className="card p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-slate-700">Kelas</h2>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowAddClassModal(true)} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
+              <Plus className="w-3.5 h-3.5" /> Tambah
+            </button>
+            {selectedClass && (
+              <>
+                <span className="text-slate-200">|</span>
+                <button onClick={() => setShowEditClassModal(true)} className="text-sm text-slate-500 hover:text-indigo-600 font-medium flex items-center gap-1">
+                  <Pencil className="w-3.5 h-3.5" /> Edit
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
-        {/* Baris: Kelas [dropdown] [Edit] */}
         {loadingClasses ? (
           <p className="text-sm text-slate-400">Memuat daftar kelas...</p>
         ) : classes.length === 0 ? (
-          <p className="text-sm text-slate-500">Belum ada kelas. Klik "+ Tambah Kelas" untuk mulai.</p>
+          <div className="text-center py-4">
+            <p className="text-sm text-slate-500 mb-3">Belum ada kelas. Buat kelas pertama Anda untuk mulai menambahkan siswa.</p>
+            <button onClick={() => setShowAddClassModal(true)} className="btn-primary mx-auto">
+              <Plus className="w-4 h-4" /> Tambah Kelas
+            </button>
+          </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-500 shrink-0">Kelas</span>
-            <div className="relative flex-1 max-w-xs">
-              <select
-                className="input appearance-none pr-9 py-1.5 text-sm"
-                value={selectedClassId}
-                onChange={e => setSelectedClassId(e.target.value)}
-              >
-                <option value="">-- Pilih --</option>
-                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-            </div>
-            {selectedClass && (
-              <button
-                onClick={() => setShowEditClassModal(true)}
-                className="btn-secondary px-2.5 py-1.5"
-                title="Edit kelas ini"
-              >
-                <Pencil className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Baris: Wali Kelas */}
-        {selectedClass && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-500 shrink-0">Wali Kelas</span>
-            <span className="text-sm font-medium text-slate-800">
-              {selectedClass.homeroom_teacher || '-'}
-            </span>
-          </div>
-        )}
-
-        {/* Baris: Mata Pelajaran — disembunyikan jika wali kelas mengajar semua */}
-        {selectedClass && !selectedClass.is_homeroom_only && (
-          <div className="flex items-start gap-2">
-            <span className="text-sm text-slate-500 shrink-0 mt-0.5">Mata Pelajaran</span>
-            {selectedClass.subjects && selectedClass.subjects.length > 0 ? (
-              <div className="flex flex-wrap gap-1">
-                {selectedClass.subjects.map(s => (
-                  <span key={s} className="badge bg-slate-100 text-slate-600 text-[11px] px-1.5 py-0.5">{s}</span>
-                ))}
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+              <div>
+                <p className="text-xs text-slate-400 font-medium mb-1">Pilih Kelas</p>
+                <div className="relative">
+                  <select
+                    className="input appearance-none pr-9"
+                    value={selectedClassId}
+                    onChange={e => setSelectedClassId(e.target.value)}
+                  >
+                    <option value="">-- Pilih kelas --</option>
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                </div>
               </div>
-            ) : (
-              <span className="text-sm text-slate-400">Belum ada</span>
+
+              {selectedClass && (
+                <div>
+                  <p className="text-xs text-slate-400 font-medium mb-1">Wali Kelas</p>
+                  <p className="text-sm text-slate-700 truncate" style={{ lineHeight: '36px' }}>
+                    {selectedClass.homeroom_teacher || '-'}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {selectedClass && (
+              <div className="mt-3 pt-3 border-t border-slate-100">
+                <p className="text-xs text-slate-400 font-medium mb-1.5">Mata Pelajaran</p>
+                {selectedClass.is_homeroom_only ? (
+                  <span className="badge bg-emerald-50 text-emerald-700">Wali kelas mengajar semua mapel</span>
+                ) : selectedClass.subjects && selectedClass.subjects.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedClass.subjects.map(s => (
+                      <span key={s} className="badge bg-slate-100 text-slate-600">{s}</span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-400">Belum ada mapel ditambahkan</p>
+                )}
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
 
-      {/* ── Konten setelah kelas dipilih ── */}
+      {/* Konten setelah kelas dipilih */}
       {selectedClass && (
         <>
           {/* Tabs */}
@@ -278,14 +271,13 @@ export default function StudentsPage() {
             {[
               { id: 'daftar', label: 'Daftar Siswa', icon: List },
               { id: 'statistik', label: 'Statistik', icon: PieChart },
+              { id: 'import', label: 'Import', icon: Upload },
             ].map(t => (
               <button
                 key={t.id}
                 onClick={() => setActiveTab(t.id as TabType)}
                 className={`flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === t.id
-                    ? 'border-indigo-600 text-indigo-600'
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
+                  activeTab === t.id ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               >
                 <t.icon className="w-4 h-4" /> {t.label}
@@ -295,62 +287,36 @@ export default function StudentsPage() {
 
           {/* TAB: Daftar */}
           {activeTab === 'daftar' && (
-            <div className="space-y-3">
-
-              {/* Toolbar: jumlah siswa + aksi */}
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <p className="text-sm text-slate-500">{students.length} siswa</p>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setShowFieldModal(true)} className="btn-secondary text-xs px-3 py-1.5">
-                    <Tags className="w-3.5 h-3.5" /> Kolom
-                  </button>
-                  <button onClick={() => setShowAddModal(true)} className="btn-primary text-xs px-3 py-1.5">
-                    <Plus className="w-3.5 h-3.5" /> Tambah Siswa
-                  </button>
-                </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <p className="text-sm text-slate-500">{students.length} siswa di kelas {selectedClass.name}</p>
+                <button onClick={openAddStudent} className="btn-primary">
+                  <Plus className="w-4 h-4" /> Tambah Siswa
+                </button>
               </div>
 
-              {/* Search + Filter */}
+              {/* Filter & Search */}
               {students.length > 0 && (
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <input
-                      className="input pl-8 py-1.5 text-sm"
-                      placeholder="Cari nama, NIS, NISN, orang tua..."
+                      className="input pl-9"
+                      placeholder="Cari nama, NIS, NISN, atau orang tua..."
                       value={search}
                       onChange={e => setSearch(e.target.value)}
                     />
                   </div>
-                  <select
-                    className="input py-1.5 text-sm w-auto shrink-0"
-                    value={viewFilter}
-                    onChange={e => setViewFilter(e.target.value)}
-                  >
-                    <option value="default">Filter</option>
-                    {viewOptions.filter(v => v.key !== 'default').map(v => (
-                      <option key={v.key} value={v.key}>{v.label}</option>
-                    ))}
-                  </select>
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4 text-slate-400" />
+                    <select className="input w-auto" value={viewFilter} onChange={e => setViewFilter(e.target.value as ViewFilter)}>
+                      {VIEW_OPTIONS.map(v => <option key={v.key} value={v.key}>{v.label}</option>)}
+                    </select>
+                  </div>
                 </div>
               )}
 
-              {/* Kolom kustom chips */}
-              {customFields.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs text-slate-400">Kolom tambahan:</span>
-                  {customFields.map(f => (
-                    <span key={f.id} className="badge bg-slate-100 text-slate-600 gap-1">
-                      {f.field_label}
-                      <button onClick={() => removeField(f.id)} className="hover:text-red-500">
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Tabel */}
+              {/* Table */}
               <div className="card overflow-hidden">
                 {loadingStudents ? (
                   <div className="p-10 text-center text-slate-400 text-sm">Memuat data...</div>
@@ -358,14 +324,14 @@ export default function StudentsPage() {
                   <div className="p-10 text-center">
                     <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                     <p className="text-slate-500 text-sm mb-3">Belum ada siswa di kelas ini.</p>
-                    <button onClick={() => setShowAddModal(true)} className="btn-primary mx-auto">
+                    <button onClick={openAddStudent} className="btn-primary mx-auto">
                       <Plus className="w-4 h-4" /> Tambah Siswa Pertama
                     </button>
                   </div>
                 ) : filtered.length === 0 ? (
                   <div className="p-10 text-center">
                     <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                    <p className="text-slate-500 text-sm">Tidak ada siswa yang cocok.</p>
+                    <p className="text-slate-500 text-sm">Tidak ada siswa yang cocok dengan pencarian.</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
@@ -375,10 +341,31 @@ export default function StudentsPage() {
                           <th className="table-header w-10">No</th>
                           <th className="table-header">Foto</th>
                           <th className="table-header">Nama</th>
-                          <th className="table-header">NIS</th>
-                          <th className="table-header">NISN</th>
-                          <th className="table-header">JK</th>
-                          {viewFilter !== 'default' && <th className="table-header">{extraColumnLabel()}</th>}
+
+                          {viewFilter === 'identitas' && (
+                            <>
+                              <th className="table-header">JK</th>
+                              <th className="table-header">Agama</th>
+                              <th className="table-header">Tempat Lahir</th>
+                              <th className="table-header">Tanggal Lahir</th>
+                            </>
+                          )}
+
+                          {viewFilter === 'akademik' && (
+                            <>
+                              <th className="table-header">NIS</th>
+                              <th className="table-header">NISN</th>
+                              <th className="table-header">Alamat</th>
+                            </>
+                          )}
+
+                          {viewFilter === 'orang_tua' && (
+                            <>
+                              <th className="table-header">Nama Ayah/Ibu/Wali</th>
+                              <th className="table-header">No. HP Orang Tua</th>
+                            </>
+                          )}
+
                           <th className="table-header w-16">Aksi</th>
                         </tr>
                       </thead>
@@ -387,7 +374,7 @@ export default function StudentsPage() {
                           <tr
                             key={s.id}
                             className="hover:bg-slate-50 transition-colors cursor-pointer"
-                            onClick={() => setSelectedStudent(s)}
+                            onClick={() => openEditStudent(s)}
                           >
                             <td className="table-cell text-slate-400">{i + 1}</td>
                             <td className="table-cell">
@@ -401,10 +388,35 @@ export default function StudentsPage() {
                               </div>
                             </td>
                             <td className="table-cell font-medium text-slate-900">{s.name}</td>
-                            <td className="table-cell text-slate-500">{s.nis}</td>
-                            <td className="table-cell text-slate-500">{s.nisn || '-'}</td>
-                            <td className="table-cell text-slate-500 text-xs">{s.gender === 'Laki-laki' ? 'L' : 'P'}</td>
-                            {viewFilter !== 'default' && renderExtraColumn(s)}
+
+                            {viewFilter === 'identitas' && (
+                              <>
+                                <td className="table-cell text-slate-500 text-xs">{s.gender === 'Laki-laki' ? 'L' : 'P'}</td>
+                                <td className="table-cell text-slate-600">{s.religion || '-'}</td>
+                                <td className="table-cell text-slate-600">{s.birth_place || '-'}</td>
+                                <td className="table-cell text-slate-600">{formatDateShort(s.birth_date)}</td>
+                              </>
+                            )}
+
+                            {viewFilter === 'akademik' && (
+                              <>
+                                <td className="table-cell text-slate-500">{s.nis}</td>
+                                <td className="table-cell text-slate-500">{s.nisn || '-'}</td>
+                                <td className="table-cell text-slate-600">{s.address || '-'}</td>
+                              </>
+                            )}
+
+                            {viewFilter === 'orang_tua' && (
+                              <>
+                                <td className="table-cell text-slate-700">
+                                  {s.parent_name
+                                    ? `${s.parent_name}${s.parent_type ? ` (${s.parent_type})` : ''}`
+                                    : '-'}
+                                </td>
+                                <td className="table-cell text-slate-600">{s.parent_phone || '-'}</td>
+                              </>
+                            )}
+
                             <td className="table-cell" onClick={e => e.stopPropagation()}>
                               <button
                                 onClick={() => setDeleteConfirm(s)}
@@ -459,10 +471,15 @@ export default function StudentsPage() {
               )}
             </div>
           )}
+
+          {/* TAB: Import */}
+          {activeTab === 'import' && (
+            <ImportStudentsTab className={selectedClass.name} onImported={fetchStudents} />
+          )}
         </>
       )}
 
-      {/* Empty state */}
+      {/* Empty state: belum pilih kelas */}
       {!selectedClass && !loadingClasses && classes.length > 0 && (
         <div className="card p-10 text-center">
           <IdCard className="w-10 h-10 text-slate-300 mx-auto mb-3" />
@@ -471,29 +488,15 @@ export default function StudentsPage() {
         </div>
       )}
 
-      {/* Modal: Detail/Edit Siswa */}
-      <StudentDetailModal
-        open={!!selectedStudent && !!selectedClass}
-        student={selectedStudent}
-        className={selectedClass?.name ?? ''}
-        customFields={customFields}
-        onClose={() => setSelectedStudent(null)}
-        onSaved={fetchStudents}
-      />
-
-      {/* Modal: Tambah Siswa */}
-      <StudentDetailModal
-        open={showAddModal && !!selectedClass}
-        student={null}
-        className={selectedClass?.name ?? ''}
-        customFields={customFields}
-        onClose={() => setShowAddModal(false)}
-        onSaved={fetchStudents}
-      />
-
-      {/* Modal: Tambah Kolom */}
-      {showFieldModal && (
-        <AddCustomFieldModal onClose={() => setShowFieldModal(false)} onAdd={addField} />
+      {/* Modal: Detail/Edit/Tambah Siswa */}
+      {selectedClass && (
+        <StudentDetailModal
+          open={showStudentModal}
+          student={selectedStudent}
+          className={selectedClass.name}
+          onClose={() => setShowStudentModal(false)}
+          onSaved={fetchStudents}
+        />
       )}
 
       {/* Modal: Tambah Kelas */}
@@ -511,7 +514,7 @@ export default function StudentsPage() {
         />
       )}
 
-      {/* Modal: Konfirmasi Hapus */}
+      {/* Modal: Delete confirm */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">

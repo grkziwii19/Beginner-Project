@@ -48,11 +48,6 @@ export default function AddClassModal({ onClose, onAdd }: Props) {
 
     setSaving(true)
 
-    // normalized_name DIHITUNG DI SINI oleh handler onAdd (lihat
-    // data-siswa/page.tsx) menggunakan helper normalizeClassName yang
-    // sama persis dipakai ClassForm untuk cek duplikat. Modal ini tidak
-    // menghitung sendiri — supaya logika normalisasi tetap berada di
-    // satu tempat saja (src/lib/normalizeClassName.ts).
     const result = await onAdd(form)
 
     if (result.error) {

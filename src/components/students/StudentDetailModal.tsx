@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
-  type Student, type CustomFieldDefinition,
-  RELIGION_OPTIONS, getInitials,
+  type Student, type ParentType,
+  RELIGION_OPTIONS, PARENT_TYPE_OPTIONS, getInitials,
 } from '@/types'
 import { X, Camera, Pencil, Save, User } from 'lucide-react'
 
@@ -12,12 +12,11 @@ interface Props {
   open: boolean
   student: Student | null
   className: string
-  customFields: CustomFieldDefinition[]
   onClose: () => void
   onSaved: () => void
 }
 
-// ✅ Didefinisikan di luar komponen agar tidak di-recreate setiap render
+// Didefinisikan di luar komponen agar tidak di-recreate setiap render
 function Row({
   label, value, editMode, children,
 }: {
@@ -36,7 +35,7 @@ function Row({
   )
 }
 
-export default function StudentDetailModal({ open, student, className, customFields, onClose, onSaved }: Props) {
+export default function StudentDetailModal({ open, student, className, onClose, onSaved }: Props) {
   const supabase = createClient()
   const isNew = !student
   const [editMode, setEditMode] = useState(isNew)
@@ -48,9 +47,8 @@ export default function StudentDetailModal({ open, student, className, customFie
   const [form, setForm] = useState<Record<string, string>>({
     name: '', nis: '', nisn: '', gender: 'Laki-laki',
     birth_place: '', birth_date: '', religion: '',
-    address: '', phone: '', father_name: '', mother_name: '', parent_phone: '',
+    address: '', parent_type: 'Ayah', parent_name: '', parent_phone: '',
   })
-  const [customValues, setCustomValues] = useState<Record<string, string>>({})
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
@@ -70,12 +68,10 @@ export default function StudentDetailModal({ open, student, className, customFie
       birth_date: student?.birth_date ?? '',
       religion: student?.religion ?? '',
       address: student?.address ?? '',
-      phone: student?.phone ?? '',
-      father_name: student?.father_name ?? '',
-      mother_name: student?.mother_name ?? '',
+      parent_type: student?.parent_type ?? 'Ayah',
+      parent_name: student?.parent_name ?? '',
       parent_phone: student?.parent_phone ?? '',
     })
-    setCustomValues(student?.custom_fields ?? {})
     setPhotoUrl(student?.photo_url ?? null)
     setPhotoPreview(student?.photo_url ?? null)
   }, [open, student])
@@ -144,12 +140,10 @@ export default function StudentDetailModal({ open, student, className, customFie
       birth_date: form.birth_date || null,
       religion: form.religion || null,
       address: form.address.trim() || null,
-      phone: form.phone.trim() || null,
-      father_name: form.father_name.trim() || null,
-      mother_name: form.mother_name.trim() || null,
+      parent_type: (form.parent_name.trim() ? form.parent_type : null) as ParentType | null,
+      parent_name: form.parent_name.trim() || null,
       parent_phone: form.parent_phone.trim() || null,
       photo_url: finalPhotoUrl,
-      custom_fields: customValues,
       updated_at: new Date().toISOString(),
     }
 
@@ -233,12 +227,6 @@ export default function StudentDetailModal({ open, student, className, customFie
           <div>
             <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Identitas</h3>
             <div className="grid grid-cols-2 gap-4">
-              <Row label="NIS" value={form.nis} editMode={editMode}>
-                <input className="input" value={form.nis} onChange={e => setForm({ ...form, nis: e.target.value })} />
-              </Row>
-              <Row label="NISN" value={form.nisn} editMode={editMode}>
-                <input className="input" value={form.nisn} onChange={e => setForm({ ...form, nisn: e.target.value })} />
-              </Row>
               <Row label="Jenis Kelamin" value={form.gender} editMode={editMode}>
                 <select className="input" value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })}>
                   <option>Laki-laki</option>
@@ -260,52 +248,46 @@ export default function StudentDetailModal({ open, student, className, customFie
             </div>
           </div>
 
-          {/* Kontak & Alamat */}
+          {/* Akademik */}
           <div>
-            <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Kontak & Alamat</h3>
+            <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Akademik</h3>
             <div className="grid grid-cols-2 gap-4">
-              <Row label="No. HP Siswa" value={form.phone} editMode={editMode}>
-                <input className="input" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} />
+              <Row label="NIS" value={form.nis} editMode={editMode}>
+                <input className="input" value={form.nis} onChange={e => setForm({ ...form, nis: e.target.value })} />
               </Row>
-              <Row label="Alamat" value={form.address} editMode={editMode}>
-                <input className="input" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} />
+              <Row label="NISN" value={form.nisn} editMode={editMode}>
+                <input className="input" value={form.nisn} onChange={e => setForm({ ...form, nisn: e.target.value })} />
               </Row>
             </div>
           </div>
 
-          {/* Orang Tua */}
+          {/* Orang Tua / Wali */}
           <div>
-            <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Orang Tua</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <Row label="Nama Ayah" value={form.father_name} editMode={editMode}>
-                <input className="input" value={form.father_name} onChange={e => setForm({ ...form, father_name: e.target.value })} />
+            <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Orang Tua / Wali</h3>
+            <div className="space-y-4">
+              {/* Alamat — full width, baris sendiri */}
+              <Row label="Alamat" value={form.address} editMode={editMode}>
+                <input className="input" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} />
               </Row>
-              <Row label="Nama Ibu" value={form.mother_name} editMode={editMode}>
-                <input className="input" value={form.mother_name} onChange={e => setForm({ ...form, mother_name: e.target.value })} />
-              </Row>
+
+              {/* Dropdown jenis (Ayah/Ibu/Wali) + Nama, sejajar */}
+              <div className="grid grid-cols-2 gap-4">
+                <Row label="Status" value={form.parent_type} editMode={editMode}>
+                  <select className="input" value={form.parent_type} onChange={e => setForm({ ...form, parent_type: e.target.value })}>
+                    {PARENT_TYPE_OPTIONS.map(p => <option key={p}>{p}</option>)}
+                  </select>
+                </Row>
+                <Row label={`Nama ${form.parent_type || 'Orang Tua'}`} value={form.parent_name} editMode={editMode}>
+                  <input className="input" value={form.parent_name} onChange={e => setForm({ ...form, parent_name: e.target.value })} />
+                </Row>
+              </div>
+
+              {/* No. HP — baris sendiri */}
               <Row label="No. HP Orang Tua" value={form.parent_phone} editMode={editMode}>
                 <input className="input" value={form.parent_phone} onChange={e => setForm({ ...form, parent_phone: e.target.value })} />
               </Row>
             </div>
           </div>
-
-          {/* Kolom Kustom */}
-          {customFields.length > 0 && (
-            <div>
-              <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Data Tambahan</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {customFields.map(f => (
-                  <Row key={f.id} label={f.field_label} value={customValues[f.field_key]} editMode={editMode}>
-                    <input
-                      className="input"
-                      value={customValues[f.field_key] ?? ''}
-                      onChange={e => setCustomValues(prev => ({ ...prev, [f.field_key]: e.target.value }))}
-                    />
-                  </Row>
-                ))}
-              </div>
-            </div>
-          )}
 
           {error && (
             <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</div>

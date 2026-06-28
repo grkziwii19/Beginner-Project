@@ -37,9 +37,6 @@ export default function ClassForm({
   const set = (patch: Partial<ClassFormData>) =>
     onChange({ ...data, ...patch })
 
-  // Ambil daftar kelas yang sudah ada — dipakai untuk cek duplikat
-  // (dibandingkan via normalizeClassName, bukan perbandingan string biasa)
-  // dan untuk saran autocomplete.
   useEffect(() => {
     const loadClasses = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -57,7 +54,6 @@ export default function ClassForm({
     loadClasses()
   }, [supabase])
 
-  // currentClassName dinormalisasi sekali saja, dipakai berkali-kali di bawah
   const normalizedCurrent = currentClassName ? normalizeClassName(currentClassName) : null
 
   const classExists = useMemo(() => {
@@ -70,9 +66,6 @@ export default function ClassForm({
 
       if (!isSameAsInput) return false
 
-      // Saat mode edit: kelas yang namanya sama dengan nama ASLI kelas
-      // yang sedang diedit bukan dianggap duplikat (karena itu kelas
-      // itu sendiri, belum tentu berubah nama).
       if (normalizedCurrent && normalizedExisting === normalizedCurrent) {
         return false
       }
@@ -195,11 +188,7 @@ export default function ClassForm({
         </label>
 
         <input
-          className={`input ${
-            !data.homeroomTeacher.trim() && data.name.trim()
-              ? '' // jangan tampilkan error sebelum user mulai mengetik nama kelas
-              : ''
-          }`}
+          className="input"
           placeholder="Contoh: Sudirman, S.Pd."
           value={data.homeroomTeacher}
           onChange={e => set({ homeroomTeacher: e.target.value })}

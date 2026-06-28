@@ -25,13 +25,6 @@ export default function EditClassModal({ classItem, onClose, onSave, onDelete }:
   const [saving, setSaving] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
-
-  // classExists sudah dihitung di dalam ClassForm dengan memperhitungkan
-  // currentClassName (supaya kelas yang sedang diedit tidak dianggap
-  // duplikat dari dirinya sendiri). Modal ini TIDAK menghitung ulang
-  // perbandingan normalisasi sendiri — itu sebabnya versi sebelumnya
-  // punya logika ganda (isSameClass) yang sebenarnya tidak diperlukan,
-  // karena ClassForm sudah menangani kasus itu dengan benar.
   const [classExists, setClassExists] = useState(false)
 
   const handleSubmit = async () => {

@@ -1,4 +1,5 @@
 export type Gender = 'Laki-laki' | 'Perempuan'
+export type ParentType = 'Ayah' | 'Ibu' | 'Wali'
 export type AttendanceStatus = 'hadir' | 'sakit' | 'izin' | 'alpha'
 export type GradeType = 'tugas' | 'uts' | 'uas' | 'proyek'
 export type ClassStatus = 'aktif' | 'arsip'
@@ -19,11 +20,9 @@ export interface Student {
   birth_date?: string | null
   religion?: string | null
   address?: string | null
-  phone?: string | null
-  father_name?: string | null
-  mother_name?: string | null
+  parent_type?: ParentType | null
+  parent_name?: string | null
   parent_phone?: string | null
-  custom_fields?: Record<string, string>
 
   created_at: string
   updated_at?: string
@@ -64,40 +63,83 @@ export interface ClassItem {
 
 // Daftar mata pelajaran umum sebagai saran/autocomplete saat menambah kelas.
 // Guru tetap bisa mengetik nama mapel custom yang tidak ada di daftar ini.
+// Mencakup jenjang SD, SMP, dan SMA/SMK (Kurikulum Merdeka) sekaligus,
+// supaya guru jarang perlu mengetik manual dengan nama yang tidak konsisten.
 export const COMMON_SUBJECTS = [
-  'Matematika',
+  // ── Umum / lintas jenjang ──
+  'Pendidikan Agama Islam dan Budi Pekerti',
+  'Pendidikan Agama Kristen dan Budi Pekerti',
+  'Pendidikan Agama Katolik dan Budi Pekerti',
+  'Pendidikan Agama Hindu dan Budi Pekerti',
+  'Pendidikan Agama Buddha dan Budi Pekerti',
+  'Pendidikan Agama Konghucu dan Budi Pekerti',
+  'Pendidikan Pancasila',
+  'PPKn',
   'Bahasa Indonesia',
   'Bahasa Inggris',
-  'IPA',
-  'IPS',
-  'Pendidikan Agama',
-  'PPKn',
-  'Seni Budaya',
-  'Pendidikan Jasmani (PJOK)',
-  'Prakarya',
-  'Informatika / TIK',
   'Bahasa Daerah',
-  'Matematika Wajib',
+  'Matematika',
+  'Seni Budaya',
+  'Seni Musik',
+  'Seni Rupa',
+  'Seni Tari',
+  'Seni Teater',
+  'Pendidikan Jasmani, Olahraga, dan Kesehatan (PJOK)',
+  'Informatika / TIK',
+  'Prakarya',
+  'Muatan Lokal',
+  'Bimbingan Konseling',
+
+  // ── Khas SD (tematik) ──
+  'Tematik',
+  'Ilmu Pengetahuan Alam dan Sosial (IPAS)',
+
+  // ── Khas SMP ──
+  'Ilmu Pengetahuan Alam (IPA)',
+  'Ilmu Pengetahuan Sosial (IPS)',
+
+  // ── Peminatan MIPA (SMA) ──
+  'Matematika Tingkat Lanjut',
   'Fisika',
   'Kimia',
   'Biologi',
-  'Ekonomi',
+
+  // ── Peminatan IPS (SMA) ──
   'Sejarah',
   'Geografi',
   'Sosiologi',
+  'Ekonomi',
+  'Antropologi',
+
+  // ── Peminatan Bahasa & Budaya (SMA) ──
+  'Bahasa dan Sastra Indonesia',
+  'Bahasa dan Sastra Inggris',
+  'Bahasa Mandarin',
+  'Bahasa Arab',
+  'Bahasa Jepang',
+  'Bahasa Jerman',
+  'Bahasa Prancis',
+  'Bahasa Korea',
+  'Antropologi Budaya',
+
+  // ── Lintas Minat / Pilihan (SMA) ──
+  'Informatika Lanjut',
+  'Ekonomi Lanjut',
+
+  // ── SMK / Kejuruan (umum, sering dipakai lintas jurusan) ──
+  'Projek Kreatif dan Kewirausahaan',
+  'Dasar-Dasar Kejuruan',
+  'Praktik Kerja Lapangan (PKL)',
+  'Produk Kreatif dan Kewirausahaan',
+  'Simulasi dan Komunikasi Digital',
+  'Fisika Terapan',
+  'Kimia Terapan',
+  'Kewirausahaan',
 ]
 
-// ── Kolom data kustom — versi sederhana, semua bertipe teks bebas ──
-export interface CustomFieldDefinition {
-  id: string
-  user_id: string
-  field_key: string
-  field_label: string
-  sort_order: number
-  created_at: string
-}
-
 export const RELIGION_OPTIONS = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu', 'Lainnya']
+
+export const PARENT_TYPE_OPTIONS: ParentType[] = ['Ayah', 'Ibu', 'Wali']
 
 export function getStatusLabel(status: AttendanceStatus): string {
   const map: Record<AttendanceStatus, string> = {
@@ -136,6 +178,17 @@ export function getPredicateColor(predicate: string): string {
 export function formatDateID(dateStr?: string | null): string {
   if (!dateStr) return '-'
   return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+// Format singkat DD/MM/YYYY, contoh: "01/02/2000" — dipakai di tabel
+// filter "Identitas" agar ringkas dan tidak memakan banyak ruang kolom.
+export function formatDateShort(dateStr?: string | null): string {
+  if (!dateStr) return '-'
+  const d = new Date(dateStr)
+  const day = String(d.getDate()).padStart(2, '0')
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const year = d.getFullYear()
+  return `${day}/${month}/${year}`
 }
 
 export function getInitials(name: string): string {

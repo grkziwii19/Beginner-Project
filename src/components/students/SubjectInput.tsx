@@ -46,7 +46,6 @@ export default function SubjectInput({ value, onChange, disabled = false }: Prop
 
   return (
     <div className={disabled ? 'opacity-50 pointer-events-none select-none' : ''}>
-      {/* Chips mapel yang sudah dipilih */}
       {value.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-2">
           {value.map(subject => (
@@ -62,7 +61,6 @@ export default function SubjectInput({ value, onChange, disabled = false }: Prop
         </div>
       )}
 
-      {/* Input dengan autocomplete */}
       <div className="relative">
         <input
           ref={inputRef}
