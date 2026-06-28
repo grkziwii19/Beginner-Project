@@ -2,23 +2,26 @@
 // Pendekatan manual sederhana (tanpa library) agar kompatibel dengan
 // Next.js 15 App Router + Turbopack tanpa konflik konfigurasi build.
 
-const CACHE_VERSION = 'v3'; // naikkan angka ini setiap kali strategi cache berubah
+const CACHE_VERSION = 'v4'; // dinaikkan karena perubahan daftar precache
 const CACHE_NAME = `gr-assistant-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
-// Halaman inti aplikasi yang WAJIB bisa dibuka offline setelah PWA di-install,
-// bahkan sebelum pengguna sempat membuka halaman tersebut secara online.
-// Sesuaikan daftar ini dengan rute utama Anda.
+// ATURAN PRECACHE:
+// Hanya masukkan aset yang:
+//   ✅ Pasti ada (200 OK) tanpa login
+//   ✅ Statis / tidak berubah sering
+// JANGAN masukkan:
+//   ❌ Route yang butuh autentikasi (/dashboard, /absensi, dll) → akan redirect ke /login (non-2xx) → precache GAGAL
+//   ❌ Route yang tidak ada → 404 → precache GAGAL
+//   ❌ /classes → tidak ada di app
 const PRECACHE_ASSETS = [
   '/',
   '/offline.html',
-  '/dashboard',
-  '/classes',
-  '/absensi',
-  '/akademik/nilai',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
 ];
+// Route seperti /dashboard, /absensi, /akademik/nilai akan otomatis
+// ter-cache saat pengguna membukanya (strategi Network First di fetch handler).
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
