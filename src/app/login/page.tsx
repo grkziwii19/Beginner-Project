@@ -154,7 +154,7 @@ export default function LoginPage() {
             Silakan masuk ke akun Anda untuk melanjutkan.
           </p>
 
-          {/* ✅ Form hanya berisi input email/password + tombol Masuk */}
+          {/* Form email/password — tombol Google di LUAR form */}
           <form onSubmit={handleLogin} className="space-y-3">
             <div>
               <label className="label">Alamat Email</label>
@@ -214,7 +214,6 @@ export default function LoginPage() {
               {loading ? 'Memproses...' : 'Masuk'}
             </button>
           </form>
-          {/* ✅ Form ditutup di sini — tombol Google ada di LUAR form */}
 
           {/* Pemisah */}
           <div className="flex items-center gap-3 my-3">
@@ -223,7 +222,7 @@ export default function LoginPage() {
             <div className="flex-1 h-px bg-slate-200" />
           </div>
 
-          {/* ✅ Tombol Google di luar form */}
+          {/* Tombol Google di luar form */}
           <button
             type="button"
             onClick={handleGoogleLogin}
@@ -239,7 +238,7 @@ export default function LoginPage() {
             {loading ? 'Memproses...' : 'Masuk dengan Google'}
           </button>
 
-          {/* Error message — satu saja */}
+          {/* Error message */}
           {error && (
             <div className="mt-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
               {error}
