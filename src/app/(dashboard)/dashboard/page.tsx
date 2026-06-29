@@ -185,22 +185,17 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Ringkasan Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Selamat datang kembali, {userName}. Berikut adalah update hari ini.</p>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={() => setShowAttendanceModal(true)} className="btn-secondary text-sm">
-            <CalendarCheck className="w-4 h-4" /> Absensi
-          </button>
-          <Link href="/import" className="btn-secondary text-sm">
-            <Download className="w-4 h-4" /> Export Data
-          </Link>
-          <Link href="/data-siswa" className="btn-primary text-sm">
-            <Plus className="w-4 h-4" /> Tambah Nilai
-          </Link>
-        </div>
+      <p className="text-sm text-slate-500">Selamat datang kembali, {userName}. Berikut adalah update hari ini.</p>
+      <div className="flex gap-2 mt-1">
+        <button onClick={() => setShowAttendanceModal(true)} className="btn-secondary text-sm">
+          <CalendarCheck className="w-4 h-4" /> Absensi
+        </button>
+        <Link href="/import" className="btn-secondary text-sm">
+          <Download className="w-4 h-4" /> Export Data
+        </Link>
+        <Link href="/data-siswa" className="btn-primary text-sm">
+          <Plus className="w-4 h-4" /> Tambah Nilai
+        </Link>
       </div>
 
       {/* Stats */}

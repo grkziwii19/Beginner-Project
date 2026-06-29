@@ -194,7 +194,7 @@ export default function Sidebar() {
                   className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
                 >
                   <UserCircle className="w-4 h-4 text-slate-400" />
-                  Pusat Akun
+                  Akun
                 </Link>
                 <div className="border-t border-slate-100">
                   <button

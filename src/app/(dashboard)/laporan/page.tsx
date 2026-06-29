@@ -328,7 +328,6 @@ export default function LaporanPage() {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Laporan / Rapor</h1>
         <p className="text-sm text-slate-500 mt-0.5">Preview dan download rapor Kurikulum Merdeka format Word (.docx).</p>
       </div>
 

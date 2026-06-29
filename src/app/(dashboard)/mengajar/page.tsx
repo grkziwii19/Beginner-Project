@@ -67,10 +67,7 @@ export default function MengajarPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Mengajar</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Absensi, nilai, dan catatan dalam satu tempat.</p>
-      </div>
+      <p className="text-sm text-slate-500">Absensi, nilai, dan catatan dalam satu tempat.</p>
 
       {/* Pilih Kelas + Mapel */}
       <div className="card p-4 sm:p-5 space-y-3">
