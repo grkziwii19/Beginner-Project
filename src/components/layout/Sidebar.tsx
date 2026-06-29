@@ -2,11 +2,12 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, ClipboardCheck, Award, FileBarChart,
-  Settings, Menu, X, Calendar, Building2, IdCard, GraduationCap
+  Settings, Menu, X, Calendar, Building2, IdCard, GraduationCap,
+  ChevronDown, UserCircle, LogOut
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
@@ -48,63 +49,82 @@ const navRows: NavRow[] = [
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const router = useRouter()
   const supabase = createClient()
   const [mobileOpen, setMobileOpen] = useState(false)
-  
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+
   const [schoolName, setSchoolName] = useState('')
   const [now, setNow] = useState(new Date())
 
+  // Profil pengguna — dipindahkan dari Topbar ke sini
+  const [email, setEmail] = useState('')
+  const [userName, setUserName] = useState('Guru')
+  const [initials, setInitials] = useState('GU')
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+
   useEffect(() => {
-  const load = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
-    if (!user) return
+      setEmail(user.email ?? '')
 
-    const { data: school } = await supabase
-      .from('school_profiles')
-      .select('name')
-      .eq('user_id', user.id)
-      .maybeSingle()
+      const [{ data: profile }, { data: school }] = await Promise.all([
+        supabase.from('profiles').select('full_name, avatar_url').eq('id', user.id).maybeSingle(),
+        supabase.from('school_profiles').select('name').eq('user_id', user.id).maybeSingle(),
+      ])
 
-    if (school?.name) {
-      setSchoolName(school.name)
+      if (profile?.full_name) {
+        setUserName(profile.full_name)
+        const parts = profile.full_name.trim().split(' ')
+        setInitials(((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || 'GU')
+        if (profile.avatar_url) setAvatarUrl(profile.avatar_url)
+      } else {
+        const fallback = user.email?.split('@')[0] ?? 'Guru'
+        setUserName(fallback)
+        setInitials(fallback.slice(0, 2).toUpperCase())
+      }
+
+      if (school?.name) setSchoolName(school.name)
     }
-  }
 
-  load()
+    load()
 
-  const interval = setInterval(() => setNow(new Date()), 60000)
-
-  return () => clearInterval(interval)
-}, [])
+    const interval = setInterval(() => setNow(new Date()), 60000)
+    return () => clearInterval(interval)
+  }, [])
 
   const isActive = (href: string) => {
-  if (href === '/dashboard') {
-    return pathname === '/dashboard'
+    if (href === '/dashboard') {
+      return pathname === '/dashboard'
+    }
+    return pathname === href || pathname.startsWith(`${href}/`)
   }
 
-  return pathname === href || pathname.startsWith(`${href}/`)
-}
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
 
   const dayLabel = now.toLocaleDateString('id-ID', { weekday: 'long' })
   const dateLabel = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
 
   const NavContent = () => (
     <>
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 px-4 py-5">
+      {/* Logo — padding dikurangi (py-4, sebelumnya py-5) agar lebih ringkas */}
+      <div className="flex items-center gap-2.5 px-4 py-4">
         <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0 p-1">
-  <Image
-    src="/icons/icon512P.png"
-    alt="GR Assistant"
-    width={36}
-    height={36}
-    className="w-full h-full object-contain"
-    priority
-  />
-</div>
+          <Image
+            src="/icons/icon512P.png"
+            alt="GR Assistant"
+            width={36}
+            height={36}
+            className="w-full h-full object-contain"
+            priority
+          />
+        </div>
         <div>
           <p className="font-bold text-white text-sm leading-tight">GR Assistant</p>
           <p className="text-xs text-slate-400 leading-tight">Asisten Digital Guru</p>
@@ -121,7 +141,7 @@ export default function Sidebar() {
             return (
               <p
                 key={`section-${idx}`}
-                className="px-3 pt-4 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 select-none"
+                className="px-3 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 select-none"
               >
                 {row.label}
               </p>
@@ -146,18 +166,64 @@ export default function Sidebar() {
         })}
       </nav>
 
-      
-      {/* Info footer */}
+      {/* Footer: Profile (baru, dipindah dari Topbar) + Sekolah + Tahun Ajaran + Tanggal */}
       <div className="p-3 mt-1 border-t border-slate-800 space-y-2.5">
+        {/* Profile */}
+        <div className="relative">
+          <button
+            onClick={() => setShowProfileMenu(v => !v)}
+            className="flex items-center gap-2.5 w-full px-1 py-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+          >
+            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
+              {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <p className="text-sm font-medium text-white truncate">{userName.split(' ')[0]}</p>
+              <p className="text-[11px] text-slate-400 truncate">{email}</p>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          </button>
+
+          {showProfileMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
+              <div className="absolute left-0 bottom-full mb-2 w-full bg-white rounded-xl border border-slate-200 shadow-lg z-50 overflow-hidden">
+                <Link
+                  href="/akun"
+                  onClick={() => setShowProfileMenu(false)}
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                >
+                  <UserCircle className="w-4 h-4 text-slate-400" />
+                  Pusat Akun
+                </Link>
+                <div className="border-t border-slate-100">
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Keluar
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Sekolah */}
         <div className="flex items-center gap-2.5 px-1">
           <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
           <p className="text-xs text-slate-300 truncate">{schoolName || 'Sekolah belum diatur'}</p>
         </div>
+
+        {/* Tahun Ajaran */}
         <div className="bg-slate-800 rounded-lg px-3 py-2">
           <p className="text-[10px] text-slate-400 uppercase tracking-wide">Tahun Ajaran Aktif</p>
           <p className="text-sm font-semibold text-white mt-0.5">2024 / 2025</p>
           <p className="text-xs text-slate-400">Semester Genap</p>
         </div>
+
+        {/* Tanggal */}
         <div className="flex items-center gap-2.5 px-1">
           <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
           <div className="leading-tight">

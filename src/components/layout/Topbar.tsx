@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Bell, ChevronDown, Search, LogOut, UserCircle, AlertCircle, CheckCircle, HardDrive, UserPlus } from 'lucide-react'
-import Link from 'next/link'
+import { Bell, Search, AlertCircle, CheckCircle, HardDrive, UserPlus } from 'lucide-react'
 
 interface NotifItem {
   id: string
@@ -15,48 +14,37 @@ interface NotifItem {
   time: string
 }
 
+// Judul halaman ditebak otomatis dari pathname, supaya setiap halaman
+// tidak perlu mengirim judulnya sendiri secara manual. Tambahkan entri
+// baru di sini setiap kali ada route baru yang butuh judul khusus.
+const PAGE_TITLES: Record<string, string> = {
+  '/dashboard': 'Ringkasan Dashboard',
+  '/data-siswa': 'Data Siswa',
+  '/mengajar': 'Mengajar',
+  '/absensi': 'Absensi',
+  '/akademik/nilai': 'Nilai',
+  '/laporan': 'Laporan',
+  '/pengaturan': 'Pengaturan',
+  '/akun': 'Pusat Akun',
+}
+
+function getPageTitle(pathname: string): string {
+  if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname]
+
+  // Cocokkan prefix terpanjang untuk route dinamis, mis. /classes/123
+  const match = Object.keys(PAGE_TITLES)
+    .filter(p => pathname.startsWith(p))
+    .sort((a, b) => b.length - a.length)[0]
+
+  return match ? PAGE_TITLES[match] : 'Dashboard'
+}
+
 export default function Topbar() {
   const supabase = createClient()
-  const router = useRouter()
-  const [email, setEmail] = useState('')
-  const [userName, setUserName] = useState('Guru')
-  const [initials, setInitials] = useState('GU')
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [showProfile, setShowProfile] = useState(false)
+  const pathname = usePathname()
   const [showNotif, setShowNotif] = useState(false)
 
-  useEffect(() => {
-    const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      setEmail(user.email ?? '')
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, avatar_url')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      if (profile?.full_name) {
-        setUserName(profile.full_name)
-        const parts = profile.full_name.trim().split(' ')
-        setInitials(((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || 'GU')
-        if (profile.avatar_url) setAvatarUrl(profile.avatar_url)
-        return
-      }
-
-      const fallback = user.email?.split('@')[0] ?? 'Guru'
-      setUserName(fallback)
-      setInitials(fallback.slice(0, 2).toUpperCase())
-    }
-    load()
-  }, [])
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
-  }
+  const title = getPageTitle(pathname)
 
   const notifications: NotifItem[] = [
     { id: '1', icon: AlertCircle, iconColor: 'text-amber-500 bg-amber-50', title: 'Nilai UTS belum diinput', desc: 'Ada kelas yang menunggu nilai', time: 'Baru saja' },
@@ -66,23 +54,32 @@ export default function Topbar() {
   ]
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shrink-0 z-30 gap-4">
-      {/* Search */}
-      <div className="relative flex-1 max-w-md ml-8 lg:ml-0">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-        <input
-          type="text"
-          placeholder="Cari apapun..."
-          className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition placeholder:text-slate-400"
-        />
-      </div>
+    <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 gap-4">
+      {/* Judul halaman, menggantikan posisi search yang lama */}
+      <h1 className="text-base sm:text-lg font-semibold text-slate-900 ml-8 lg:ml-0 truncate">
+        {title}
+      </h1>
 
-      {/* Right */}
+      {/* Search + Notifikasi, digeser ke kanan */}
       <div className="flex items-center gap-3 shrink-0">
-        {/* Notification */}
+        <div className="relative hidden sm:block">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Cari apapun..."
+            className="w-56 pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition placeholder:text-slate-400"
+          />
+        </div>
+
+        {/* Tombol search ringkas untuk mobile (search penuh disembunyikan di layar kecil) */}
+        <button className="sm:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors">
+          <Search className="w-5 h-5 text-slate-500" />
+        </button>
+
+        {/* Notifikasi */}
         <div className="relative">
           <button
-            onClick={() => { setShowNotif(v => !v); setShowProfile(false) }}
+            onClick={() => setShowNotif(v => !v)}
             className="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
           >
             <Bell className="w-5 h-5 text-slate-500" />
@@ -112,42 +109,6 @@ export default function Topbar() {
                 </div>
                 <div className="px-4 py-2.5 border-t border-slate-100 text-center">
                   <button className="text-xs text-indigo-600 font-medium hover:underline">Lihat Semua Notifikasi</button>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Profile */}
-        <div className="relative">
-          <button
-            onClick={() => { setShowProfile(v => !v); setShowNotif(false) }}
-            className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
-          >
-            <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden">
-              {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
-            </div>
-            <span className="hidden sm:block text-sm font-medium text-slate-700">{userName.split(' ')[0]}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-          </button>
-
-          {showProfile && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowProfile(false)} />
-              <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl border border-slate-200 shadow-lg z-50 overflow-hidden">
-                <div className="px-4 py-3 border-b border-slate-100">
-                  <p className="text-sm font-medium text-slate-800">{userName}</p>
-                  <p className="text-xs text-slate-400 truncate mt-0.5">{email}</p>
-                </div>
-                <Link href="/akun" onClick={() => setShowProfile(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 transition-colors">
-                  <UserCircle className="w-4 h-4 text-slate-400" />
-                  Pusat Akun
-                </Link>
-                <div className="border-t border-slate-100">
-                  <button onClick={handleLogout} className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                    <LogOut className="w-4 h-4" />
-                    Keluar
-                  </button>
                 </div>
               </div>
             </>

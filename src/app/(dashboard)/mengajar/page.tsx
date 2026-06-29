@@ -74,10 +74,10 @@ export default function MengajarPage() {
 
       {/* Pilih Kelas + Mapel */}
       <div className="card p-4 sm:p-5 space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8">
           {/* Kelas */}
-          <div className="flex items-center gap-3 flex-1">
-            <label className="text-sm font-medium text-slate-600 shrink-0 w-16 sm:w-auto">Kelas</label>
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-medium text-slate-600 shrink-0">Kelas</label>
             <div className="relative flex-1 sm:max-w-xs">
               <select
                 className="input appearance-none pr-9"
@@ -94,8 +94,8 @@ export default function MengajarPage() {
 
           {/* Mapel */}
           {selectedClass && (
-            <div className="flex items-center gap-3 flex-1">
-              <label className="text-sm font-medium text-slate-600 shrink-0 w-16 sm:w-auto">Mapel</label>
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-slate-600 shrink-0">Mapel</label>
               <div className="relative flex-1 sm:max-w-xs">
                 <select
                   className="input appearance-none pr-9"
