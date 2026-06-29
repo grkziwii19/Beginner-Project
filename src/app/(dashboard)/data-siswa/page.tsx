@@ -188,21 +188,38 @@ export default function StudentsPage() {
 
       {/* Pilih Kelas */}
       <div className="card p-4 sm:p-5">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <button onClick={() => setShowAddClassModal(true)} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
-              <Plus className="w-3.5 h-3.5" /> Tambah
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-sm font-medium text-slate-600 mb-2">Kelas</h3>
+
+          {selectedClass && (
+            <button
+              onClick={() => setShowEditClassModal(true)}
+              className="text-sm text-slate-500 hover:text-indigo-600 font-medium flex items-center gap-1"
+            >
+              <Pencil className="
+                inline-flex
+                items-center
+                gap-1
+                mt-1
+                text-xs
+                font-medium
+                text-slate-500
+                hover:text-indigo-600
+                " />
+              Edit
             </button>
-            {selectedClass && (
-              <>
-                <span className="text-slate-200">|</span>
-                <button onClick={() => setShowEditClassModal(true)} className="text-sm text-slate-500 hover:text-indigo-600 font-medium flex items-center gap-1">
-                  <Pencil className="w-3.5 h-3.5" /> Edit
-                </button>
-              </>
-            )}
-          </div>
+          )}
         </div>
+
+        <button
+          onClick={() => setShowAddClassModal(true)}
+          className="btn-primary"
+        >
+          <Plus className="w-4 h-4" />
+          Tambah Kelas
+        </button>
+      </div>
 
         {loadingClasses ? (
           <p className="text-sm text-slate-400">Memuat daftar kelas...</p>
