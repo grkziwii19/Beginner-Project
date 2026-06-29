@@ -25,9 +25,16 @@ function Row({
   editMode: boolean
   children?: React.ReactNode
 }) {
+  // Pisahkan tanda * dari label agar bisa diberi warna merah
+  const isRequired = label.endsWith(' *')
+  const displayLabel = isRequired ? label.slice(0, -2) : label
+
   return (
     <div>
-      <p className="text-xs font-medium text-slate-400 mb-1">{label}</p>
+      <p className="text-xs font-medium text-slate-400 mb-1">
+        {displayLabel}
+        {isRequired && <span className="text-red-500 ml-0.5">*</span>}
+      </p>
       {editMode
         ? children
         : <p className="text-sm text-slate-800">{value || <span className="text-slate-300">—</span>}</p>}
@@ -99,11 +106,11 @@ export default function StudentDetailModal({ open, student, className, onClose, 
   }
 
   const handleSave = async () => {
-    if (!form.name.trim() || !form.nis.trim()) {
-      setError('Nama dan NIS wajib diisi.')
+    if (!form.name.trim()) {
+      setError('Nama lengkap wajib diisi.')
       return
     }
-    if (!/^\d+$/.test(form.nis.trim())) {
+    if (form.nis.trim() && !/^\d+$/.test(form.nis.trim())) {
       setError('NIS harus berupa angka.')
       return
     }
@@ -226,7 +233,7 @@ export default function StudentDetailModal({ open, student, className, onClose, 
               <input ref={fileRef} type="file" accept="image/*" onChange={handlePhotoSelect} className="hidden" />
             </div>
             <div className="flex-1 grid grid-cols-2 gap-3">
-              <Row label="Nama Lengkap" value={form.name} editMode={editMode}>
+              <Row label="Nama Lengkap *" value={form.name} editMode={editMode}>
                 <input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
               </Row>
               <Row label="Kelas" value={className} editMode={editMode}>
@@ -239,7 +246,7 @@ export default function StudentDetailModal({ open, student, className, onClose, 
           <div>
             <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Identitas</h3>
             <div className="grid grid-cols-2 gap-4">
-              <Row label="Jenis Kelamin" value={form.gender} editMode={editMode}>
+              <Row label="Jenis Kelamin *" value={form.gender} editMode={editMode}>
                 <select className="input" value={form.gender} onChange={e => setForm({ ...form, gender: e.target.value })}>
                   <option>Laki-laki</option>
                   <option>Perempuan</option>
@@ -265,10 +272,10 @@ export default function StudentDetailModal({ open, student, className, onClose, 
             <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Akademik</h3>
             <div className="grid grid-cols-2 gap-4">
               <Row label="NIS" value={form.nis} editMode={editMode}>
-                <input className="input" inputMode="numeric" value={form.nis} onChange={e => { if (/^\d*$/.test(e.target.value)) setForm({ ...form, nis: e.target.value }) }} placeholder="Contoh: 2024001" />
+                <input className="input" value={form.nis} onChange={e => setForm({ ...form, nis: e.target.value })} />
               </Row>
               <Row label="NISN" value={form.nisn} editMode={editMode}>
-                <input className="input" inputMode="numeric" value={form.nisn} onChange={e => { if (/^\d*$/.test(e.target.value)) setForm({ ...form, nisn: e.target.value }) }} placeholder="Contoh: 0012345678" />
+                <input className="input" value={form.nisn} onChange={e => setForm({ ...form, nisn: e.target.value })} />
               </Row>
             </div>
           </div>
@@ -296,7 +303,7 @@ export default function StudentDetailModal({ open, student, className, onClose, 
 
               {/* No. HP — baris sendiri */}
               <Row label="No. HP Orang Tua" value={form.parent_phone} editMode={editMode}>
-                <input className="input" inputMode="numeric" value={form.parent_phone} onChange={e => { if (/^\d*$/.test(e.target.value)) setForm({ ...form, parent_phone: e.target.value }) }} placeholder="Contoh: 081298765432" />
+                <input className="input" value={form.parent_phone} onChange={e => setForm({ ...form, parent_phone: e.target.value })} />
               </Row>
             </div>
           </div>
