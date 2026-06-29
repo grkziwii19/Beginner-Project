@@ -6,8 +6,7 @@ import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, ClipboardCheck, Award, FileBarChart,
-  Settings, Menu, X, Calendar, Building2, IdCard,
-  BookOpen
+  Settings, Menu, X, Calendar, Building2, IdCard, GraduationCap
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
@@ -39,8 +38,9 @@ const navRows: NavRow[] = [
   { type: 'section', label: 'Akademik' },
 
   { href: '/data-siswa', label: 'Data Siswa', icon: IdCard },
+  { href: '/mengajar', label: 'Mengajar', icon: GraduationCap },
   { href: '/absensi', label: 'Absensi', icon: ClipboardCheck },
-  { href: '/akademik/nilai', label: 'Nilai', icon: BookOpen },
+  { href: '/akademik/nilai', label: 'Nilai', icon: Award },
 
   { href: '/laporan', label: 'Laporan', icon: FileBarChart },
   { href: '/pengaturan', label: 'Pengaturan', icon: Settings },
@@ -52,11 +52,7 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false)
   
   const [schoolName, setSchoolName] = useState('')
-  // ⚠️ PENTING: Jangan pakai useState(new Date()) langsung!
-  // Server render menggunakan waktu UTC, browser menggunakan waktu lokal (WIB).
-  // Perbedaan ini menyebabkan React error #418 (hydration mismatch).
-  // Solusi: mulai dengan null, baru set setelah komponen mount di browser.
-  const [now, setNow] = useState<Date | null>(null)
+  const [now, setNow] = useState(new Date())
 
   useEffect(() => {
   const load = async () => {
@@ -79,8 +75,6 @@ export default function Sidebar() {
 
   load()
 
-  // Set waktu sekarang setelah mount (hanya berjalan di browser, bukan server)
-  setNow(new Date())
   const interval = setInterval(() => setNow(new Date()), 60000)
 
   return () => clearInterval(interval)
@@ -94,9 +88,8 @@ export default function Sidebar() {
   return pathname === href || pathname.startsWith(`${href}/`)
 }
 
-  // now bisa null saat server render / sebelum mount — tampilkan string kosong dulu
-  const dayLabel = now ? now.toLocaleDateString('id-ID', { weekday: 'long' }) : ''
-  const dateLabel = now ? now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+  const dayLabel = now.toLocaleDateString('id-ID', { weekday: 'long' })
+  const dateLabel = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
 
   const NavContent = () => (
     <>
