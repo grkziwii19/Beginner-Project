@@ -232,32 +232,54 @@ export default function StudentsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {/* Kelas + Wali Kelas: 2 baris terpisah di HP, 1 baris sejajar di desktop */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8">
-              <div className="flex items-center gap-3">
-                <label className="text-sm font-medium text-slate-600 shrink-0">Kelas</label>
-                <div className="relative flex-1 sm:max-w-xs">
-                  <select
-                    className="input appearance-none pr-9"
-                    value={selectedClassId}
-                    onChange={e => setSelectedClassId(e.target.value)}
-                  >
-                    <option value="">-- Pilih kelas --</option>
-                    {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
+  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 
-              {selectedClass && (
-                <div className="flex items-center gap-3">
-                  <label className="text-sm font-medium text-slate-600 shrink-0">Wali Kelas</label>
-                  <p className="text-sm text-slate-700">
-                    {selectedClass.homeroom_teacher || '-'}
-                  </p>
-                </div>
-              )}
-            </div>
+    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
+      <label className="text-sm font-medium text-slate-600 shrink-0">
+        Kelas
+      </label>
+
+      <div className="relative w-40">
+        <select
+          className="input appearance-none pr-9"
+          value={selectedClassId}
+          onChange={e => setSelectedClassId(e.target.value)}
+        >
+          <option value="">-- Pilih kelas --</option>
+          {classes.map(c => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+
+        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+      </div>
+
+      {selectedClass && (
+        <button
+          onClick={() => setShowEditClassModal(true)}
+          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-indigo-600"
+        >
+          <Pencil className="w-4 h-4" />
+          Edit
+        </button>
+      )}
+
+      {selectedClass && (
+        <div className="flex items-center gap-2 lg:ml-2">
+          <label className="text-sm font-medium text-slate-600 whitespace-nowrap">
+            Wali Kelas
+          </label>
+
+          <p className="text-sm text-slate-700">
+            {selectedClass.homeroom_teacher || '-'}
+          </p>
+        </div>
+      )}
+    </div>
+
+  </div>
 
             {/* Mata Pelajaran: selalu baris sendiri, di bawah */}
             {selectedClass && (
