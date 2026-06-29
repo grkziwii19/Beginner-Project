@@ -103,6 +103,18 @@ export default function StudentDetailModal({ open, student, className, onClose, 
       setError('Nama dan NIS wajib diisi.')
       return
     }
+    if (!/^\d+$/.test(form.nis.trim())) {
+      setError('NIS harus berupa angka.')
+      return
+    }
+    if (form.nisn.trim() && !/^\d+$/.test(form.nisn.trim())) {
+      setError('NISN harus berupa angka.')
+      return
+    }
+    if (form.parent_phone.trim() && !/^\d+$/.test(form.parent_phone.trim())) {
+      setError('No. HP harus berupa angka.')
+      return
+    }
     setSaving(true)
     setError('')
 
@@ -253,10 +265,10 @@ export default function StudentDetailModal({ open, student, className, onClose, 
             <h3 className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-3">Akademik</h3>
             <div className="grid grid-cols-2 gap-4">
               <Row label="NIS" value={form.nis} editMode={editMode}>
-                <input className="input" value={form.nis} onChange={e => setForm({ ...form, nis: e.target.value })} />
+                <input className="input" inputMode="numeric" value={form.nis} onChange={e => { if (/^\d*$/.test(e.target.value)) setForm({ ...form, nis: e.target.value }) }} placeholder="Contoh: 2024001" />
               </Row>
               <Row label="NISN" value={form.nisn} editMode={editMode}>
-                <input className="input" value={form.nisn} onChange={e => setForm({ ...form, nisn: e.target.value })} />
+                <input className="input" inputMode="numeric" value={form.nisn} onChange={e => { if (/^\d*$/.test(e.target.value)) setForm({ ...form, nisn: e.target.value }) }} placeholder="Contoh: 0012345678" />
               </Row>
             </div>
           </div>
@@ -284,7 +296,7 @@ export default function StudentDetailModal({ open, student, className, onClose, 
 
               {/* No. HP — baris sendiri */}
               <Row label="No. HP Orang Tua" value={form.parent_phone} editMode={editMode}>
-                <input className="input" value={form.parent_phone} onChange={e => setForm({ ...form, parent_phone: e.target.value })} />
+                <input className="input" inputMode="numeric" value={form.parent_phone} onChange={e => { if (/^\d*$/.test(e.target.value)) setForm({ ...form, parent_phone: e.target.value }) }} placeholder="Contoh: 081298765432" />
               </Row>
             </div>
           </div>
