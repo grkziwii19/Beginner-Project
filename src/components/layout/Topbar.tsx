@@ -56,7 +56,7 @@ export default function Topbar() {
   return (
     <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 gap-4">
       {/* Judul halaman, menggantikan posisi search yang lama */}
-      <h1 className="text-base sm:text-lg font-semibold text-slate-900 ml-8 lg:ml-0 truncate">
+      <h1 className="text-lg sm:text-xl font-bold text-slate-900 ml-8 lg:ml-0 truncate">
         {title}
       </h1>
 
