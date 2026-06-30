@@ -189,7 +189,6 @@ export default function StudentsPage() {
       {/* Pilih Kelas */}
       <div className="card p-4 sm:p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-slate-700">Kelas</h2>
           <div className="flex items-center gap-2">
             {selectedClass && (
               <button onClick={() => setShowEditClassModal(true)} className="btn-secondary">
