@@ -188,38 +188,22 @@ export default function StudentsPage() {
 
       {/* Pilih Kelas */}
       <div className="card p-4 sm:p-5">
-      <div className="flex items-start justify-between mb-4">
-        <div>
-          <h3 className="text-sm font-medium text-slate-600 mb-2">Kelas</h3>
-
-          {selectedClass && (
-            <button
-              onClick={() => setShowEditClassModal(true)}
-              className="text-sm text-slate-500 hover:text-indigo-600 font-medium flex items-center gap-1"
-            >
-              <Pencil className="
-                inline-flex
-                items-center
-                gap-1
-                mt-1
-                text-xs
-                font-medium
-                text-slate-500
-                hover:text-indigo-600
-                " />
-              Edit
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold text-slate-700">Kelas</h2>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowAddClassModal(true)} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
+              <Plus className="w-3.5 h-3.5" /> Tambah
             </button>
-          )}
+            {selectedClass && (
+              <>
+                <span className="text-slate-200">|</span>
+                <button onClick={() => setShowEditClassModal(true)} className="text-sm text-slate-500 hover:text-indigo-600 font-medium flex items-center gap-1">
+                  <Pencil className="w-3.5 h-3.5" /> Edit
+                </button>
+              </>
+            )}
+          </div>
         </div>
-
-        <button
-          onClick={() => setShowAddClassModal(true)}
-          className="btn-primary"
-        >
-          <Plus className="w-4 h-4" />
-          Tambah Kelas
-        </button>
-      </div>
 
         {loadingClasses ? (
           <p className="text-sm text-slate-400">Memuat daftar kelas...</p>
@@ -232,54 +216,32 @@ export default function StudentsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            {/* Kelas + Wali Kelas: 2 baris terpisah di HP, 1 baris sejajar di desktop */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-slate-600 shrink-0">Kelas</label>
+                <div className="relative flex-1 sm:max-w-xs">
+                  <select
+                    className="input appearance-none pr-9"
+                    value={selectedClassId}
+                    onChange={e => setSelectedClassId(e.target.value)}
+                  >
+                    <option value="">-- Pilih kelas --</option>
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
 
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-4">
-      <label className="text-sm font-medium text-slate-600 shrink-0">
-        Kelas
-      </label>
-
-      <div className="relative w-40">
-        <select
-          className="input appearance-none pr-9"
-          value={selectedClassId}
-          onChange={e => setSelectedClassId(e.target.value)}
-        >
-          <option value="">-- Pilih kelas --</option>
-          {classes.map(c => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-
-        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-      </div>
-
-      {selectedClass && (
-        <button
-          onClick={() => setShowEditClassModal(true)}
-          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-indigo-600"
-        >
-          <Pencil className="w-4 h-4" />
-          Edit
-        </button>
-      )}
-
-      {selectedClass && (
-        <div className="flex items-center gap-2 lg:ml-2">
-          <label className="text-sm font-medium text-slate-600 whitespace-nowrap">
-            Wali Kelas
-          </label>
-
-          <p className="text-sm text-slate-700">
-            {selectedClass.homeroom_teacher || '-'}
-          </p>
-        </div>
-      )}
-    </div>
-
-  </div>
+              {selectedClass && (
+                <div className="flex items-center gap-3">
+                  <label className="text-sm font-medium text-slate-600 shrink-0">Wali Kelas</label>
+                  <p className="text-sm text-slate-700">
+                    {selectedClass.homeroom_teacher || '-'}
+                  </p>
+                </div>
+              )}
+            </div>
 
             {/* Mata Pelajaran: selalu baris sendiri, di bawah */}
             {selectedClass && (
