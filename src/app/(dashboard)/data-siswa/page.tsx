@@ -189,19 +189,15 @@ export default function StudentsPage() {
       {/* Pilih Kelas */}
       <div className="card p-4 sm:p-5">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-slate-700">Kelas</h2>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowAddClassModal(true)} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
-              <Plus className="w-3.5 h-3.5" /> Tambah
-            </button>
             {selectedClass && (
-              <>
-                <span className="text-slate-200">|</span>
-                <button onClick={() => setShowEditClassModal(true)} className="text-sm text-slate-500 hover:text-indigo-600 font-medium flex items-center gap-1">
-                  <Pencil className="w-3.5 h-3.5" /> Edit
-                </button>
-              </>
+              <button onClick={() => setShowEditClassModal(true)} className="text-sm text-slate-500 hover:text-indigo-600 font-medium flex items-center gap-1">
+                <Pencil className="w-3.5 h-3.5" /> Edit
+              </button>
             )}
+            <button onClick={() => setShowAddClassModal(true)} className="btn-primary">
+              <Plus className="w-4 h-4" /> Tambah Kelas
+            </button>
           </div>
         </div>
 
