@@ -13,14 +13,26 @@ type TabType = 'absensi' | 'nilai' | 'catatan'
 
 const UMUM_VALUE = '__umum__'
 
+const SEMESTER_OPTIONS = [
+  { value: '1', label: 'I (Ganjil)' },
+  { value: '2', label: 'II (Genap)' },
+]
+
+function getAcademicYear() {
+  const y = new Date().getFullYear()
+  return new Date().getMonth() + 1 >= 7 ? `${y}/${y + 1}` : `${y - 1}/${y}`
+}
+
 export default function MengajarPage() {
-  const supabase = createClient()
+  const [supabase] = useState(() => createClient())
 
   const [classes, setClasses] = useState<ClassItem[]>([])
   const [loadingClasses, setLoadingClasses] = useState(true)
   const [selectedClassId, setSelectedClassId] = useState('')
   const [selectedSubject, setSelectedSubject] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [semester, setSemester] = useState('1')
+  const [academicYear, setAcademicYear] = useState(getAcademicYear())
   const [activeTab, setActiveTab] = useState<TabType>('absensi')
 
   const [isSemesterMode, setIsSemesterMode] = useState(false)
@@ -28,7 +40,6 @@ export default function MengajarPage() {
 
   const selectedClass = classes.find(c => c.id === selectedClassId) ?? null
 
-  // Daftar mapel yang tersedia untuk kelas terpilih
   const subjectOptions = selectedClass?.is_homeroom_only
     ? [UMUM_VALUE]
     : (selectedClass?.subjects ?? [])
@@ -44,23 +55,14 @@ export default function MengajarPage() {
     load()
   }, [])
 
-  // Reset pilihan mapel saat ganti kelas
   useEffect(() => {
     setSelectedSubject('')
     setIsSemesterMode(false)
   }, [selectedClassId])
 
   const handleToggleSemester = (checked: boolean) => {
-    if (checked) {
-      setShowConfirmModal(true)
-    } else {
-      setIsSemesterMode(false)
-    }
-  }
-
-  const confirmSemesterMode = () => {
-    setIsSemesterMode(true)
-    setShowConfirmModal(false)
+    if (checked) setShowConfirmModal(true)
+    else setIsSemesterMode(false)
   }
 
   const readyToShowTabs = selectedClass && selectedSubject
@@ -69,10 +71,10 @@ export default function MengajarPage() {
     <div className="space-y-6">
       <p className="text-sm text-slate-500">Absensi, nilai, dan catatan dalam satu tempat.</p>
 
-      {/* Pilih Kelas + Mapel */}
+      {/* Pilih Kelas + Mapel + Tanggal */}
       <div className="card p-4 sm:p-5 space-y-3">
+        {/* Baris 1: Kelas + Mapel */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-8">
-          {/* Kelas */}
           <div className="flex items-center gap-3">
             <label className="text-sm font-medium text-slate-600 shrink-0">Kelas</label>
             <div className="relative flex-1 sm:max-w-xs">
@@ -89,7 +91,6 @@ export default function MengajarPage() {
             </div>
           </div>
 
-          {/* Mapel */}
           {selectedClass && (
             <div className="flex items-center gap-3">
               <label className="text-sm font-medium text-slate-600 shrink-0">Mapel</label>
@@ -101,7 +102,9 @@ export default function MengajarPage() {
                 >
                   <option value="">-- Pilih mapel --</option>
                   {subjectOptions.map(s => (
-                    <option key={s} value={s}>{s === UMUM_VALUE ? 'Semua Mapel (Wali Kelas)' : s}</option>
+                    <option key={s} value={s}>
+                      {s === UMUM_VALUE ? 'Semua Mapel (Wali Kelas)' : s}
+                    </option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -110,20 +113,45 @@ export default function MengajarPage() {
           )}
         </div>
 
-        {/* Tanggal + Checkbox Nilai Semester */}
+        {/* Baris 2: Tanggal + Semester + Tahun Ajaran + Checkbox Nilai Semester */}
         {readyToShowTabs && (
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 pt-3 border-t border-slate-100">
-            <div className="flex items-center gap-3 flex-1">
-              <label className="text-sm font-medium text-slate-600 shrink-0 w-16 sm:w-auto">Tanggal</label>
+          <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-100">
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-slate-600 shrink-0">Tanggal</label>
               <input
                 type="date"
-                className="input flex-1 sm:max-w-xs"
+                className="input"
                 value={date}
                 onChange={e => setDate(e.target.value)}
               />
             </div>
 
-            <label className="flex items-center gap-2 cursor-pointer flex-1">
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-slate-600 shrink-0">Semester</label>
+              <div className="relative">
+                <select
+                  className="input appearance-none pr-9"
+                  value={semester}
+                  onChange={e => setSemester(e.target.value)}
+                >
+                  {SEMESTER_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-slate-600 shrink-0">Tahun Pelajaran</label>
+              <input
+                type="text"
+                className="input w-32"
+                value={academicYear}
+                onChange={e => setAcademicYear(e.target.value)}
+                placeholder="2024/2025"
+              />
+            </div>
+
+            <label className="flex items-center gap-2 cursor-pointer ml-auto">
               <input
                 type="checkbox"
                 className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
@@ -136,7 +164,7 @@ export default function MengajarPage() {
         )}
       </div>
 
-      {/* Belum pilih kelas/mapel */}
+      {/* Empty state */}
       {!readyToShowTabs && !loadingClasses && (
         <div className="card p-10 text-center">
           <GraduationCap className="w-10 h-10 text-slate-300 mx-auto mb-3" />
@@ -158,7 +186,9 @@ export default function MengajarPage() {
                 key={t.id}
                 onClick={() => setActiveTab(t.id as TabType)}
                 className={`flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === t.id ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700'
+                  activeTab === t.id
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               >
                 <t.icon className="w-4 h-4" /> {t.label}
@@ -167,14 +197,20 @@ export default function MengajarPage() {
           </div>
 
           {activeTab === 'absensi' && (
-            <AbsensiTab className={selectedClass!.name} subject={selectedSubject} date={date} />
+            <AbsensiTab
+              className={selectedClass!.name}
+              subject={selectedSubject}
+              date={date}
+            />
           )}
 
           {activeTab === 'nilai' && (
             <NilaiTab
               className={selectedClass!.name}
               subject={selectedSubject === UMUM_VALUE ? 'Umum' : selectedSubject}
-              isSemesterMode={isSemesterMode}
+              date={date}
+              semester={semester}
+              academicYear={academicYear}
             />
           )}
 
@@ -187,10 +223,9 @@ export default function MengajarPage() {
         </>
       )}
 
-      {/* Modal konfirmasi nilai semester */}
       {showConfirmModal && (
         <ConfirmSemesterModal
-          onConfirm={confirmSemesterMode}
+          onConfirm={() => { setIsSemesterMode(true); setShowConfirmModal(false) }}
           onCancel={() => setShowConfirmModal(false)}
         />
       )}

@@ -6,23 +6,19 @@ import { type AttendanceStatus, getStatusColor, getStatusLabel } from '@/types'
 import { CheckCircle, AlertCircle, Save, Users, CheckCheck } from 'lucide-react'
 import clsx from 'clsx'
 
-interface StudentRow {
-  id: string
-  name: string
-}
+interface StudentRow { id: string; name: string }
 
 const STATUSES: AttendanceStatus[] = ['hadir', 'sakit', 'izin', 'alpha']
 const UMUM_VALUE = '__umum__'
 
 interface Props {
   className: string
-  subject: string // bisa UMUM_VALUE
+  subject: string
   date: string
 }
 
 export default function AbsensiTab({ className, subject, date }: Props) {
-  const supabase = createClient()
-
+  const [supabase] = useState(() => createClient())
   const [students, setStudents] = useState<StudentRow[]>([])
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({})
   const [loading, setLoading] = useState(true)
@@ -38,18 +34,20 @@ export default function AbsensiTab({ className, subject, date }: Props) {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) { setError('Sesi tidak valid.'); return }
 
+        const subjectQuery = subject || UMUM_VALUE
         const [{ data: studentsData, error: studentsError }, { data: attData }] = await Promise.all([
-          supabase.from('students').select('id, name').eq('user_id', user.id).eq('class_name', className).order('name'),
+          supabase.from('students').select('id, name')
+            .eq('user_id', user.id).eq('class_name', className).order('name'),
           supabase.from('attendance').select('student_id, status')
-            .eq('user_id', user.id).eq('date', date).eq('subject', subject || UMUM_VALUE),
+            .eq('user_id', user.id).eq('date', date).eq('subject', subjectQuery),
         ])
 
         if (studentsError) throw studentsError
-
         setStudents(studentsData ?? [])
+
         const map: Record<string, AttendanceStatus> = {}
-        const studentIds = new Set((studentsData ?? []).map(s => s.id))
-        attData?.forEach(a => { if (studentIds.has(a.student_id)) map[a.student_id] = a.status })
+        const ids = new Set((studentsData ?? []).map(s => s.id))
+        attData?.forEach(a => { if (ids.has(a.student_id)) map[a.student_id] = a.status })
         setAttendance(map)
       } catch (err) {
         console.error(err)
@@ -61,8 +59,8 @@ export default function AbsensiTab({ className, subject, date }: Props) {
     load()
   }, [className, subject, date])
 
-  const setStatus = (studentId: string, status: AttendanceStatus) => {
-    setAttendance(prev => ({ ...prev, [studentId]: status }))
+  const setStatus = (id: string, status: AttendanceStatus) => {
+    setAttendance(prev => ({ ...prev, [id]: status }))
     setSaved(false)
   }
 
@@ -81,7 +79,8 @@ export default function AbsensiTab({ className, subject, date }: Props) {
       if (!user) { setError('Sesi tidak valid.'); return }
 
       const records = Object.entries(attendance).map(([student_id, status]) => ({
-        user_id: user.id, student_id, date, status, subject: subject || UMUM_VALUE,
+        user_id: user.id, student_id, date, status,
+        subject: subject || UMUM_VALUE,
       }))
 
       const { error: saveError } = await supabase
@@ -108,18 +107,14 @@ export default function AbsensiTab({ className, subject, date }: Props) {
     belum: students.filter(s => !attendance[s.id]).length,
   }
 
-  if (loading) {
-    return <div className="card p-10 text-center text-slate-400 text-sm">Memuat data absensi...</div>
-  }
+  if (loading) return <div className="card p-10 text-center text-slate-400 text-sm">Memuat data absensi...</div>
 
-  if (students.length === 0) {
-    return (
-      <div className="card p-10 text-center">
-        <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-        <p className="text-slate-500 text-sm">Belum ada siswa di kelas ini.</p>
-      </div>
-    )
-  }
+  if (students.length === 0) return (
+    <div className="card p-10 text-center">
+      <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+      <p className="text-slate-500 text-sm">Belum ada siswa di kelas ini.</p>
+    </div>
+  )
 
   return (
     <div className="space-y-4">
@@ -129,7 +124,6 @@ export default function AbsensiTab({ className, subject, date }: Props) {
         </div>
       )}
 
-      {/* Summary */}
       <div className="grid grid-cols-5 gap-2">
         {[
           { key: 'hadir', label: 'Hadir', color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
@@ -145,28 +139,24 @@ export default function AbsensiTab({ className, subject, date }: Props) {
         ))}
       </div>
 
-      {/* Aksi */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <button
-          onClick={markAllHadir}
-          className="btn-secondary text-sm"
-        >
+        <button onClick={markAllHadir} className="btn-secondary text-sm">
           <CheckCheck className="w-4 h-4" /> Tandai Hadir Semua
         </button>
-
         <div className="flex items-center gap-3">
           <span className="text-xs text-slate-400">{filledCount}/{students.length} terisi</span>
           <button
             onClick={handleSave}
-            disabled={saving || students.length === 0}
+            disabled={saving}
             className={clsx('btn-primary text-sm', saved && 'bg-emerald-600 hover:bg-emerald-700')}
           >
-            {saved ? <><CheckCircle className="w-4 h-4" /> Tersimpan!</> : <><Save className="w-4 h-4" /> {saving ? 'Menyimpan...' : 'Simpan Absensi'}</>}
+            {saved
+              ? <><CheckCircle className="w-4 h-4" /> Tersimpan!</>
+              : <><Save className="w-4 h-4" /> {saving ? 'Menyimpan...' : 'Simpan Absensi'}</>}
           </button>
         </div>
       </div>
 
-      {/* Daftar siswa */}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -179,7 +169,7 @@ export default function AbsensiTab({ className, subject, date }: Props) {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {students.map((s, i) => (
-                <tr key={s.id} className="hover:bg-slate-50 transition-colors">
+                <tr key={s.id} className="hover:bg-slate-50">
                   <td className="table-cell text-slate-400">{i + 1}</td>
                   <td className="table-cell font-medium text-slate-900">{s.name}</td>
                   <td className="table-cell">
@@ -192,9 +182,10 @@ export default function AbsensiTab({ className, subject, date }: Props) {
                             'px-3 py-1 rounded-lg text-xs font-medium border transition-all',
                             attendance[s.id] === status
                               ? `${getStatusColor(status)} border-transparent ring-2 ring-offset-1 ${
-                                  status === 'hadir' ? 'ring-emerald-400' : status === 'sakit' ? 'ring-blue-400' :
-                                  status === 'izin' ? 'ring-amber-400' : 'ring-red-400'
-                                }`
+                                  status === 'hadir' ? 'ring-emerald-400'
+                                  : status === 'sakit' ? 'ring-blue-400'
+                                  : status === 'izin' ? 'ring-amber-400'
+                                  : 'ring-red-400'}`
                               : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
                           )}
                         >

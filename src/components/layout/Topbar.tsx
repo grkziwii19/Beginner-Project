@@ -18,7 +18,7 @@ interface NotifItem {
 // tidak perlu mengirim judulnya sendiri secara manual. Tambahkan entri
 // baru di sini setiap kali ada route baru yang butuh judul khusus.
 const PAGE_TITLES: Record<string, string> = {
-  '/dashboard': 'Ringkasan Dashboard',
+  '/dashboard': 'Dashboard',
   '/data-siswa': 'Data Siswa',
   '/mengajar': 'Mengajar',
   '/absensi': 'Absensi',
