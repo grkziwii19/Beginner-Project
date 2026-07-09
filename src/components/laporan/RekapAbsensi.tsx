@@ -73,10 +73,19 @@ export default function RekapAbsensi({ className, subject, semester, academicYea
     }
 
     const rows: StudentAbsensi[] = (studentData ?? []).map(s => {
-      const att = attMap[s.id] ?? { hadir: 0, sakit: 0, izin: 0, alpha: 0 }
-      const total = att.hadir + att.sakit + att.izin + att.alpha
-      return { id: s.id, name: s.name, nis: s.nis, ...att, total }
-    })
+    const att = attMap[s.id] ?? { hadir: 0, sakit: 0, izin: 0, alpha: 0 }
+    const total = att.hadir + att.sakit + att.izin + att.alpha
+    return {
+      id: s.id,
+      name: s.name,
+      nis: s.nis,
+      hadir: att.hadir,
+      sakit: att.sakit,
+      izin: att.izin,
+      alpha: att.alpha,
+      total,
+    }
+  })
 
     setStudents(rows)
     setLoading(false)
