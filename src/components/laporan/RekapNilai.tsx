@@ -58,7 +58,7 @@ export default function RekapNilai({ className, subject, semester, academicYear 
     setActivityTypes(types)
 
     const scoresByStudentActivity: Record<string, Record<string, number[]>> = {}
-    for (const s of scoreData?.data ?? scoreData ?? []) {
+    for (const s of scoreData ?? []) {
       if (!scoresByStudentActivity[s.student_id]) scoresByStudentActivity[s.student_id] = {}
       const actId = s.activity_type_id
       if (!scoresByStudentActivity[s.student_id][actId]) scoresByStudentActivity[s.student_id][actId] = []
