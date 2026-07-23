@@ -181,15 +181,19 @@ export default function NilaiTab({ className, subject, date, semester, academicY
   )
 
   return (
-    <div className="space-y-4">
-      {/* Pilih Jenis Kegiatan */}
-      <div className="card p-4">
-        <div className="flex items-center gap-3 flex-wrap">
-          <label className="text-sm font-medium text-slate-600 shrink-0">Jenis Kegiatan</label>
-
+    <div className="space-y-3">
+      
+      {/* BARIS UTAMA TINDAKAN & KONFIGURASI (Sejajar dan Compact) */}
+      <div className="flex flex-wrap items-center justify-between gap-2.5 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+        
+        {/* Sisi Kiri: Dropdown Jenis Kegiatan & Tombol Tambah Baru */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5">
+            Kegiatan
+          </span>
           <div className="relative">
             <select
-              className="input appearance-none pr-9 text-sm"
+              className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none pr-9 text-xs py-1 h-[34px] font-bold text-slate-800 min-w-[180px]"
               value={selectedActivityId}
               onChange={e => setSelectedActivityId(e.target.value)}
             >
@@ -203,70 +207,78 @@ export default function NilaiTab({ className, subject, date, semester, academicY
           </div>
 
           {!addingType ? (
-            <button onClick={() => setAddingType(true)} className="btn-secondary text-xs py-1.5 px-3">
+            <button 
+              onClick={() => setAddingType(true)} 
+              className="btn-secondary text-xs py-1 px-2.5 flex items-center gap-1.5 h-[34px] rounded-md"
+            >
               <Plus className="w-3.5 h-3.5" /> Jenis Baru
             </button>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <input
-                className="input text-sm py-1.5 w-44"
-                placeholder="Nama jenis kegiatan"
+                className="input text-xs py-1 h-[34px] w-40 border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 font-semibold"
+                placeholder="Nama kegiatan baru"
                 value={newTypeName}
                 onChange={e => setNewTypeName(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') handleAddType() }}
                 autoFocus
               />
-              <button onClick={handleAddType} className="btn-primary text-xs py-1.5 px-3">Tambah</button>
-              <button onClick={() => { setAddingType(false); setNewTypeName('') }} className="btn-secondary text-xs py-1.5 px-3">Batal</button>
+              <button onClick={handleAddType} className="btn-primary text-xs py-1.5 px-3 h-[34px] rounded-md">Tambah</button>
+              <button onClick={() => { setAddingType(false); setNewTypeName('') }} className="btn-secondary text-xs py-1.5 px-3 h-[34px] rounded-md">Batal</button>
             </div>
           )}
-
-          {meetingCount > 0 && (
-            <span className="ml-auto text-xs text-slate-400">
-              Pertemuan ke-{meetingCount}
-            </span>
-          )}
         </div>
+
+        {/* Sisi Kanan: Status Pertemuan */}
+        {meetingCount > 0 && (
+          <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200">
+            Pertemuan ke-{meetingCount}
+          </span>
+        )}
       </div>
 
+      {/* Tampilan Error */}
       {error && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</div>
+        <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</div>
       )}
 
+      {/* TABEL DATA NILAI */}
       {loading ? (
         <div className="card p-10 text-center text-slate-400 text-sm">Memuat data...</div>
       ) : rows.length === 0 ? (
         <div className="card p-10 text-center text-slate-400 text-sm">Belum ada siswa di kelas ini.</div>
       ) : (
-        <div className="card overflow-hidden">
+        <div className="card overflow-hidden border border-slate-200 shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200">
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-slate-100 border-b border-slate-200">
                 <tr>
-                  <th className="table-header w-8 text-center">No</th>
-                  <th className="table-header">Nama Siswa</th>
-                  <th className="table-header w-24">NIS</th>
-                  <th className="table-header w-24 text-center">
+                  <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 w-12 text-center">No</th>
+                  <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">Nama Siswa</th>
+                  <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 w-24">NIS</th>
+                  <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 w-28 text-center">
                     Nilai
                     {selectedActivity?.weight != null && (
-                      <span className="block text-[10px] text-slate-400 font-normal">bobot {selectedActivity.weight}%</span>
+                      <span className="block text-[9px] text-slate-400 font-normal">bobot {selectedActivity.weight}%</span>
                     )}
                   </th>
-                  <th className="table-header">Catatan</th>
+                  <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">Catatan</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-150">
                 {rows.map((row, i) => (
                   <tr key={row.studentId} className="hover:bg-slate-50 transition-colors">
-                    <td className="table-cell text-center text-slate-400">{i + 1}</td>
-                    <td className="table-cell font-medium text-slate-900">{row.studentName}</td>
-                    <td className="table-cell text-slate-500">{row.nis}</td>
-                    <td className="table-cell p-1">
+                    <td className="px-3 py-1.5 text-xs text-slate-500 font-medium text-center">{i + 1}</td>
+                    <td className="px-3 py-1.5 text-xs font-semibold text-slate-900">{row.studentName}</td>
+                    <td className="px-3 py-1.5 text-xs font-bold text-slate-500">{row.nis}</td>
+                    
+                    {/* Input Nilai yang Kompak & Kontras */}
+                    <td className="px-2 py-1 text-center">
                       <input
                         type="text"
                         inputMode="numeric"
                         pattern="[0-9]*"
-                        className="w-full text-center border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+                        className="w-full text-center border border-slate-300 hover:border-slate-400 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent bg-white h-[30px]"
                         value={row.score}
                         onChange={e => {
                           const val = e.target.value.replace(/[^0-9]/g, '')
@@ -275,10 +287,12 @@ export default function NilaiTab({ className, subject, date, semester, academicY
                         placeholder="–"
                       />
                     </td>
-                    <td className="table-cell p-1">
+                    
+                    {/* Input Catatan */}
+                    <td className="px-2 py-1">
                       <input
                         type="text"
-                        className="w-full border border-slate-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent"
+                        className="w-full border border-slate-300 hover:border-slate-400 rounded-lg px-2 py-1 text-xs font-medium text-slate-800 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-transparent bg-white h-[30px]"
                         value={row.note}
                         onChange={e => updateRow(row.studentId, { note: e.target.value })}
                         placeholder="–"
@@ -290,17 +304,22 @@ export default function NilaiTab({ className, subject, date, semester, academicY
             </table>
           </div>
 
-          <div className="p-3 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
-            <p className="text-xs text-slate-400">
+          {/* Baris Tindakan Bawah yang Ramping */}
+          <div className="p-2.5 border-t border-slate-150 bg-slate-50 flex items-center justify-between">
+            <p className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
               {rows.length} siswa · {selectedActivity?.name}
             </p>
             <div className="flex items-center gap-3">
               {savedOk && (
-                <span className="flex items-center gap-1.5 text-emerald-600 text-xs">
+                <span className="flex items-center gap-1 text-emerald-600 text-xs font-bold">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Tersimpan
                 </span>
               )}
-              <button onClick={handleSave} disabled={saving} className="btn-primary text-xs py-1.5 px-3">
+              <button 
+                onClick={handleSave} 
+                disabled={saving} 
+                className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-sm rounded-md"
+              >
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                 Simpan Nilai
               </button>

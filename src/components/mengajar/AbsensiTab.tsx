@@ -117,69 +117,89 @@ export default function AbsensiTab({ className, subject, date }: Props) {
   )
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {error && (
-        <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
           <AlertCircle className="w-4 h-4 shrink-0" /> {error}
         </div>
       )}
 
-      <div className="grid grid-cols-5 gap-2">
-        {[
-          { key: 'hadir', label: 'Hadir', color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
-          { key: 'sakit', label: 'Sakit', color: 'bg-blue-50 text-blue-700 border-blue-100' },
-          { key: 'izin', label: 'Izin', color: 'bg-amber-50 text-amber-700 border-amber-100' },
-          { key: 'alpha', label: 'Alpha', color: 'bg-red-50 text-red-700 border-red-100' },
-          { key: 'belum', label: 'Belum', color: 'bg-slate-100 text-slate-500 border-slate-200' },
-        ].map(({ key, label, color }) => (
-          <div key={key} className={`rounded-xl p-2.5 text-center border ${color}`}>
-            <p className="text-xl font-bold">{summary[key as keyof typeof summary]}</p>
-            <p className="text-xs font-medium mt-0.5">{label}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <button onClick={markAllHadir} className="btn-secondary text-sm">
-          <CheckCheck className="w-4 h-4" /> Tandai Hadir Semua
-        </button>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-400">{filledCount}/{students.length} terisi</span>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className={clsx('btn-primary text-sm', saved && 'bg-emerald-600 hover:bg-emerald-700')}
+      {/* BARIS UTAMA TINDAKAN & RINGKASAN DATA (Sejajar dan Compact) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+        
+        {/* Sisi Kiri: Tindakan & Progress Pengisian */}
+        <div className="flex items-center gap-2.5">
+          <button 
+            onClick={markAllHadir} 
+            className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
           >
-            {saved
-              ? <><CheckCircle className="w-4 h-4" /> Tersimpan!</>
-              : <><Save className="w-4 h-4" /> {saving ? 'Menyimpan...' : 'Simpan Absensi'}</>}
+            <CheckCheck className="w-3.5 h-3.5" /> Tandai Hadir Semua
           </button>
+          <span className="text-xs text-slate-500 font-bold border-l border-slate-200 pl-3">
+            {filledCount}/{students.length} Terisi
+          </span>
         </div>
+
+        {/* Bagian Tengah: Jumlah H, S, I, A, B Berukuran Kecil & Rapi */}
+        <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5">
+          <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+            H: <span className="font-extrabold">{summary.hadir}</span>
+          </span>
+          <span className="text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+            S: <span className="font-extrabold">{summary.sakit}</span>
+          </span>
+          <span className="text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
+            I: <span className="font-extrabold">{summary.izin}</span>
+          </span>
+          <span className="text-red-700 bg-red-50 px-1.5 py-0.5 rounded border border-red-100">
+            A: <span className="font-extrabold">{summary.alpha}</span>
+          </span>
+          <span className="text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+            B: <span className="font-extrabold">{summary.belum}</span>
+          </span>
+        </div>
+
+        {/* Sisi Kanan: Tombol Simpan Absensi */}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className={clsx(
+            'btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-sm',
+            saved && 'bg-emerald-600 hover:bg-emerald-700'
+          )}
+        >
+          {saved ? (
+            <><CheckCircle className="w-3.5 h-3.5" /> Tersimpan!</>
+          ) : (
+            <><Save className="w-3.5 h-3.5" /> {saving ? 'Menyimpan...' : 'Simpan Absensi'}</>
+          )}
+        </button>
       </div>
 
-      <div className="card overflow-hidden">
+      {/* TABEL DATA SISWA (Padding baris dipadatkan py-1.5 agar ramping) */}
+      <div className="card overflow-hidden border border-slate-200 shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-slate-100 border-b border-slate-200">
               <tr>
-                <th className="table-header w-10">No</th>
-                <th className="table-header">Nama Siswa</th>
-                <th className="table-header">Status Kehadiran</th>
+                <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 w-12 text-center">No</th>
+                <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">Nama Siswa</th>
+                <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 w-72">Status Kehadiran</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-150">
               {students.map((s, i) => (
-                <tr key={s.id} className="hover:bg-slate-50">
-                  <td className="table-cell text-slate-400">{i + 1}</td>
-                  <td className="table-cell font-medium text-slate-900">{s.name}</td>
-                  <td className="table-cell">
-                    <div className="flex gap-2 flex-wrap">
+                <tr key={s.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-3 py-1.5 text-xs text-slate-500 font-medium text-center">{i + 1}</td>
+                  <td className="px-3 py-1.5 text-xs font-semibold text-slate-900">{s.name}</td>
+                  <td className="px-3 py-1.5">
+                    <div className="flex gap-1.5 flex-wrap">
                       {STATUSES.map(status => (
                         <button
                           key={status}
                           onClick={() => setStatus(s.id, status)}
                           className={clsx(
-                            'px-3 py-1 rounded-lg text-xs font-medium border transition-all',
+                            'px-2.5 py-1 rounded-md text-[11px] font-bold border transition-all',
                             attendance[s.id] === status
                               ? `${getStatusColor(status)} border-transparent ring-2 ring-offset-1 ${
                                   status === 'hadir' ? 'ring-emerald-400'
