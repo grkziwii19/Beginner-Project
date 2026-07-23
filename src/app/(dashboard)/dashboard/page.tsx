@@ -173,7 +173,7 @@ export default function DashboardPage() {
   ]
 
   const quickActions = [
-    { label: 'Input Nilai Baru', sub: 'Tambah nilai siswa', icon: Plus, color: 'bg-indigo-600', href: '/data-siswa' },
+    { label: 'Input Nilai Baru', sub: 'Tambah nilai siswa', icon: Plus, color: 'bg-indigo-600', href: '/kelas' },
     { label: 'Absensi Hari Ini', sub: 'Catat kehadiran cepat', icon: CalendarCheck, color: 'bg-emerald-600', onClick: () => setShowAttendanceModal(true) },
     { label: 'Import Data Siswa', sub: 'Upload file Excel', icon: Upload, color: 'bg-amber-500', href: '/import' },
     { label: 'Lihat Laporan', sub: 'Statistik lengkap', icon: BarChart3, color: 'bg-slate-700', href: '/students' },
@@ -193,7 +193,7 @@ export default function DashboardPage() {
         <Link href="/import" className="btn-secondary text-sm">
           <Download className="w-4 h-4" /> Export Data
         </Link>
-        <Link href="/data-siswa" className="btn-primary text-sm">
+        <Link href="/kelas" className="btn-primary text-sm">
           <Plus className="w-4 h-4" /> Tambah Nilai
         </Link>
       </div>

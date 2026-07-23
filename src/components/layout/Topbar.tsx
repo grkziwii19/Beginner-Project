@@ -19,7 +19,7 @@ interface NotifItem {
 // baru di sini setiap kali ada route baru yang butuh judul khusus.
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Dashboard',
-  '/data-siswa': 'Data Siswa',
+  '/kelas': 'Kelas',
   '/mengajar': 'Mengajar',
   '/absensi': 'Absensi',
   '/akademik/nilai': 'Nilai',

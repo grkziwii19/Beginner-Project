@@ -74,7 +74,7 @@ export default function RekapPage() {
             <div className="flex-1">
               <p className={`text-sm font-medium ${hasClasses ? 'text-slate-700' : 'text-slate-500'}`}>Memiliki minimal 1 kelas dengan siswa</p>
               {!hasClasses && (
-                <Link href="/data-siswa" className="text-xs text-indigo-600 hover:underline inline-flex items-center gap-1 mt-1">
+                <Link href="/kelas" className="text-xs text-indigo-600 hover:underline inline-flex items-center gap-1 mt-1">
                   Buat kelas <ArrowRight className="w-3 h-3" />
                 </Link>
               )}
@@ -86,7 +86,7 @@ export default function RekapPage() {
             <div className="flex-1">
               <p className={`text-sm font-medium ${hasAttendance ? 'text-slate-700' : 'text-slate-500'}`}>Memiliki data absensi</p>
               {hasClasses && !hasAttendance && (
-                <Link href="/data-siswa" className="text-xs text-indigo-600 hover:underline inline-flex items-center gap-1 mt-1">
+                <Link href="/kelas" className="text-xs text-indigo-600 hover:underline inline-flex items-center gap-1 mt-1">
                   Mulai input absensi <ArrowRight className="w-3 h-3" />
                 </Link>
               )}
