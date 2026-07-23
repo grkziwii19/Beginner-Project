@@ -611,6 +611,7 @@ export default function KelasPage() {
               date={date}
               semester={semester}
               academicYear={academicYear}
+              inputType={inputType} // <-- Kirim jenis data global ke komponen NilaiTab
             />
           </div>
         )
