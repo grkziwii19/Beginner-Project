@@ -39,10 +39,8 @@ const navRows: NavRow[] = [
   { type: 'section', label: 'Akademik' },
 
   { href: '/kelas', label: 'Kelas', icon: IdCard },
-  { href: '/mengajar', label: 'Mengajar', icon: GraduationCap },
   { href: '/absensi', label: 'Absensi', icon: ClipboardCheck },
   { href: '/akademik/nilai', label: 'Nilai', icon: Award },
-
   { href: '/laporan', label: 'Laporan', icon: FileBarChart },
   { href: '/pengaturan', label: 'Pengaturan', icon: Settings },
 ]

@@ -53,13 +53,19 @@ export default function KelasPage() {
 
   // ── State Parameter Global ──
   const [selectedSubject, setSelectedSubject] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState('') // Default kosong agar tidak terjadi mismatch
   const [inputType, setInputType] = useState('Harian')
   const [isSemesterMode, setIsSemesterMode] = useState(false)
 
-  // ── State Nilai & Akademik (Default di Balik Layar) ──
+  // ── State Nilai & Akademik (Default kosong dahulu) ──
   const [semester] = useState('1')
-  const [academicYear] = useState(getAcademicYear())
+  const [academicYear, setAcademicYear] = useState('') // Default kosong agar aman
+
+  // Isi tanggal dan tahun ajaran setelah mounted di browser
+  useEffect(() => {
+    setDate(new Date().toISOString().split('T')[0])
+    setAcademicYear(getAcademicYear())
+  }, [])
 
   // ── State Modals ──
   const [showStudentModal, setShowStudentModal] = useState(false)
