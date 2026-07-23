@@ -57,18 +57,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // onboarding check (safe guard)
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('onboarding_completed')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (profile && !profile.onboarding_completed) {
-    const url = req.nextUrl.clone()
-    url.pathname = '/onboarding'
-    return NextResponse.redirect(url)
-  }
+  // Catatan: cek onboarding_completed dipindah ke
+  // src/app/(dashboard)/layout.tsx — middleware sekarang hanya
+  // melakukan SATU panggilan network (auth.getUser), bukan dua.
+  // Ini mengurangi risiko MIDDLEWARE_INVOCATION_TIMEOUT saat
+  // Supabase lambat merespons.
 
   return res
 }
