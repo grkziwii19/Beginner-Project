@@ -38,6 +38,9 @@ function getAcademicYear() {
 export default function KelasPage() {
   const supabase = createClient()
 
+  // ── Mounted Guard State ──
+  const [mounted, setMounted] = useState(false)
+
   // ── State Kelas & Siswa ──
   const [classes, setClasses] = useState<ClassItem[]>([])
   const [selectedClassId, setSelectedClassId] = useState('')
@@ -53,13 +56,18 @@ export default function KelasPage() {
 
   // ── State Parameter Global ──
   const [selectedSubject, setSelectedSubject] = useState('')
-  const [date, setDate] = useState('') // Default kosong agar tidak terjadi mismatch
+  const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
   const [inputType, setInputType] = useState('Harian')
   const [isSemesterMode, setIsSemesterMode] = useState(false)
 
-  // ── State Nilai & Akademik (Default kosong dahulu) ──
+  // ── State Nilai & Akademik ──
   const [semester] = useState('1')
-  const [academicYear, setAcademicYear] = useState('') // Default kosong agar aman
+  const [academicYear, setAcademicYear] = useState(() => getAcademicYear())
+
+  // Aktifkan mounted setelah halaman terpasang di browser
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Isi tanggal dan tahun ajaran setelah mounted di browser
   useEffect(() => {
@@ -232,6 +240,15 @@ export default function KelasPage() {
     adaFoto: students.filter(s => s.photo_url).length,
   }
 
+  // ── SINKRONISASI MOUNTED (Memblokir error #418 secara total) ──
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center min-h-[300px] text-slate-400 text-sm">
+        Memuat halaman kelas...
+      </div>
+    )
+  }
+
   // 1. TAMPILAN: DAFTAR KELAS (Jika Belum Pilih Kelas atau selectedClass bernilai null)
   if (!selectedClass) {
     return (
@@ -329,7 +346,7 @@ export default function KelasPage() {
 
         {/* Baris Informasi Sejajar (Wali Kelas, Mapel, Tanggal, Input) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-slate-100">
-          {/* Kolom 1: Wali Kelas (Teks Ukuran Standar Semibold) */}
+          {/* Kolom 1: Wali Kelas */}
           <div className="flex flex-col gap-1">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Wali Kelas</span>
             <div className="text-slate-900 font-bold text-sm h-[38px] flex items-center">
@@ -337,7 +354,7 @@ export default function KelasPage() {
             </div>
           </div>
 
-          {/* Kolom 2: Mata Pelajaran (Ukuran Font Standar) */}
+          {/* Kolom 2: Mata Pelajaran */}
           <div className="flex flex-col gap-1">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mata Pelajaran</span>
             <div className="relative">
@@ -357,7 +374,7 @@ export default function KelasPage() {
             </div>
           </div>
 
-          {/* Kolom 3: Tanggal (Ukuran Font Standar) */}
+          {/* Kolom 3: Tanggal */}
           <div className="flex flex-col gap-1">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tanggal</span>
             <input
@@ -368,7 +385,7 @@ export default function KelasPage() {
             />
           </div>
 
-          {/* Kolom 4: Input Jenis Data (Ukuran Font Standar) */}
+          {/* Kolom 4: Input Jenis Data */}
           <div className="flex flex-col gap-1">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Input</span>
             <div className="relative">
@@ -394,7 +411,7 @@ export default function KelasPage() {
         </div>
       </div>
 
-      {/* TABS UTAMA KELAS (Ukuran Font Standar - text-sm) */}
+      {/* TABS UTAMA KELAS */}
       <div className="flex flex-wrap gap-1.5 border-b border-slate-200 pb-2">
         {[
           { id: 'daftar', label: 'Daftar Siswa', icon: List },
@@ -453,7 +470,7 @@ export default function KelasPage() {
             </div>
           )}
 
-          {/* Table (Font Standar text-sm, Jarak Baris Rapat Menggunakan py-2.5) */}
+          {/* Table */}
           <div className="card overflow-hidden border border-slate-200 shadow-sm">
             {loadingStudents ? (
               <div className="p-10 text-center text-slate-400 text-sm">Memuat data siswa...</div>
@@ -617,7 +634,7 @@ export default function KelasPage() {
               date={date}
               semester={semester}
               academicYear={academicYear}
-              inputType={inputType} // <-- Kirim jenis data global ke komponen NilaiTab
+              inputType={inputType}
             />
           </div>
         )
@@ -628,7 +645,7 @@ export default function KelasPage() {
         !selectedSubject ? (
           <div className="card p-8 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
             <GraduationCap className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-            <h3 className="font-bold text-slate-800 text-sm">Pilih mata pelajaran terlebih dahulu</h3>
+            <h3 className="font-semibold text-slate-700 text-sm">Pilih mata pelajaran terlebih dahulu</h3>
             <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Silakan pilih mata pelajaran dan tanggal pada bar kontrol di atas untuk membuat catatan.</p>
           </div>
         ) : (
