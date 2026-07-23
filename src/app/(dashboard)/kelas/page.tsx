@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic' // Tambahkan import dynamic
 import { createClient } from '@/lib/supabase/client'
 import { type Student, type ClassItem, getInitials, formatDateShort } from '@/types'
 import StudentDetailModal from '@/components/students/StudentDetailModal'
@@ -35,11 +36,9 @@ function getAcademicYear() {
   return new Date().getMonth() + 1 >= 7 ? `${y}/${y + 1}` : `${y - 1}/${y}`
 }
 
-export default function KelasPage() {
+// Ubah nama fungsi utama menjadi KelasPageContent
+function KelasPageContent() {
   const supabase = createClient()
-
-  // ── Mounted Guard State ──
-  const [mounted, setMounted] = useState(false)
 
   // ── State Kelas & Siswa ──
   const [classes, setClasses] = useState<ClassItem[]>([])
@@ -60,20 +59,9 @@ export default function KelasPage() {
   const [inputType, setInputType] = useState('Harian')
   const [isSemesterMode, setIsSemesterMode] = useState(false)
 
-  // ── State Nilai & Akademik ──
+  // ── State Nilai & Academic Year ──
   const [semester] = useState('1')
   const [academicYear, setAcademicYear] = useState(() => getAcademicYear())
-
-  // Aktifkan mounted setelah halaman terpasang di browser
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Isi tanggal dan tahun ajaran setelah mounted di browser
-  useEffect(() => {
-    setDate(new Date().toISOString().split('T')[0])
-    setAcademicYear(getAcademicYear())
-  }, [])
 
   // ── State Modals ──
   const [showStudentModal, setShowStudentModal] = useState(false)
@@ -240,15 +228,6 @@ export default function KelasPage() {
     adaFoto: students.filter(s => s.photo_url).length,
   }
 
-  // ── SINKRONISASI MOUNTED (Memblokir error #418 secara total) ──
-  if (!mounted) {
-    return (
-      <div className="flex items-center justify-center min-h-[300px] text-slate-400 text-sm">
-        Memuat halaman kelas...
-      </div>
-    )
-  }
-
   // 1. TAMPILAN: DAFTAR KELAS (Jika Belum Pilih Kelas atau selectedClass bernilai null)
   if (!selectedClass) {
     return (
@@ -323,9 +302,8 @@ export default function KelasPage() {
   // 2. TAMPILAN: DETAIL KELAS YANG DIPILIH
   return (
     <div className="space-y-4">
-      {/* DASHBOARD KONTROL UTAMA: Wali Kelas, Mapel, Tanggal & Input Sejajar */}
+      {/* DASHBOARD KONTROL UTAMA */}
       <div className="card p-4 bg-white border border-slate-200 shadow-sm space-y-3">
-        {/* Tombol Back Sejajar Samping Nama Halaman */}
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSelectedClassId('')}
@@ -344,9 +322,7 @@ export default function KelasPage() {
           </button>
         </div>
 
-        {/* Baris Informasi Sejajar (Wali Kelas, Mapel, Tanggal, Input) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-slate-100">
-          {/* Kolom 1: Wali Kelas */}
           <div className="flex flex-col gap-1">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Wali Kelas</span>
             <div className="text-slate-900 font-bold text-sm h-[38px] flex items-center">
@@ -354,7 +330,6 @@ export default function KelasPage() {
             </div>
           </div>
 
-          {/* Kolom 2: Mata Pelajaran */}
           <div className="flex flex-col gap-1">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mata Pelajaran</span>
             <div className="relative">
@@ -374,7 +349,6 @@ export default function KelasPage() {
             </div>
           </div>
 
-          {/* Kolom 3: Tanggal */}
           <div className="flex flex-col gap-1">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tanggal</span>
             <input
@@ -385,7 +359,6 @@ export default function KelasPage() {
             />
           </div>
 
-          {/* Kolom 4: Input Jenis Data */}
           <div className="flex flex-col gap-1">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Input</span>
             <div className="relative">
@@ -449,7 +422,6 @@ export default function KelasPage() {
             </button>
           </div>
 
-          {/* Filter & Search */}
           {students.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative flex-1 min-w-[180px]">
@@ -470,7 +442,6 @@ export default function KelasPage() {
             </div>
           )}
 
-          {/* Table */}
           <div className="card overflow-hidden border border-slate-200 shadow-sm">
             {loadingStudents ? (
               <div className="p-10 text-center text-slate-400 text-sm">Memuat data siswa...</div>
@@ -590,7 +561,7 @@ export default function KelasPage() {
         </div>
       )}
 
-      {/* ── TAB: Absensi (Butuh Mapel) ── */}
+      {/* ── TAB: Absensi ── */}
       {activeTab === 'absensi' && (
         !selectedSubject ? (
           <div className="card p-8 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
@@ -607,7 +578,7 @@ export default function KelasPage() {
         )
       )}
 
-      {/* ── TAB: Nilai (Butuh Mapel) ── */}
+      {/* ── TAB: Nilai ── */}
       {activeTab === 'nilai' && (
         !selectedSubject ? (
           <div className="card p-8 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
@@ -640,7 +611,7 @@ export default function KelasPage() {
         )
       )}
 
-      {/* ── TAB: Catatan (Butuh Mapel) ── */}
+      {/* ── TAB: Catatan ── */}
       {activeTab === 'catatan' && (
         !selectedSubject ? (
           <div className="card p-8 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
@@ -698,7 +669,7 @@ export default function KelasPage() {
         <ImportStudentsTab className={selectedClass.name} onImported={fetchStudents} />
       )}
 
-      {/* Modal: Detail/Edit/Tambah Siswa */}
+      {/* Modals */}
       <StudentDetailModal
         open={showStudentModal}
         student={selectedStudent}
@@ -707,7 +678,6 @@ export default function KelasPage() {
         onSaved={fetchStudents}
       />
 
-      {/* Modal: Edit Kelas */}
       {showEditClassModal && selectedClass && (
         <EditClassModal
           classItem={selectedClass}
@@ -717,7 +687,6 @@ export default function KelasPage() {
         />
       )}
 
-      {/* Modal: Konfirmasi Nilai Semester */}
       {showConfirmModal && (
         <ConfirmSemesterModal
           onConfirm={() => { setIsSemesterMode(true); setShowConfirmModal(false) }}
@@ -725,7 +694,6 @@ export default function KelasPage() {
         />
       )}
 
-      {/* Modal: Delete confirm siswa */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
@@ -742,3 +710,16 @@ export default function KelasPage() {
     </div>
   )
 }
+
+// ── BUNGKUS DENGAN DYNAMIC IMPORT SSR: FALSE ──
+// Cara ini menonaktifkan SSR pada komponen ini, sehingga menjamin bebas dari error #418 secara total.
+const KelasPage = dynamic(() => Promise.resolve(KelasPageContent), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center min-h-[300px] text-slate-400 text-sm">
+      Memuat halaman kelas...
+    </div>
+  )
+})
+
+export default KelasPage
