@@ -54,7 +54,7 @@ export default function KelasPage() {
   // ── State Parameter Global ──
   const [selectedSubject, setSelectedSubject] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-  const [inputType, setInputType] = useState('Harian') // State baru untuk Jenis Data yang di-input
+  const [inputType, setInputType] = useState('Harian')
   const [isSemesterMode, setIsSemesterMode] = useState(false)
 
   // ── State Nilai & Akademik (Default di Balik Layar) ──
@@ -230,7 +230,6 @@ export default function KelasPage() {
   if (!selectedClass) {
     return (
       <div className="space-y-4">
-        {/* Header Bersih Tanpa Tulisan 'Daftar Kelas' */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-slate-500">Pilih kelas di bawah ini untuk mulai mengelola siswa, absensi, dan nilai.</p>
           <button onClick={() => setShowAddClassModal(true)} className="btn-primary">
@@ -324,20 +323,20 @@ export default function KelasPage() {
 
         {/* Baris Informasi Sejajar (Wali Kelas, Mapel, Tanggal, Input) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-slate-100">
-          {/* Kolom 1: Wali Kelas */}
+          {/* Kolom 1: Wali Kelas (Teks Ukuran Standar Semibold) */}
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Wali Kelas</span>
-            <div className="text-slate-900 font-bold text-sm h-[34px] flex items-center">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Wali Kelas</span>
+            <div className="text-slate-900 font-bold text-sm h-[38px] flex items-center">
               {selectedClass.homeroom_teacher || '-'}
             </div>
           </div>
 
-          {/* Kolom 2: Mata Pelajaran */}
+          {/* Kolom 2: Mata Pelajaran (Ukuran Font Standar) */}
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Mata Pelajaran</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mata Pelajaran</span>
             <div className="relative">
               <select
-                className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none pr-9 text-xs py-1 h-[34px] w-full font-bold text-slate-800"
+                className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none pr-9 text-sm py-1.5 h-[38px] w-full font-bold text-slate-800"
                 value={selectedSubject}
                 onChange={e => setSelectedSubject(e.target.value)}
               >
@@ -352,28 +351,27 @@ export default function KelasPage() {
             </div>
           </div>
 
-          {/* Kolom 3: Tanggal */}
+          {/* Kolom 3: Tanggal (Ukuran Font Standar) */}
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tanggal</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tanggal</span>
             <input
               type="date"
-              className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs py-1 h-[34px] w-full font-bold text-slate-800"
+              className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm py-1.5 h-[38px] w-full font-bold text-slate-800"
               value={date}
               onChange={e => setDate(e.target.value)}
             />
           </div>
 
-          {/* Kolom 4: Input (Pilihan Jenis Data Baru) */}
+          {/* Kolom 4: Input Jenis Data (Ukuran Font Standar) */}
           <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Input</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Input</span>
             <div className="relative">
               <select
-                className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none pr-9 text-xs py-1 h-[34px] w-full font-bold text-slate-800"
+                className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none pr-9 text-sm py-1.5 h-[38px] w-full font-bold text-slate-800"
                 value={inputType}
                 onChange={e => setInputType(e.target.value)}
               >
-                <option value="Harian">Harian (Penilaian Harian)</option>
-                <option value="Tugas">Tugas / PR</option>
+                <option value="Harian">Harian</option>
                 <option value="Kuis">Kuis</option>
                 <option value="STS">STS (Sumatif Tengah Semester)</option>
                 <option value="SAS">SAS (Sumatif Akhir Semester)</option>
@@ -382,6 +380,7 @@ export default function KelasPage() {
                 <option value="Praktik">Praktik</option>
                 <option value="Proyek">Proyek</option>
                 <option value="Portofolio">Portofolio</option>
+                <option value="Lainnya">Lainnya</option>
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
@@ -389,7 +388,7 @@ export default function KelasPage() {
         </div>
       </div>
 
-      {/* TABS UTAMA KELAS (Tombol Pil Ramping) */}
+      {/* TABS UTAMA KELAS (Ukuran Font Standar - text-sm) */}
       <div className="flex flex-wrap gap-1.5 border-b border-slate-200 pb-2">
         {[
           { id: 'daftar', label: 'Daftar Siswa', icon: List },
@@ -402,13 +401,13 @@ export default function KelasPage() {
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id as TabType)}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-3 text-xs font-semibold rounded-lg transition-all flex-1 min-w-[120px] text-center whitespace-nowrap ${
+            className={`flex items-center justify-center gap-1.5 py-2 px-3 text-sm font-semibold rounded-lg transition-all flex-1 min-w-[120px] text-center whitespace-nowrap ${
               activeTab === t.id
                 ? 'bg-indigo-600 text-white shadow-sm'
                 : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50 border border-transparent hover:border-slate-200'
             }`}
           >
-            <t.icon className="w-3.5 h-3.5" /> {t.label}
+            <t.icon className="w-4 h-4" /> {t.label}
           </button>
         ))}
       </div>
@@ -419,11 +418,11 @@ export default function KelasPage() {
       {activeTab === 'daftar' && (
         <div className="space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <p className="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-md">
+            <p className="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-md">
               Total {students.length} siswa terdaftar.
             </p>
-            <button onClick={openAddStudent} className="btn-primary shadow-sm py-1.5 px-3 text-xs">
-              <Plus className="w-3.5 h-3.5" /> Tambah Siswa
+            <button onClick={openAddStudent} className="btn-primary shadow-sm py-1.5 px-3 text-sm">
+              <Plus className="w-4 h-4" /> Tambah Siswa
             </button>
           </div>
 
@@ -431,74 +430,74 @@ export default function KelasPage() {
           {students.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative flex-1 min-w-[180px]">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
-                  className="input pl-8 text-xs font-medium border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-1.5"
+                  className="input pl-8 text-sm font-medium border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-1.5"
                   placeholder="Cari nama, NIS, NISN, atau orang tua..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                 />
               </div>
               <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1.5 rounded-md border border-slate-200">
-                <Filter className="w-3.5 h-3.5 text-slate-500" />
-                <select className="bg-transparent border-none text-xs font-bold text-slate-700 focus:ring-0 cursor-pointer p-0" value={viewFilter} onChange={e => setViewFilter(e.target.value as ViewFilter)}>
+                <Filter className="w-4 h-4 text-slate-500" />
+                <select className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer p-0" value={viewFilter} onChange={e => setViewFilter(e.target.value as ViewFilter)}>
                   {VIEW_OPTIONS.map(v => <option key={v.key} value={v.key}>{v.label}</option>)}
                 </select>
               </div>
             </div>
           )}
 
-          {/* Table (Paddings dirapatkan menjadi py-2 agar ramping) */}
+          {/* Table (Font Standar text-sm, Jarak Baris Rapat Menggunakan py-2.5) */}
           <div className="card overflow-hidden border border-slate-200 shadow-sm">
             {loadingStudents ? (
               <div className="p-10 text-center text-slate-400 text-sm">Memuat data siswa...</div>
             ) : students.length === 0 ? (
               <div className="p-10 text-center bg-slate-50/50">
                 <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-slate-500 text-xs font-medium mb-3">Belum ada siswa di kelas ini.</p>
-                <button onClick={openAddStudent} className="btn-primary mx-auto py-1 px-2.5 text-xs">
-                  <Plus className="w-3.5 h-3.5" /> Tambah Siswa Pertama
+                <p className="text-slate-500 text-sm font-medium mb-3">Belum ada siswa di kelas ini.</p>
+                <button onClick={openAddStudent} className="btn-primary mx-auto py-1.5 px-3 text-sm">
+                  <Plus className="w-4 h-4" /> Tambah Siswa Pertama
                 </button>
               </div>
             ) : filteredStudents.length === 0 ? (
               <div className="p-10 text-center bg-slate-50/50">
                 <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-slate-500 text-xs font-medium">Tidak ada siswa yang cocok.</p>
+                <p className="text-slate-500 text-sm font-medium">Tidak ada siswa yang cocok.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead className="bg-slate-100 border-b border-slate-200">
                     <tr>
-                      <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 w-10 text-center">No</th>
-                      <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 w-14 text-center">Foto</th>
-                      <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">Nama Lengkap</th>
+                      <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 w-12 text-center">No</th>
+                      <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 w-14 text-center">Foto</th>
+                      <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600">Nama Lengkap</th>
 
                       {viewFilter === 'identitas' && (
                         <>
-                          <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 w-16 text-center">L/P</th>
-                          <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">Agama</th>
-                          <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">Tempat Lahir</th>
-                          <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">Tanggal Lahir</th>
+                          <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 w-16 text-center">L/P</th>
+                          <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600">Agama</th>
+                          <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600">Tempat Lahir</th>
+                          <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600">Tanggal Lahir</th>
                         </>
                       )}
 
                       {viewFilter === 'akademik' && (
                         <>
-                          <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">NIS</th>
-                          <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">NISN</th>
-                          <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">Alamat</th>
+                          <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600">NIS</th>
+                          <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600">NISN</th>
+                          <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600">Alamat</th>
                         </>
                       )}
 
                       {viewFilter === 'orang_tua' && (
                         <>
-                          <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">Nama Orang Tua/Wali</th>
-                          <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">No. HP Orang Tua</th>
+                          <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600">Nama Orang Tua/Wali</th>
+                          <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600">No. HP Orang Tua</th>
                         </>
                       )}
 
-                      <th className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-600 w-14 text-center">Aksi</th>
+                      <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 w-14 text-center">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-150">
@@ -508,9 +507,9 @@ export default function KelasPage() {
                         className="hover:bg-slate-50 transition-colors cursor-pointer"
                         onClick={() => openEditStudent(s)}
                       >
-                        <td className="px-3 py-2 text-xs text-slate-500 font-medium text-center">{i + 1}</td>
-                        <td className="px-3 py-2 text-center">
-                          <div className="w-7 h-7 rounded-full bg-indigo-100 border border-indigo-200 overflow-hidden flex items-center justify-center text-indigo-700 font-bold text-[10px] mx-auto">
+                        <td className="px-3 py-2.5 text-sm text-slate-500 font-medium text-center">{i + 1}</td>
+                        <td className="px-3 py-2.5 text-center">
+                          <div className="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-200 overflow-hidden flex items-center justify-center text-indigo-700 font-bold text-xs mx-auto">
                             {s.photo_url ? (
                               <img src={s.photo_url} alt={s.name} className="w-full h-full object-cover" />
                             ) : (
@@ -518,44 +517,44 @@ export default function KelasPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-3 py-2 text-xs font-semibold text-slate-900">{s.name}</td>
+                        <td className="px-3 py-2.5 text-sm font-semibold text-slate-900">{s.name}</td>
 
                         {viewFilter === 'identitas' && (
                           <>
-                            <td className="px-3 py-2 text-xs text-slate-850 font-bold text-center">
+                            <td className="px-3 py-2.5 text-sm text-slate-850 font-bold text-center">
                               {s.gender === 'Laki-laki' ? 'L' : 'P'}
                             </td>
-                            <td className="px-3 py-2 text-xs font-medium text-slate-700">{s.religion || '-'}</td>
-                            <td className="px-3 py-2 text-xs font-medium text-slate-700">{s.birth_place || '-'}</td>
-                            <td className="px-3 py-2 text-xs font-medium text-slate-700">{formatDateShort(s.birth_date)}</td>
+                            <td className="px-3 py-2.5 text-sm font-medium text-slate-700">{s.religion || '-'}</td>
+                            <td className="px-3 py-2.5 text-sm font-medium text-slate-700">{s.birth_place || '-'}</td>
+                            <td className="px-3 py-2.5 text-sm font-medium text-slate-700">{formatDateShort(s.birth_date)}</td>
                           </>
                         )}
 
                         {viewFilter === 'akademik' && (
                           <>
-                            <td className="px-3 py-2 text-xs font-bold text-slate-800">{s.nis}</td>
-                            <td className="px-3 py-2 text-xs font-medium text-slate-700">{s.nisn || '-'}</td>
-                            <td className="px-3 py-2 text-xs font-medium text-slate-700 truncate max-w-xs">{s.address || '-'}</td>
+                            <td className="px-3 py-2.5 text-sm font-bold text-slate-800">{s.nis}</td>
+                            <td className="px-3 py-2.5 text-sm font-medium text-slate-700">{s.nisn || '-'}</td>
+                            <td className="px-3 py-2.5 text-sm font-medium text-slate-700 truncate max-w-xs">{s.address || '-'}</td>
                           </>
                         )}
 
                         {viewFilter === 'orang_tua' && (
                           <>
-                            <td className="px-3 py-2 text-xs font-semibold text-slate-800">
+                            <td className="px-3 py-2.5 text-sm font-semibold text-slate-800">
                               {s.parent_name
                                 ? s.parent_name + (s.parent_type ? ' (' + s.parent_type + ')' : '')
                                 : '-'}
                             </td>
-                            <td className="px-3 py-2 text-xs font-bold text-slate-800">{s.parent_phone || '-'}</td>
+                            <td className="px-3 py-2.5 text-sm font-bold text-slate-800">{s.parent_phone || '-'}</td>
                           </>
                         )}
 
-                        <td className="px-3 py-2 text-center" onClick={e => e.stopPropagation()}>
+                        <td className="px-3 py-2.5 text-center" onClick={e => e.stopPropagation()}>
                           <button
                             onClick={() => setDeleteConfirm(s)}
-                            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </td>
                       </tr>
@@ -596,14 +595,14 @@ export default function KelasPage() {
         ) : (
           <div className="space-y-3">
             <div className="flex justify-end">
-              <label className="flex items-center gap-1.5 cursor-pointer bg-white border border-slate-250 rounded-lg px-2.5 py-1 shadow-sm hover:bg-slate-50 transition-colors">
+              <label className="flex items-center gap-1.5 cursor-pointer bg-white border border-slate-250 rounded-lg px-3 py-1.5 shadow-sm hover:bg-slate-50 transition-colors">
                 <input
                   type="checkbox"
-                  className="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                   checked={isSemesterMode}
                   onChange={e => handleToggleSemester(e.target.checked)}
                 />
-                <span className="text-[11px] font-bold text-slate-700">Nilai Semester</span>
+                <span className="text-xs font-bold text-slate-700">Nilai Semester</span>
               </label>
             </div>
             <NilaiTab
@@ -644,26 +643,26 @@ export default function KelasPage() {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div className="card p-4 border-l-4 border-slate-500 bg-slate-50/50">
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Siswa</p>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Total Siswa</p>
                 <p className="text-2xl font-extrabold text-slate-900 mt-1">{stats.total}</p>
               </div>
               <div className="card p-4 border-l-4 border-indigo-500 bg-indigo-50/40">
-                <p className="text-[10px] text-indigo-600 font-bold uppercase tracking-wider">Laki-laki</p>
+                <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">Laki-laki</p>
                 <p className="text-2xl font-extrabold text-indigo-700 mt-1">{stats.laki}</p>
               </div>
               <div className="card p-4 border-l-4 border-pink-500 bg-pink-50/40">
-                <p className="text-[10px] text-pink-600 font-bold uppercase tracking-wider">Perempuan</p>
+                <p className="text-xs text-pink-600 font-bold uppercase tracking-wider">Perempuan</p>
                 <p className="text-2xl font-extrabold text-pink-700 mt-1">{stats.perempuan}</p>
               </div>
               <div className="card p-4 border-l-4 border-emerald-500 bg-emerald-50/40 col-span-2 sm:col-span-1">
-                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Biodata Lengkap</p>
+                <p className="text-xs text-emerald-600 font-bold uppercase tracking-wider">Biodata Lengkap</p>
                 <p className="text-2xl font-extrabold text-emerald-700 mt-1">{stats.lengkapBiodata}</p>
-                <p className="text-[10px] text-emerald-500 font-semibold mt-0.5">dari {stats.total} siswa</p>
+                <p className="text-xs text-emerald-500 font-semibold mt-0.5">dari {stats.total} siswa</p>
               </div>
               <div className="card p-4 border-l-4 border-amber-500 bg-amber-50/40 col-span-2 sm:col-span-1">
-                <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">Sudah Ada Foto</p>
+                <p className="text-xs text-amber-600 font-bold uppercase tracking-wider">Sudah Ada Foto</p>
                 <p className="text-2xl font-extrabold text-amber-700 mt-1">{stats.adaFoto}</p>
-                <p className="text-[10px] text-amber-500 font-semibold mt-0.5">dari {stats.total} siswa</p>
+                <p className="text-xs text-amber-500 font-semibold mt-0.5">dari {stats.total} siswa</p>
               </div>
             </div>
           )}
