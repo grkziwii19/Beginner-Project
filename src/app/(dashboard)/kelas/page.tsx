@@ -259,7 +259,7 @@ export default function KelasPage() {
               <div
                 key={c.id}
                 onClick={() => setSelectedClassId(c.id)}
-                className="card p-5 hover:border-indigo-500 hover:shadow-md cursor-pointer transition-all flex flex-col justify-between group"
+                className="card p-5 hover:border-indigo-500 hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2">
@@ -303,40 +303,47 @@ export default function KelasPage() {
   // 2. TAMPILAN: DETAIL KELAS YANG DIPILIH
   return (
     <div className="space-y-6">
-      {/* Tombol Kembali & Header Kelas */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <button
-            onClick={() => setSelectedClassId('')}
-            className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors mb-2"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Kembali ke Daftar Kelas
-          </button>
+      {/* Tombol Kembali & Header Kelas Utama */}
+      <div>
+        <button
+          onClick={() => setSelectedClassId('')}
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors bg-slate-100 hover:bg-indigo-50 px-3 py-1.5 rounded-lg mb-4"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Kembali ke Daftar Kelas
+        </button>
+      </div>
+
+      {/* DASHBOARD KONTROL UTAMA: Wali Kelas, Mapel, & Tanggal Sejajar */}
+      <div className="card p-5 bg-white border border-slate-200 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold text-slate-900">Kelas {selectedClass.name}</h1>
             <button
               onClick={() => setShowEditClassModal(true)}
-              className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-slate-200"
               title="Edit Detail Kelas"
             >
               <Pencil className="w-4 h-4" />
             </button>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Wali Kelas: <span className="font-medium text-slate-700">{selectedClass.homeroom_teacher || '-'}</span>
-          </p>
         </div>
-      </div>
 
-      {/* PENCARIAN & PARAMETER GLOBAL (Mata Pelajaran & Tanggal di Atas Semua Tab) */}
-      <div className="card p-4 sm:p-5 bg-slate-50 border-slate-200">
-        <div className="flex flex-wrap items-center gap-6">
-          {/* Pilih Mapel */}
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Mapel</label>
-            <div className="relative min-w-[200px]">
+        {/* Baris Informasi Sejajar */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-100">
+          {/* Kolom 1: Wali Kelas (Diperbesar & Tebal) */}
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Wali Kelas</span>
+            <div className="text-slate-900 font-bold text-base h-[38px] flex items-center">
+              {selectedClass.homeroom_teacher || '-'}
+            </div>
+          </div>
+
+          {/* Kolom 2: Mata Pelajaran */}
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mata Pelajaran</span>
+            <div className="relative">
               <select
-                className="input bg-white appearance-none pr-9 text-sm py-1.5"
+                className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none pr-9 text-sm py-1.5 h-[38px] w-full font-bold text-slate-800"
                 value={selectedSubject}
                 onChange={e => setSelectedSubject(e.target.value)}
               >
@@ -351,12 +358,12 @@ export default function KelasPage() {
             </div>
           </div>
 
-          {/* Pilih Tanggal */}
-          <div className="flex items-center gap-2">
-            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Tanggal</label>
+          {/* Kolom 3: Tanggal */}
+          <div className="flex flex-col gap-2">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tanggal</span>
             <input
               type="date"
-              className="input bg-white text-sm py-1.5"
+              className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm py-1.5 h-[38px] w-full font-bold text-slate-800"
               value={date}
               onChange={e => setDate(e.target.value)}
             />
@@ -364,8 +371,8 @@ export default function KelasPage() {
         </div>
       </div>
 
-      {/* TABS UTAMA KELAS (Lebar Seragam & Tidak Terlalu Kecil) */}
-      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-px">
+      {/* TABS UTAMA KELAS (Desain Tombol Pil Premium) */}
+      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-3">
         {[
           { id: 'daftar', label: 'Daftar Siswa', icon: List },
           { id: 'absensi', label: 'Absensi', icon: ClipboardCheck },
@@ -377,10 +384,10 @@ export default function KelasPage() {
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id as TabType)}
-            className={`flex items-center justify-center gap-2 pb-3 pt-2 text-sm font-medium border-b-2 transition-colors flex-1 min-w-[130px] sm:min-w-[150px] text-center whitespace-nowrap ${
+            className={`flex items-center justify-center gap-2 py-2.5 px-4 text-sm font-semibold rounded-xl transition-all flex-1 min-w-[130px] sm:min-w-[150px] text-center whitespace-nowrap ${
               activeTab === t.id
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-slate-500 hover:text-slate-700'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 border border-transparent hover:border-slate-200'
             }`}
           >
             <t.icon className="w-4 h-4" /> {t.label}
@@ -394,8 +401,10 @@ export default function KelasPage() {
       {activeTab === 'daftar' && (
         <div className="space-y-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <p className="text-sm text-slate-500">{students.length} siswa terdaftar di kelas ini.</p>
-            <button onClick={openAddStudent} className="btn-primary">
+            <p className="text-sm font-semibold text-slate-700 bg-slate-100 px-3 py-1.5 rounded-lg">
+              Total {students.length} siswa terdaftar di kelas ini.
+            </p>
+            <button onClick={openAddStudent} className="btn-primary shadow-sm">
               <Plus className="w-4 h-4" /> Tambah Siswa
             </button>
           </div>
@@ -406,15 +415,15 @@ export default function KelasPage() {
               <div className="relative flex-1 min-w-[200px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
-                  className="input pl-9 text-sm"
+                  className="input pl-9 text-sm font-medium border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   placeholder="Cari nama, NIS, NISN, atau orang tua..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-slate-400" />
-                <select className="input w-auto text-sm py-1.5" value={viewFilter} onChange={e => setViewFilter(e.target.value as ViewFilter)}>
+              <div className="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
+                <Filter className="w-4 h-4 text-slate-500" />
+                <select className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer" value={viewFilter} onChange={e => setViewFilter(e.target.value as ViewFilter)}>
                   {VIEW_OPTIONS.map(v => <option key={v.key} value={v.key}>{v.label}</option>)}
                 </select>
               </div>
@@ -422,68 +431,68 @@ export default function KelasPage() {
           )}
 
           {/* Table */}
-          <div className="card overflow-hidden">
+          <div className="card overflow-hidden border border-slate-200 shadow-sm">
             {loadingStudents ? (
               <div className="p-10 text-center text-slate-400 text-sm">Memuat data siswa...</div>
             ) : students.length === 0 ? (
-              <div className="p-10 text-center">
-                <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-slate-500 text-sm mb-3">Belum ada siswa di kelas ini.</p>
+              <div className="p-10 text-center bg-slate-50/50">
+                <Users className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                <p className="text-slate-500 text-sm font-medium mb-3">Belum ada siswa di kelas ini.</p>
                 <button onClick={openAddStudent} className="btn-primary mx-auto">
                   <Plus className="w-4 h-4" /> Tambah Siswa Pertama
                 </button>
               </div>
             ) : filteredStudents.length === 0 ? (
-              <div className="p-10 text-center">
-                <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-slate-500 text-sm">Tidak ada siswa yang cocok dengan pencarian.</p>
+              <div className="p-10 text-center bg-slate-50/50">
+                <Search className="w-10 h-10 text-slate-300 mx-auto mb-2" />
+                <p className="text-slate-500 text-sm font-medium">Tidak ada siswa yang cocok dengan pencarian Anda.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-slate-50 border-b border-slate-200">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-slate-100 border-b border-slate-200">
                     <tr>
-                      <th className="table-header w-10">No</th>
-                      <th className="table-header w-12">Foto</th>
-                      <th className="table-header">Nama</th>
+                      <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 w-12 text-center">No</th>
+                      <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 w-16 text-center">Foto</th>
+                      <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700">Nama Lengkap</th>
 
                       {viewFilter === 'identitas' && (
                         <>
-                          <th className="table-header">L/P</th>
-                          <th className="table-header">Agama</th>
-                          <th className="table-header">Tempat Lahir</th>
-                          <th className="table-header">Tanggal Lahir</th>
+                          <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 w-20 text-center">L/P</th>
+                          <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700">Agama</th>
+                          <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700">Tempat Lahir</th>
+                          <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700">Tanggal Lahir</th>
                         </>
                       )}
 
                       {viewFilter === 'akademik' && (
                         <>
-                          <th className="table-header">NIS</th>
-                          <th className="table-header">NISN</th>
-                          <th className="table-header">Alamat</th>
+                          <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700">NIS</th>
+                          <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700">NISN</th>
+                          <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700">Alamat</th>
                         </>
                       )}
 
                       {viewFilter === 'orang_tua' && (
                         <>
-                          <th className="table-header">Nama Ayah/Ibu/Wali</th>
-                          <th className="table-header">No. HP Orang Tua</th>
+                          <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700">Nama Ayah/Ibu/Wali</th>
+                          <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700">No. HP Orang Tua</th>
                         </>
                       )}
 
-                      <th className="table-header w-16 text-center">Aksi</th>
+                      <th className="px-4 py-3 text-xs font-bold uppercase tracking-wider text-slate-700 w-16 text-center">Aksi</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-150">
                     {filteredStudents.map((s, i) => (
                       <tr
                         key={s.id}
                         className="hover:bg-slate-50 transition-colors cursor-pointer"
                         onClick={() => openEditStudent(s)}
                       >
-                        <td className="table-cell text-slate-400">{i + 1}</td>
-                        <td className="table-cell">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 overflow-hidden flex items-center justify-center text-indigo-700 font-semibold text-xs">
+                        <td className="px-4 py-3.5 text-sm text-slate-500 font-medium text-center">{i + 1}</td>
+                        <td className="px-4 py-3.5 text-center">
+                          <div className="w-8 h-8 rounded-full bg-indigo-100 border border-indigo-200 overflow-hidden flex items-center justify-center text-indigo-700 font-bold text-xs mx-auto">
                             {s.photo_url ? (
                               <img src={s.photo_url} alt={s.name} className="w-full h-full object-cover" />
                             ) : (
@@ -491,42 +500,44 @@ export default function KelasPage() {
                             )}
                           </div>
                         </td>
-                        <td className="table-cell font-medium text-slate-900">{s.name}</td>
+                        <td className="px-4 py-3.5 text-sm font-semibold text-slate-900">{s.name}</td>
 
                         {viewFilter === 'identitas' && (
                           <>
-                            <td className="table-cell text-slate-500 text-xs">{s.gender === 'Laki-laki' ? 'L' : 'P'}</td>
-                            <td className="table-cell text-slate-600">{s.religion || '-'}</td>
-                            <td className="table-cell text-slate-600">{s.birth_place || '-'}</td>
-                            <td className="table-cell text-slate-600">{formatDateShort(s.birth_date)}</td>
+                            <td className="px-4 py-3.5 text-sm text-slate-800 font-bold text-center">
+                              {s.gender === 'Laki-laki' ? 'L' : 'P'}
+                            </td>
+                            <td className="px-4 py-3.5 text-sm font-medium text-slate-700">{s.religion || '-'}</td>
+                            <td className="px-4 py-3.5 text-sm font-medium text-slate-700">{s.birth_place || '-'}</td>
+                            <td className="px-4 py-3.5 text-sm font-medium text-slate-700">{formatDateShort(s.birth_date)}</td>
                           </>
                         )}
 
                         {viewFilter === 'akademik' && (
                           <>
-                            <td className="table-cell text-slate-500">{s.nis}</td>
-                            <td className="table-cell text-slate-500">{s.nisn || '-'}</td>
-                            <td className="table-cell text-slate-600 truncate max-w-xs">{s.address || '-'}</td>
+                            <td className="px-4 py-3.5 text-sm font-bold text-slate-800">{s.nis}</td>
+                            <td className="px-4 py-3.5 text-sm font-medium text-slate-700">{s.nisn || '-'}</td>
+                            <td className="px-4 py-3.5 text-sm font-medium text-slate-700 truncate max-w-xs">{s.address || '-'}</td>
                           </>
                         )}
 
                         {viewFilter === 'orang_tua' && (
                           <>
-                            <td className="table-cell text-slate-700">
+                            <td className="px-4 py-3.5 text-sm font-semibold text-slate-800">
                               {s.parent_name
                                 ? s.parent_name + (s.parent_type ? ' (' + s.parent_type + ')' : '')
                                 : '-'}
                             </td>
-                            <td className="table-cell text-slate-600">{s.parent_phone || '-'}</td>
+                            <td className="px-4 py-3.5 text-sm font-bold text-slate-800">{s.parent_phone || '-'}</td>
                           </>
                         )}
 
-                        <td className="table-cell text-center" onClick={e => e.stopPropagation()}>
+                        <td className="px-4 py-3.5 text-center" onClick={e => e.stopPropagation()}>
                           <button
                             onClick={() => setDeleteConfirm(s)}
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </td>
                       </tr>
@@ -542,10 +553,10 @@ export default function KelasPage() {
       {/* ── TAB: Absensi (Butuh Mapel) ── */}
       {activeTab === 'absensi' && (
         !selectedSubject ? (
-          <div className="card p-10 text-center">
-            <GraduationCap className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <h3 className="font-semibold text-slate-700">Pilih mata pelajaran terlebih dahulu</h3>
-            <p className="text-sm text-slate-400 mt-1">Gunakan pemilih mata pelajaran di atas untuk memulai absensi.</p>
+          <div className="card p-12 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-2xl">
+            <GraduationCap className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+            <h3 className="font-bold text-slate-800 text-lg">Pilih mata pelajaran terlebih dahulu</h3>
+            <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto">Silakan pilih mata pelajaran dan tanggal pada bar kontrol di atas untuk mulai absensi.</p>
           </div>
         ) : (
           <AbsensiTab
@@ -559,23 +570,23 @@ export default function KelasPage() {
       {/* ── TAB: Nilai (Butuh Mapel & Fitur Nilai Semester) ── */}
       {activeTab === 'nilai' && (
         !selectedSubject ? (
-          <div className="card p-10 text-center">
-            <GraduationCap className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <h3 className="font-semibold text-slate-700">Pilih mata pelajaran terlebih dahulu</h3>
-            <p className="text-sm text-slate-400 mt-1">Gunakan pemilih mata pelajaran di atas untuk mengisi nilai.</p>
+          <div className="card p-12 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-2xl">
+            <GraduationCap className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+            <h3 className="font-bold text-slate-800 text-lg">Pilih mata pelajaran terlebih dahulu</h3>
+            <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto">Silakan pilih mata pelajaran dan tanggal pada bar kontrol di atas untuk mengisi nilai.</p>
           </div>
         ) : (
           <div className="space-y-4">
             {/* Opsi Nilai Semester khusus di halaman input nilai */}
             <div className="flex justify-end">
-              <label className="flex items-center gap-2 cursor-pointer bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-sm">
+              <label className="flex items-center gap-2 cursor-pointer bg-white border border-slate-250 rounded-xl px-4 py-2 shadow-sm hover:bg-slate-50 transition-colors">
                 <input
                   type="checkbox"
                   className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                   checked={isSemesterMode}
                   onChange={e => handleToggleSemester(e.target.checked)}
                 />
-                <span className="text-xs font-medium text-slate-700">Nilai Semester</span>
+                <span className="text-xs font-bold text-slate-700">Nilai Semester</span>
               </label>
             </div>
             <NilaiTab
@@ -592,10 +603,10 @@ export default function KelasPage() {
       {/* ── TAB: Catatan (Butuh Mapel) ── */}
       {activeTab === 'catatan' && (
         !selectedSubject ? (
-          <div className="card p-10 text-center">
-            <GraduationCap className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-            <h3 className="font-semibold text-slate-700">Pilih mata pelajaran terlebih dahulu</h3>
-            <p className="text-sm text-slate-400 mt-1">Gunakan pemilih mata pelajaran di atas untuk membuat catatan.</p>
+          <div className="card p-12 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-2xl">
+            <GraduationCap className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+            <h3 className="font-bold text-slate-800 text-lg">Pilih mata pelajaran terlebih dahulu</h3>
+            <p className="text-sm text-slate-500 mt-2 max-w-sm mx-auto">Silakan pilih mata pelajaran dan tanggal pada bar kontrol di atas untuk membuat catatan.</p>
           </div>
         ) : (
           <CatatanTab
@@ -615,27 +626,27 @@ export default function KelasPage() {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              <div className="card p-5">
-                <p className="text-xs text-slate-400 font-medium">Total Siswa</p>
-                <p className="text-3xl font-bold text-slate-900 mt-1">{stats.total}</p>
+              <div className="card p-5 border-l-4 border-slate-500 bg-slate-50/50">
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider">Total Siswa</p>
+                <p className="text-3xl font-extrabold text-slate-900 mt-2">{stats.total}</p>
               </div>
-              <div className="card p-5">
-                <p className="text-xs text-slate-400 font-medium">Laki-laki</p>
-                <p className="text-3xl font-bold text-indigo-600 mt-1">{stats.laki}</p>
+              <div className="card p-5 border-l-4 border-indigo-500 bg-indigo-50/40">
+                <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">Laki-laki</p>
+                <p className="text-3xl font-extrabold text-indigo-700 mt-2">{stats.laki}</p>
               </div>
-              <div className="card p-5">
-                <p className="text-xs text-slate-400 font-medium">Perempuan</p>
-                <p className="text-3xl font-bold text-pink-500 mt-1">{stats.perempuan}</p>
+              <div className="card p-5 border-l-4 border-pink-500 bg-pink-50/40">
+                <p className="text-xs text-pink-600 font-bold uppercase tracking-wider">Perempuan</p>
+                <p className="text-3xl font-extrabold text-pink-700 mt-2">{stats.perempuan}</p>
               </div>
-              <div className="card p-5">
-                <p className="text-xs text-slate-400 font-medium">Biodata Lengkap</p>
-                <p className="text-3xl font-bold text-emerald-600 mt-1">{stats.lengkapBiodata}</p>
-                <p className="text-xs text-slate-400 mt-1">dari {stats.total} siswa</p>
+              <div className="card p-5 border-l-4 border-emerald-500 bg-emerald-50/40 col-span-2 sm:col-span-1">
+                <p className="text-xs text-emerald-600 font-bold uppercase tracking-wider">Biodata Lengkap</p>
+                <p className="text-3xl font-extrabold text-emerald-700 mt-2">{stats.lengkapBiodata}</p>
+                <p className="text-xs text-emerald-500 font-semibold mt-1">dari {stats.total} siswa</p>
               </div>
-              <div className="card p-5">
-                <p className="text-xs text-slate-400 font-medium">Sudah Ada Foto</p>
-                <p className="text-3xl font-bold text-amber-500 mt-1">{stats.adaFoto}</p>
-                <p className="text-xs text-slate-400 mt-1">dari {stats.total} siswa</p>
+              <div className="card p-5 border-l-4 border-amber-500 bg-amber-50/40 col-span-2 sm:col-span-1">
+                <p className="text-xs text-amber-600 font-bold uppercase tracking-wider">Sudah Ada Foto</p>
+                <p className="text-3xl font-extrabold text-amber-700 mt-2">{stats.adaFoto}</p>
+                <p className="text-xs text-amber-500 font-semibold mt-1">dari {stats.total} siswa</p>
               </div>
             </div>
           )}
