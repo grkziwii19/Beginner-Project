@@ -275,7 +275,7 @@ export default function AbsensiPage() {
             <div className="card p-12 text-center">
               <BookOpen className="w-10 h-10 text-slate-200 mx-auto mb-3" />
               <h3 className="font-semibold text-slate-700">{classes.length === 0 ? 'Belum ada kelas' : 'Tidak ada kelas yang cocok'}</h3>
-              <p className="text-sm text-slate-400 mt-1">{classes.length === 0 ? 'Buat kelas terlebih dahulu di menu Data Siswa.' : 'Coba kata kunci lain.'}</p>
+              <p className="text-sm text-slate-400 mt-1">{classes.length === 0 ? 'Buat kelas terlebih dahulu di menu Kelas.' : 'Coba kata kunci lain.'}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -319,7 +319,7 @@ export default function AbsensiPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {selectedClass.subjects.length === 0 ? (
               <div className="col-span-full card p-6 text-center">
-                <p className="text-sm text-slate-500">Kelas ini belum memiliki mata pelajaran. Tambahkan mapel di menu Data Siswa.</p>
+                <p className="text-sm text-slate-500">Kelas ini belum memiliki mata pelajaran. Tambahkan mapel di menu Kelas.</p>
               </div>
             ) : (
               selectedClass.subjects.map(subject => (
@@ -409,7 +409,7 @@ export default function AbsensiPage() {
             <div className="card p-12 text-center">
               <Users className="w-10 h-10 text-slate-200 mx-auto mb-3" />
               <h3 className="font-semibold text-slate-700">Belum ada siswa di kelas ini</h3>
-              <p className="text-sm text-slate-400 mt-1">Tambahkan siswa lewat menu Data Siswa terlebih dahulu.</p>
+              <p className="text-sm text-slate-400 mt-1">Tambahkan siswa lewat menu Kelas terlebih dahulu.</p>
             </div>
           ) : (
             <>
