@@ -30,11 +30,6 @@ const VIEW_OPTIONS: { key: ViewFilter; label: string }[] = [
 
 const UMUM_VALUE = '__umum__'
 
-const SEMESTER_OPTIONS = [
-  { value: '1', label: 'I (Ganjil)' },
-  { value: '2', label: 'II (Genap)' },
-]
-
 function getAcademicYear() {
   const y = new Date().getFullYear()
   return new Date().getMonth() + 1 >= 7 ? `${y}/${y + 1}` : `${y - 1}/${y}`
@@ -56,12 +51,14 @@ export default function KelasPage() {
   const [viewFilter, setViewFilter] = useState<ViewFilter>('identitas')
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
 
-  // ── State Mengajar (Absensi/Nilai/Catatan) ──
+  // ── State Parameter (Mata Pelajaran & Tanggal Sekarang Global) ──
   const [selectedSubject, setSelectedSubject] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-  const [semester, setSemester] = useState('1')
-  const [academicYear, setAcademicYear] = useState(getAcademicYear())
   const [isSemesterMode, setIsSemesterMode] = useState(false)
+
+  // ── State Nilai & Akademik (Default di Balik Layar) ──
+  const [semester] = useState('1')
+  const [academicYear] = useState(getAcademicYear())
 
   // ── State Modals ──
   const [showStudentModal, setShowStudentModal] = useState(false)
@@ -262,7 +259,7 @@ export default function KelasPage() {
               <div
                 key={c.id}
                 onClick={() => setSelectedClassId(c.id)}
-                className="card p-5 hover:border-indigo-500 hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group"
+                className="card p-5 hover:border-indigo-500 hover:shadow-md cursor-pointer transition-all flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2">
@@ -304,8 +301,6 @@ export default function KelasPage() {
   }
 
   // 2. TAMPILAN: DETAIL KELAS YANG DIPILIH
-  const isAcademicTab = ['absensi', 'nilai', 'catatan'].includes(activeTab)
-
   return (
     <div className="space-y-6">
       {/* Tombol Kembali & Header Kelas */}
@@ -333,8 +328,44 @@ export default function KelasPage() {
         </div>
       </div>
 
-      {/* TABS UTAMA KELAS */}
-      <div className="flex gap-4 border-b border-slate-200 overflow-x-auto pb-px scrollbar-thin">
+      {/* PENCARIAN & PARAMETER GLOBAL (Mata Pelajaran & Tanggal di Atas Semua Tab) */}
+      <div className="card p-4 sm:p-5 bg-slate-50 border-slate-200">
+        <div className="flex flex-wrap items-center gap-6">
+          {/* Pilih Mapel */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Mapel</label>
+            <div className="relative min-w-[200px]">
+              <select
+                className="input bg-white appearance-none pr-9 text-sm py-1.5"
+                value={selectedSubject}
+                onChange={e => setSelectedSubject(e.target.value)}
+              >
+                <option value="">-- Pilih mapel --</option>
+                {subjectOptions.map(s => (
+                  <option key={s} value={s}>
+                    {s === UMUM_VALUE ? 'Semua Mapel (Wali Kelas)' : s}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Pilih Tanggal */}
+          <div className="flex items-center gap-2">
+            <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Tanggal</label>
+            <input
+              type="date"
+              className="input bg-white text-sm py-1.5"
+              value={date}
+              onChange={e => setDate(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* TABS UTAMA KELAS (Lebar Seragam & Tidak Terlalu Kecil) */}
+      <div className="flex flex-wrap gap-2 border-b border-slate-200 pb-px">
         {[
           { id: 'daftar', label: 'Daftar Siswa', icon: List },
           { id: 'absensi', label: 'Absensi', icon: ClipboardCheck },
@@ -346,7 +377,7 @@ export default function KelasPage() {
           <button
             key={t.id}
             onClick={() => setActiveTab(t.id as TabType)}
-            className={`flex items-center gap-1.5 pb-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap shrink-0 ${
+            className={`flex items-center justify-center gap-2 pb-3 pt-2 text-sm font-medium border-b-2 transition-colors flex-1 min-w-[130px] sm:min-w-[150px] text-center whitespace-nowrap ${
               activeTab === t.id
                 ? 'border-indigo-600 text-indigo-600'
                 : 'border-transparent text-slate-500 hover:text-slate-700'
@@ -356,89 +387,6 @@ export default function KelasPage() {
           </button>
         ))}
       </div>
-
-      {/* FILTER AKADEMIK (Hanya muncul di Tab Absensi, Nilai, dan Catatan) */}
-      {isAcademicTab && (
-        <div className="card p-4 sm:p-5 space-y-3 bg-slate-50 border-slate-200">
-          <div className="flex flex-wrap items-center gap-4">
-            {/* Pilih Mapel */}
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-semibold text-slate-600 shrink-0 uppercase tracking-wider">Mapel</label>
-              <div className="relative min-w-[180px]">
-                <select
-                  className="input bg-white appearance-none pr-9 text-sm"
-                  value={selectedSubject}
-                  onChange={e => setSelectedSubject(e.target.value)}
-                >
-                  <option value="">-- Pilih mapel --</option>
-                  {subjectOptions.map(s => (
-                    <option key={s} value={s}>
-                      {s === UMUM_VALUE ? 'Semua Mapel (Wali Kelas)' : s}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Konfigurasi Tambahan (Hanya jika Mapel sudah dipilih) */}
-            {selectedSubject && (
-              <div className="flex flex-wrap items-center gap-4">
-                {/* Tanggal */}
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-semibold text-slate-600 shrink-0 uppercase tracking-wider">Tanggal</label>
-                  <input
-                    type="date"
-                    className="input bg-white text-sm py-1.5"
-                    value={date}
-                    onChange={e => setDate(e.target.value)}
-                  />
-                </div>
-
-                {/* Semester */}
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-semibold text-slate-600 shrink-0 uppercase tracking-wider">Semester</label>
-                  <div className="relative">
-                    <select
-                      className="input bg-white appearance-none pr-9 text-sm py-1.5"
-                      value={semester}
-                      onChange={e => setSemester(e.target.value)}
-                    >
-                      {SEMESTER_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  </div>
-                </div>
-
-                {/* Tahun Pelajaran */}
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-semibold text-slate-600 shrink-0 uppercase tracking-wider">Tahun Pelajaran</label>
-                  <input
-                    type="text"
-                    className="input bg-white w-28 text-sm py-1.5"
-                    value={academicYear}
-                    onChange={e => setAcademicYear(e.target.value)}
-                    placeholder="2024/2025"
-                  />
-                </div>
-
-                {/* Nilai Semester Checkbox */}
-                {activeTab === 'nilai' && (
-                  <label className="flex items-center gap-2 cursor-pointer ml-auto bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-sm">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                      checked={isSemesterMode}
-                      onChange={e => handleToggleSemester(e.target.checked)}
-                    />
-                    <span className="text-xs font-medium text-slate-700">Nilai Semester</span>
-                  </label>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ISI KONTEN BERDASARKAN TAB YANG AKTIF */}
 
@@ -608,7 +556,7 @@ export default function KelasPage() {
         )
       )}
 
-      {/* ── TAB: Nilai (Butuh Mapel) ── */}
+      {/* ── TAB: Nilai (Butuh Mapel & Fitur Nilai Semester) ── */}
       {activeTab === 'nilai' && (
         !selectedSubject ? (
           <div className="card p-10 text-center">
@@ -617,13 +565,27 @@ export default function KelasPage() {
             <p className="text-sm text-slate-400 mt-1">Gunakan pemilih mata pelajaran di atas untuk mengisi nilai.</p>
           </div>
         ) : (
-          <NilaiTab
-            className={selectedClass.name}
-            subject={selectedSubject === UMUM_VALUE ? 'Umum' : selectedSubject}
-            date={date}
-            semester={semester}
-            academicYear={academicYear}
-          />
+          <div className="space-y-4">
+            {/* Opsi Nilai Semester khusus di halaman input nilai */}
+            <div className="flex justify-end">
+              <label className="flex items-center gap-2 cursor-pointer bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-sm">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  checked={isSemesterMode}
+                  onChange={e => handleToggleSemester(e.target.checked)}
+                />
+                <span className="text-xs font-medium text-slate-700">Nilai Semester</span>
+              </label>
+            </div>
+            <NilaiTab
+              className={selectedClass.name}
+              subject={selectedSubject === UMUM_VALUE ? 'Umum' : selectedSubject}
+              date={date}
+              semester={semester}
+              academicYear={academicYear}
+            />
+          </div>
         )
       )}
 
@@ -694,7 +656,7 @@ export default function KelasPage() {
         onSaved={fetchStudents}
       />
 
-      {/* Modal: Edit Kelas (Di-wrap kondisional guna menjamin selectedClass tidak null di mata compiler) */}
+      {/* Modal: Edit Kelas */}
       {showEditClassModal && selectedClass && (
         <EditClassModal
           classItem={selectedClass}
