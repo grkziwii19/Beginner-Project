@@ -41,10 +41,10 @@ export default function DashboardPage() {
   const fetchAll = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-  setLoading(false)
-  router.push('/login')
-  return
-}
+      setLoading(false)
+      router.push('/login')
+      return
+    }
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -165,7 +165,7 @@ export default function DashboardPage() {
     fetchAll() // refresh data setelah absen disimpan
   }
 
-  // --- Ringkasan turunan untuk tampilan (dihitung dari data yang sudah diambil, tanpa fetch baru) ---
+  // Ringkasan turunan untuk tampilan
   const avgWeeklyAttendance = weeklyAttendance.length
     ? Math.round(weeklyAttendance.reduce((a, b) => a + b.rate, 0) / weeklyAttendance.length)
     : 0
@@ -391,13 +391,21 @@ export default function DashboardPage() {
               )
               if (qa.onClick) {
                 return (
-                  <button
+                  <div
                     key={qa.label}
+                    role="button"
+                    tabIndex={0}
                     onClick={qa.onClick}
-                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100 w-full text-left"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        qa.onClick()
+                      }
+                    }}
+                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100 w-full text-left cursor-pointer select-none"
                   >
                     {content}
-                  </button>
+                  </div>
                 )
               }
               return (
