@@ -234,10 +234,15 @@ export default function Sidebar() {
               )}
             >
               <div className="flex w-full items-center gap-3 px-3 py-[11px]">
-                <row.icon className={clsx(
-                  "h-[18px] w-[18px] shrink-0 transition-colors duration-200",
-                  active ? "text-white" : "text-[#94A3B8] group-hover:text-white"
-                )} />
+                <div className={clsx(
+                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-200",
+                  active ? "bg-white/15" : "bg-white/5 group-hover:bg-white/10"
+                )}>
+                  <row.icon className={clsx(
+                    "h-[16px] w-[16px] transition-colors duration-200",
+                    active ? "text-white" : "text-[#94A3B8] group-hover:text-white"
+                  )} />
+                </div>
 
                 <span className="text-[14px] font-semibold">
                   {row.label}
@@ -326,7 +331,7 @@ export default function Sidebar() {
         </div>
 
         {/* ACADEMIC YEAR (TINGGI 72PX) */}
-        <div className="bg-[#1E293B]/40 border border-white/10 rounded-xl px-3 py-2.5 flex items-center justify-between h-[72px]">
+        <div className="bg-white/[0.06] border border-white/10 rounded-xl px-3 py-2.5 flex items-center justify-between h-[72px]">
           <div>
             <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
               Tahun Ajaran Aktif
@@ -434,8 +439,8 @@ export default function Sidebar() {
       {/* Lebar Sidebar 270px, Scrollbar sepenuhnya dihapus (overflow-hidden) */}
       <aside
         style={{
-          background: 'linear-gradient(180deg, #0F172A 0%, #111827 55%, #1E293B 100%)',
-          borderRight: '1px solid rgba(255,255,255,0.05)'
+          background: 'linear-gradient(180deg, #241f5c 0%, #1e1a4d 55%, #17133f 100%)',
+          borderRight: '1px solid rgba(255,255,255,0.06)'
         }}
         className={clsx(
           "fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col overflow-hidden",
