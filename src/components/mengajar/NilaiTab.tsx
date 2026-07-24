@@ -210,11 +210,8 @@ export default function NilaiTab({ className, subject, date, semester, academicY
                   <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600">Nama Siswa</th>
                   <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 w-24">NIS</th>
                   <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 w-28 text-center">
-                    Nilai
-                    {selectedActivity?.weight != null && (
-                      <span className="block text-[9px] text-slate-400 font-normal">bobot {selectedActivity.weight}%</span>
-                    )}
-                  </th>
+                    Nilai </th>
+                    
                   <th className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-600">Catatan</th>
                 </tr>
               </thead>

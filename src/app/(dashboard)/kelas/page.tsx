@@ -12,7 +12,6 @@ import ImportStudentsTab from '@/components/students/ImportStudentsTab'
 import AbsensiTab from '@/components/mengajar/AbsensiTab'
 import NilaiTab from '@/components/mengajar/NilaiTab'
 import CatatanTab from '@/components/mengajar/CatatanTab'
-import ConfirmSemesterModal from '@/components/mengajar/ConfirmSemesterModal'
 import { type ClassFormData } from '@/components/students/ClassForm'
 import { normalizeClassName, formatClassName } from '@/lib/normalizeClassName'
 import {
@@ -60,7 +59,6 @@ function KelasPageContent() {
   const [selectedSubject, setSelectedSubject] = useState('')
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
   const [inputType, setInputType] = useState('Harian')
-  const [isSemesterMode, setIsSemesterMode] = useState(false)
 
   // ── State Nilai & Academic Year ──
   const [semester] = useState('1')
@@ -70,7 +68,6 @@ function KelasPageContent() {
   const [showStudentModal, setShowStudentModal] = useState(false)
   const [showAddClassModal, setShowAddClassModal] = useState(false)
   const [showEditClassModal, setShowEditClassModal] = useState(false)
-  const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<Student | null>(null)
 
   const selectedClass = classes.find(c => c.id === selectedClassId) ?? null
@@ -107,16 +104,16 @@ function KelasPageContent() {
     setLoadingStudents(false)
   }
 
-  useEffect(() => {
-    fetchStudents()
-    if (selectedClass) {
-      setSelectedSubject(selectedClass.is_homeroom_only ? UMUM_VALUE : '')
-    } else {
-      setSelectedSubject('')
-    }
-    setIsSemesterMode(false)
-    setActiveTab('daftar')
-  }, [selectedClassId])
+  //  SESUDAH (Sudah bersih dari sisa pemanggilan)
+useEffect(() => {
+  fetchStudents()
+  if (selectedClass) {
+    setSelectedSubject(selectedClass.is_homeroom_only ? UMUM_VALUE : '')
+  } else {
+    setSelectedSubject('')
+  }
+  setActiveTab('daftar')
+}, [selectedClassId])
 
   // ── Tambah kelas baru ──
   const handleAddClass = async (form: ClassFormData) => {
@@ -201,11 +198,6 @@ function KelasPageContent() {
   const openEditStudent = (s: Student) => {
     setSelectedStudent(s)
     setShowStudentModal(true)
-  }
-
-  const handleToggleSemester = (checked: boolean) => {
-    if (checked) setShowConfirmModal(true)
-    else setIsSemesterMode(false)
   }
 
   // ── Filter Pencarian Kelas (Tampilan Utama Dashboard Kelas) ──
@@ -596,37 +588,24 @@ function KelasPageContent() {
       )}
 
       {/* ── TAB: Nilai ── */}
-      {activeTab === 'nilai' && (
-        !selectedSubject ? (
-          <div className="card p-8 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
-            <GraduationCap className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-            <h3 className="font-bold text-slate-800 text-sm">Pilih mata pelajaran terlebih dahulu</h3>
-            <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Silakan pilih mata pelajaran dan tanggal pada bar kontrol di atas untuk mengisi nilai.</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <div className="flex justify-end">
-              <label className="flex items-center gap-1.5 cursor-pointer bg-white border border-slate-250 rounded-lg px-3 py-1.5 shadow-sm hover:bg-slate-50 transition-colors">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                  checked={isSemesterMode}
-                  onChange={e => handleToggleSemester(e.target.checked)}
-                />
-                <span className="text-xs font-bold text-slate-700">Nilai Semester</span>
-              </label>
-            </div>
-            <NilaiTab
-              className={selectedClass.name}
-              subject={selectedSubject === UMUM_VALUE ? 'Umum' : selectedSubject}
-              date={date}
-              semester={semester}
-              academicYear={academicYear}
-              inputType={inputType}
-            />
-          </div>
-        )
-      )}
+{activeTab === 'nilai' && (
+  !selectedSubject ? (
+    <div className="card p-8 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
+      <GraduationCap className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+      <h3 className="font-bold text-slate-800 text-sm">Pilih mata pelajaran terlebih dahulu</h3>
+      <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Silakan pilih mata pelajaran dan tanggal pada bar kontrol di atas untuk mengisi nilai.</p>
+    </div>
+  ) : (
+    <NilaiTab
+      className={selectedClass.name}
+      subject={selectedSubject === UMUM_VALUE ? 'Umum' : selectedSubject}
+      date={date}
+      semester={semester}
+      academicYear={academicYear}
+      inputType={inputType}
+    />
+    )
+  )}
 
       {/* ── TAB: Catatan ── */}
       {activeTab === 'catatan' && (
@@ -701,13 +680,6 @@ function KelasPageContent() {
           onClose={() => setShowEditClassModal(false)}
           onSave={handleEditClass}
           onDelete={handleDeleteClass}
-        />
-      )}
-
-      {showConfirmModal && (
-        <ConfirmSemesterModal
-          onConfirm={() => { setIsSemesterMode(true); setShowConfirmModal(false) }}
-          onCancel={() => setShowConfirmModal(false)}
         />
       )}
 
