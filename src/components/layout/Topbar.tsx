@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Bell, Search, AlertCircle, CheckCircle, HardDrive, UserPlus } from 'lucide-react'
+import { Bell, Search, AlertCircle, CheckCircle, HardDrive, UserPlus, Sun } from 'lucide-react'
 
 interface NotifItem {
   id: string
@@ -14,27 +14,6 @@ interface NotifItem {
   time: string
 }
 
-const PAGE_TITLES: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/kelas': 'Kelas',
-  '/mengajar': 'Mengajar',
-  '/absensi': 'Absensi',
-  '/akademik/nilai': 'Nilai',
-  '/laporan': 'Laporan',
-  '/pengaturan': 'Pengaturan',
-  '/akun': 'Pusat Akun',
-}
-
-function getPageTitle(pathname: string): string {
-  if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname]
-
-  const match = Object.keys(PAGE_TITLES)
-    .filter(p => pathname.startsWith(p))
-    .sort((a, b) => b.length - a.length)[0]
-
-  return match ? PAGE_TITLES[match] : 'Dashboard'
-}
-
 export default function Topbar() {
   const supabase = createClient()
   const pathname = usePathname()
@@ -43,25 +22,32 @@ export default function Topbar() {
 
   const [showNotif, setShowNotif] = useState(false)
   const [searchValue, setSearchValue] = useState('')
+  const [userName, setUserName] = useState('rakaziwi')
 
-  const title = getPageTitle(pathname)
-
-  // Sinkronisasi kolom pencarian dengan parameter URL saat pertama kali dimuat atau saat URL berubah
   useEffect(() => {
     setSearchValue(searchParams.get('q') || '')
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle()
+        if (profile?.full_name) {
+          setUserName(profile.full_name.split(' ')[0].toLowerCase())
+        } else {
+          setUserName((user.email?.split('@')[0] ?? 'rakaziwi').toLowerCase())
+        }
+      }
+    }
+    fetchUser()
   }, [searchParams])
 
-  // Fungsi untuk meng-update parameter URL secara dinamis
   const handleSearchChange = (val: string) => {
     setSearchValue(val)
     const params = new URLSearchParams(searchParams.toString())
-    
     if (val) {
       params.set('q', val)
     } else {
       params.delete('q')
     }
-
     router.replace(`${pathname}?${params.toString()}`)
   }
 
@@ -69,51 +55,53 @@ export default function Topbar() {
     { id: '1', icon: AlertCircle, iconColor: 'text-amber-500 bg-amber-50', title: 'Nilai UTS belum diinput', desc: 'Ada kelas yang menunggu nilai', time: 'Baru saja' },
     { id: '2', icon: CheckCircle, iconColor: 'text-emerald-500 bg-emerald-50', title: 'Absensi hari ini berhasil', desc: 'Semua kelas telah tercatat', time: '1 jam lalu' },
     { id: '3', icon: HardDrive, iconColor: 'text-blue-500 bg-blue-50', title: 'Backup otomatis selesai', desc: 'Data berhasil di-backup', time: '2 jam lalu' },
-    { id: '4', icon: UserPlus, iconColor: 'text-purple-500 bg-purple-50', title: 'Siswa baru terdaftar', desc: 'Ada penambahan siswa baru', time: 'Kemarin' },
   ]
 
   return (
-    <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 gap-4">
-      {/* Judul Halaman */}
-      <h1 className="text-lg sm:text-xl font-bold text-slate-900 ml-8 lg:ml-0 truncate">
-        {title}
-      </h1>
+    <header className="h-20 bg-[#F8FAFC] flex items-center justify-between px-6 sm:px-8 shrink-0 z-30 gap-4">
+      {/* Sambutan Pengguna */}
+      <div className="ml-8 lg:ml-0 min-w-0">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+          Selamat datang kembali, {userName} <span className="text-xl">👋</span>
+        </h1>
+        <p className="text-xs text-slate-400 mt-1 font-medium">Berikut adalah update dan aktivitas kelas hari ini.</p>
+      </div>
 
       {/* Kontrol Kanan */}
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-4 shrink-0">
         {/* Kolom Pencarian Utama */}
-        <div className="relative hidden sm:block">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        <div className="relative hidden sm:flex items-center">
+          <Search className="absolute left-3.5 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder={pathname === '/kelas' ? "Cari kelas, wali kelas, atau siswa..." : "Cari apapun..."}
+            placeholder={pathname === '/kelas' ? "Cari kelas, wali kelas..." : "Cari apapun..."}
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-56 pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition placeholder:text-slate-400"
+            className="w-64 pl-10 pr-12 py-2.5 text-xs font-medium border border-slate-200/80 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition placeholder:text-slate-400"
           />
+          <div className="absolute right-3 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-[10px] text-slate-400 font-bold select-none pointer-events-none flex items-center gap-0.5">
+            <span>⌘</span><span>K</span>
+          </div>
         </div>
-
-        {/* Tombol Search Mobile */}
-        <button className="sm:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors">
-          <Search className="w-5 h-5 text-slate-500" />
-        </button>
 
         {/* Notifikasi */}
         <div className="relative">
           <button
             onClick={() => setShowNotif(v => !v)}
-            className="relative w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors"
+            className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200/80 hover:bg-slate-50 transition-colors"
           >
-            <Bell className="w-5 h-5 text-slate-500" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+            <Bell className="w-[18px] h-[18px] text-slate-500" />
+            <span className="absolute top-2 right-2.5 w-4 h-4 bg-red-500 border border-white rounded-full text-[9px] text-white flex items-center justify-center font-bold">
+              3
+            </span>
           </button>
 
           {showNotif && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowNotif(false)} />
-              <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl border border-slate-200 shadow-lg z-50 overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-                  <p className="font-semibold text-slate-900 text-sm">Notifikasi</p>
+              <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 overflow-hidden">
+                <div className="px-4 py-3 border-b border-slate-100">
+                  <p className="font-bold text-slate-900 text-sm">Notifikasi</p>
                 </div>
                 <div className="max-h-80 overflow-y-auto">
                   {notifications.map(n => (
@@ -122,20 +110,22 @@ export default function Topbar() {
                         <n.icon className="w-4 h-4" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-800">{n.title}</p>
-                        <p className="text-xs text-slate-500">{n.desc}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">{n.time}</p>
+                        <p className="text-xs font-bold text-slate-800">{n.title}</p>
+                        <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{n.desc}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{n.time}</p>
                       </div>
                     </div>
                   ))}
-                </div>
-                <div className="px-4 py-2.5 border-t border-slate-100 text-center">
-                  <button className="text-xs text-indigo-600 font-medium hover:underline">Lihat Semua Notifikasi</button>
                 </div>
               </div>
             </>
           )}
         </div>
+
+        {/* Toggle Mode */}
+        <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-white border border-slate-200/80 hover:bg-slate-50 transition-colors shrink-0">
+          <Sun className="w-[18px] h-[18px] text-slate-500" />
+        </button>
       </div>
     </header>
   )
