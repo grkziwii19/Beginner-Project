@@ -177,7 +177,10 @@ export default function Sidebar() {
       {/* ========================= */}
       <div className="relative border-b border-white/5 px-4 py-4 shrink-0">
         <div className="relative flex items-center gap-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#6366F1] shadow-lg shadow-indigo-600/20">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br
+from-[#4F46E5]
+to-[#6366F1]
+ shadow-lg shadow-indigo-600/20">
             <span className="text-[16px] font-black tracking-tight text-white">
               G
             </span>
@@ -331,7 +334,7 @@ export default function Sidebar() {
         </div>
 
         {/* ACADEMIC YEAR (TINGGI 72PX) */}
-        <div className="bg-white/[0.06] border border-white/10 rounded-xl px-3 py-2.5 flex items-center justify-between h-[72px]">
+        <div className="bg-[#1E293B] border border-white/5 rounded-xl px-3 py-2.5 flex items-center justify-between h-[72px]">
           <div>
             <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
               Tahun Ajaran Aktif
@@ -363,7 +366,7 @@ export default function Sidebar() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-indigo-500/20 bg-[#21264c] px-2.5 py-1">
+          <div className="rounded-lg border border-indigo-500/20 bg-[#4338CA] px-2.5 py-1">
             <span className="text-[10px] font-bold tracking-wider text-indigo-300">
               {timeLabel} AM
             </span>
@@ -372,7 +375,8 @@ export default function Sidebar() {
 
         {/* AI ASSISTANT CARD (TINGGI 120PX, FLAT 3D ROBOT, BUTTON KECIL) */}
         {/* Mengarahkan langsung ke halaman AI Tools (/ai-tools) */}
-        <div className="relative overflow-hidden rounded-xl border border-indigo-500/20 bg-gradient-to-br from-[#1b214d] to-[#121635] p-3.5 h-[120px] flex flex-col justify-between">
+        <div className="relative overflow-hidden rounded-xl border border-indigo-500/20 bg-gradient-to-br from-[#4338CA]
+to-[#6366F1] p-3.5 h-[120px] flex flex-col justify-between">
           <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-indigo-500/25 blur-2xl" />
 
           <div className="relative z-10 max-w-[65%] leading-tight">
@@ -387,7 +391,7 @@ export default function Sidebar() {
           <div className="relative z-10">
             <Link
               href="/ai-tools"
-              className="inline-flex h-[34px] items-center gap-1.5 rounded-[10px] bg-white px-3 text-[10px] font-bold text-[#0F172A] transition hover:bg-slate-100 shadow-sm"
+              className="inline-flex h-[34px] items-center gap-1.5 rounded-[10px] bg-[#6366F1] px-3 text-[10px] font-bold text-white hover:bg-[#4F46E5] transition shadow-sm"
             >
               <span>Mulai Chat</span>
               <span className="text-[8px] text-slate-400">&gt;</span>
@@ -439,8 +443,9 @@ export default function Sidebar() {
       {/* Lebar Sidebar 270px, Scrollbar sepenuhnya dihapus (overflow-hidden) */}
       <aside
         style={{
-          background: 'linear-gradient(180deg, #241f5c 0%, #1e1a4d 55%, #17133f 100%)',
-          borderRight: '1px solid rgba(255,255,255,0.06)'
+          background:
+            'linear-gradient(180deg,#0F172A 0%,#111827 55%,#1F2937 100%)',
+          borderRight:'1px solid rgba(255,255,255,.06)'
         }}
         className={clsx(
           "fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col overflow-hidden",
