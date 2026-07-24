@@ -4,6 +4,8 @@ import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
 import mammoth from 'mammoth'
+import jsPDF from 'jspdf'
+import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx'
 import {
   ArrowLeft, FileText, UploadCloud, HelpCircle,
   Settings2, Sparkles, Download, Database, CheckCircle2, AlertTriangle
@@ -81,7 +83,10 @@ function BuatSoalAI() {
 
       } else if (file.type === 'application/pdf') {
         const pdfjsLib = await import('pdfjs-dist')
-        pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+          'pdfjs-dist/build/pdf.worker.min.mjs',
+          import.meta.url
+        ).toString()
 
         const buffer = await file.arrayBuffer()
         const pdf = await pdfjsLib.getDocument({ data: buffer }).promise
@@ -169,6 +174,125 @@ function BuatSoalAI() {
     document.body.appendChild(downloadAnchor)
     downloadAnchor.click()
     downloadAnchor.remove()
+  }
+
+  // Mengunduh hasil soal ke format PDF
+  const downloadPDF = () => {
+    if (questions.length === 0) return
+    const doc = new jsPDF()
+    const pageHeight = doc.internal.pageSize.height
+    const marginLeft = 15
+    const maxWidth = 180
+    let y = 20
+
+    doc.setFontSize(14)
+    doc.text('Kumpulan Soal', marginLeft, y)
+    y += 10
+    doc.setFontSize(11)
+
+    const checkPageBreak = (lines: number) => {
+      if (y + lines * 6 > pageHeight - 20) {
+        doc.addPage()
+        y = 20
+      }
+    }
+
+    questions.forEach((q, idx) => {
+      const questionLines = doc.splitTextToSize(`${idx + 1}. ${q.question}`, maxWidth)
+      checkPageBreak(questionLines.length)
+      doc.text(questionLines, marginLeft, y)
+      y += questionLines.length * 6 + 2
+
+      if (q.options?.length) {
+        q.options.forEach(opt => {
+          const optLines = doc.splitTextToSize(opt, maxWidth - 5)
+          checkPageBreak(optLines.length)
+          doc.text(optLines, marginLeft + 5, y)
+          y += optLines.length * 6
+        })
+        y += 2
+      }
+
+      if (q.pairs?.length) {
+        q.pairs.forEach(p => {
+          checkPageBreak(1)
+          doc.text(`${p.left}  <->  ${p.right}`, marginLeft + 5, y)
+          y += 6
+        })
+        y += 2
+      }
+
+      doc.setFont('helvetica', 'bold')
+      const ansLines = doc.splitTextToSize(`Kunci Jawaban: ${q.correct_answer}`, maxWidth)
+      checkPageBreak(ansLines.length)
+      doc.text(ansLines, marginLeft, y)
+      y += ansLines.length * 6
+      doc.setFont('helvetica', 'normal')
+
+      if (q.explanation) {
+        const expLines = doc.splitTextToSize(`Pembahasan: ${q.explanation}`, maxWidth)
+        checkPageBreak(expLines.length)
+        doc.text(expLines, marginLeft, y)
+        y += expLines.length * 6
+      }
+      if (q.rubric) {
+        const rubLines = doc.splitTextToSize(`Kriteria Penilaian: ${q.rubric}`, maxWidth)
+        checkPageBreak(rubLines.length)
+        doc.text(rubLines, marginLeft, y)
+        y += rubLines.length * 6
+      }
+
+      y += 6
+    })
+
+    doc.save(`soal_ai_${questionType}.pdf`)
+  }
+
+  // Mengunduh hasil soal ke format Word (.docx)
+  const downloadDOCX = async () => {
+    if (questions.length === 0) return
+
+    const children: Paragraph[] = [
+      new Paragraph({ text: 'Kumpulan Soal', heading: HeadingLevel.HEADING_1 })
+    ]
+
+    questions.forEach((q, idx) => {
+      children.push(new Paragraph({
+        children: [new TextRun({ text: `${idx + 1}. ${q.question}`, bold: true })],
+        spacing: { before: 200 }
+      }))
+
+      q.options?.forEach(opt => {
+        children.push(new Paragraph({ text: opt, indent: { left: 400 } }))
+      })
+
+      q.pairs?.forEach(p => {
+        children.push(new Paragraph({ text: `${p.left}  ↔  ${p.right}`, indent: { left: 400 } }))
+      })
+
+      children.push(new Paragraph({
+        children: [new TextRun({ text: `Kunci Jawaban: ${q.correct_answer}`, bold: true, color: '15803d' })],
+        spacing: { before: 100 }
+      }))
+
+      if (q.explanation) {
+        children.push(new Paragraph({ text: `Pembahasan: ${q.explanation}` }))
+      }
+      if (q.rubric) {
+        children.push(new Paragraph({ text: `Kriteria Penilaian: ${q.rubric}` }))
+      }
+    })
+
+    const doc = new Document({ sections: [{ children }] })
+    const blob = await Packer.toBlob(doc)
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `soal_ai_${questionType}.docx`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
   }
 
   // Menyimpan data hasil generate ke database Supabase secara aman
@@ -376,7 +500,13 @@ function BuatSoalAI() {
               <div className="flex items-center justify-between border-b border-slate-150 pb-3 mb-4">
                 <h3 className="font-bold text-slate-900 text-sm">Pratinjau Soal Tergenerate</h3>
                 {questions.length > 0 && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={downloadPDF} className="btn-secondary py-1.5 px-3 text-xs font-semibold">
+                      <Download className="w-3.5 h-3.5 mr-1" /> Unduh (.PDF)
+                    </button>
+                    <button onClick={downloadDOCX} className="btn-secondary py-1.5 px-3 text-xs font-semibold">
+                      <Download className="w-3.5 h-3.5 mr-1" /> Unduh (.DOCX)
+                    </button>
                     <button onClick={downloadJSON} className="btn-secondary py-1.5 px-3 text-xs font-semibold">
                       <Download className="w-3.5 h-3.5 mr-1" /> Unduh (.JSON)
                     </button>
