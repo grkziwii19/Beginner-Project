@@ -3,9 +3,10 @@
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
-import { 
-  ArrowLeft, FileText, UploadCloud, HelpCircle, 
-  Settings2, Sparkles, Download, Database, CheckCircle2, AlertTriangle 
+import mammoth from 'mammoth'
+import {
+  ArrowLeft, FileText, UploadCloud, HelpCircle,
+  Settings2, Sparkles, Download, Database, CheckCircle2, AlertTriangle
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -19,6 +20,9 @@ interface Question {
   pairs?: { left: string; right: string }[]
 }
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
+const MAX_TEXT_CHARS = 45000
+
 function BuatSoalAI() {
   const supabase = createClient()
 
@@ -26,7 +30,7 @@ function BuatSoalAI() {
   const [fileText, setFileText] = useState('')
   const [fileInfo, setFileInfo] = useState<{ name: string; size: number } | null>(null)
   const [promptText, setPromptText] = useState('')
-  
+
   // Konfigurasi soal
   const [questionType, setQuestionType] = useState('pilihan_ganda')
   const [count, setCount] = useState(10)
@@ -40,34 +44,73 @@ function BuatSoalAI() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [successMsg, setSuccessMsg] = useState('')
 
-  // Menangani Pembacaan Berkas TXT secara aman di Client-side
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setError('')
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setFileInfo({ name: file.name, size: file.size })
-
-    if (file.type !== 'text/plain') {
-      setError('Untuk keamanan performa browser saat ini, harap unggah file berformat dokumen teks murni (.txt).')
+  // Menerapkan batas panjang teks & memberi peringatan jika dipotong
+  const finalizeExtractedText = (text: string) => {
+    if (!text.trim()) {
+      setError('Dokumen yang Anda unggah kosong atau tidak ada teks yang bisa dibaca.')
       setFileText('')
       return
     }
-
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const text = event.target?.result as string
-      if (!text.trim()) {
-        setError('Dokumen yang Anda unggah kosong.')
-        setFileText('')
-        return
-      }
+    if (text.length > MAX_TEXT_CHARS) {
+      setFileText(text.slice(0, MAX_TEXT_CHARS))
+      setError(`Dokumen terlalu panjang, hanya ${MAX_TEXT_CHARS.toLocaleString()} karakter pertama yang dipakai. Untuk modul panjang, sebaiknya generate per-bab.`)
+    } else {
       setFileText(text)
+      setError('')
     }
-    reader.onerror = () => {
-      setError('Gagal membaca dokumen.')
+  }
+
+  // Menangani pembacaan berkas TXT, PDF, dan DOCX di client-side
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setError('')
+    setFileText('')
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`Ukuran file terlalu besar (${(file.size / 1024 / 1024).toFixed(1)} MB). Maksimal 10 MB.`)
+      return
     }
-    reader.readAsText(file)
+
+    setFileInfo({ name: file.name, size: file.size })
+
+    try {
+      if (file.type === 'text/plain') {
+        const text = await file.text()
+        finalizeExtractedText(text)
+
+      } else if (file.type === 'application/pdf') {
+        const pdfjsLib = await import('pdfjs-dist')
+        pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`
+
+        const buffer = await file.arrayBuffer()
+        const pdf = await pdfjsLib.getDocument({ data: buffer }).promise
+        let fullText = ''
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i)
+          const content = await page.getTextContent()
+          fullText += content.items.map((item: any) => item.str).join(' ') + '\n'
+        }
+        if (!fullText.trim()) {
+          setError('Tidak ada teks yang bisa diambil dari PDF ini (kemungkinan hasil scan/gambar, bukan teks asli).')
+          return
+        }
+        finalizeExtractedText(fullText)
+
+      } else if (
+        file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      ) {
+        const buffer = await file.arrayBuffer()
+        const result = await mammoth.extractRawText({ arrayBuffer: buffer })
+        finalizeExtractedText(result.value)
+
+      } else {
+        setError('Format tidak didukung. Harap unggah file .txt, .pdf, atau .docx.')
+      }
+    } catch (err) {
+      console.error(err)
+      setError('Gagal membaca dokumen. Pastikan file tidak rusak.')
+    }
   }
 
   // Generate Soal via Next.js API Route
@@ -203,17 +246,17 @@ function BuatSoalAI() {
               </div>
             ) : (
               <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Unggah Modul (.TXT)</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Unggah Modul (.TXT / .PDF / .DOCX)</label>
                 <div className="border-2 border-dashed border-slate-300 rounded-xl p-5 text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative">
                   <input
                     type="file"
-                    accept=".txt"
+                    accept=".txt,.pdf,.docx"
                     onChange={handleFileUpload}
                     className="absolute inset-0 opacity-0 cursor-pointer"
                   />
                   <UploadCloud className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                   <p className="text-xs font-semibold text-slate-700">Klik untuk upload dokumen</p>
-                  <p className="text-[10px] text-slate-400 mt-1">Hanya mendukung .txt murni demi performa</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Mendukung .txt, .pdf, .docx — maks 10 MB</p>
                 </div>
                 {fileInfo && (
                   <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center gap-2">

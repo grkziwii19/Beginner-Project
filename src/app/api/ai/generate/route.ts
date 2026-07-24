@@ -43,6 +43,13 @@ export async function POST(req: NextRequest) {
   try {
     const { method, contextText, promptText, questionType, count, difficulty, language, standard } = await req.json()
 
+    // ✅ Validasi panjang teks modul di sisi server (jangan cuma percaya client)
+    if (method === 'upload' && contextText && contextText.length > 50000) {
+      return NextResponse.json({
+        error: 'Teks modul terlalu panjang. Maksimal ~50.000 karakter per generate.'
+      }, { status: 400 })
+    }
+
     // Ambil maksimal soal yang boleh di-generate per request (max 50 untuk free user)
     const safeCount = Math.min(count || 10, isAdmin ? 100 : 50)
 
@@ -116,7 +123,6 @@ ${contextText}
       userContent = `Gunakan instruksi manual berikut sebagai sumber acuan pembuatan soal: "${promptText}"`
     }
 
-    // 3. Panggil Gemini
     const model = genAI.getGenerativeModel({
       model: 'gemini-flash-latest',
       generationConfig: {
