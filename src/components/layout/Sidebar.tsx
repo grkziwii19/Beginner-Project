@@ -40,15 +40,12 @@ function isSection(row: NavRow): row is SectionLabel {
   return 'type' in row && row.type === 'section'
 }
 
+// Hanya menampilkan Dashboard, Kelas, Laporan, dan Pengaturan
 const navRows: NavRow[] = [
   {
     href: '/dashboard',
     label: 'Dashboard',
     icon: LayoutDashboard,
-  },
-  {
-    type: 'section',
-    label: 'AKADEMIK',
   },
   {
     href: '/kelas',
@@ -59,10 +56,6 @@ const navRows: NavRow[] = [
     href: '/laporan',
     label: 'Laporan',
     icon: FileBarChart,
-  },
-  {
-    type: 'section',
-    label: 'SISTEM',
   },
   {
     href: '/pengaturan',
@@ -175,14 +168,14 @@ export default function Sidebar() {
         hour: '2-digit',
         minute: '2-digit',
       })
-    : '18:23'
+    : '09:41'
 
   const NavContent = () => (
     <>
       {/* ========================= */}
-      {/* LOGO (Padding vertikal diperkecil) */}
+      {/* LOGO */}
       {/* ========================= */}
-      <div className="relative border-b border-white/5 px-4 py-3 shrink-0">
+      <div className="relative border-b border-white/5 px-4 py-4 shrink-0">
         <div className="relative flex items-center gap-3">
           <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#6366F1] shadow-lg shadow-indigo-600/20">
             <span className="text-[16px] font-black tracking-tight text-white">
@@ -209,15 +202,15 @@ export default function Sidebar() {
       </div>
 
       {/* ========================= */}
-      {/* NAVIGATION (Tinggi baris & jarak section diperkecil agar pas satu layar) */}
+      {/* NAVIGATION (SCROLL DIHAPUS) */}
       {/* ========================= */}
-      <nav className="flex-1 px-4 py-2 space-y-0.5 overflow-hidden">
+      <nav className="flex-1 px-4 py-3 space-y-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {navRows.map((row) => {
           if (isSection(row)) {
             return (
               <div
                 key={row.label}
-                className="mt-3 mb-1 px-3"
+                className="mt-[18px] mb-[8px] px-3"
               >
                 <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94A3B8]/50">
                   {row.label}
@@ -240,7 +233,7 @@ export default function Sidebar() {
                   : "text-[#94A3B8] hover:bg-white/[0.05] hover:scale-[1.01] hover:text-white"
               )}
             >
-              <div className="flex w-full items-center gap-3 px-3 py-2">
+              <div className="flex w-full items-center gap-3 px-3 py-[11px]">
                 <row.icon className={clsx(
                   "h-[18px] w-[18px] shrink-0 transition-colors duration-200",
                   active ? "text-white" : "text-[#94A3B8] group-hover:text-white"
@@ -256,15 +249,15 @@ export default function Sidebar() {
       </nav>
 
       {/* ========================= */}
-      {/* FOOTER (Padding & Gap diperketat agar tidak tumpang tindih) */}
+      {/* FOOTER (SATU GRUP KONSISTEN) */}
       {/* ========================= */}
-      <div className="border-t border-white/5 bg-slate-950/25 p-3 space-y-2.5 shrink-0">
+      <div className="p-4 space-y-3.5 shrink-0">
         
         {/* PROFILE CARD */}
         <div className="relative">
           <button
             onClick={() => setShowProfileMenu((v) => !v)}
-            className="flex items-center gap-3 w-full px-2 py-1 rounded-xl hover:bg-white/[0.05] transition-colors"
+            className="flex items-center gap-3 w-full px-2 py-1.5 rounded-xl hover:bg-white/[0.05] transition-colors"
           >
             <div className="relative h-10 w-10 shrink-0">
               {avatarUrl ? (
@@ -290,7 +283,7 @@ export default function Sidebar() {
               </p>
             </div>
 
-            <ChevronDown className="h-3.5 w-3.5 text-slate-500 transition-colors group-hover:text-white" />
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-500 transition-colors group-hover:text-white" />
           </button>
 
           {showProfileMenu && (
@@ -332,27 +325,27 @@ export default function Sidebar() {
           </p>
         </div>
 
-        {/* ACADEMIC YEAR (Tinggi ditekan menjadi 64px) */}
-        <div className="bg-[#1E293B]/40 border border-white/10 rounded-xl px-3 py-2 flex items-center justify-between h-[64px] shrink-0">
+        {/* ACADEMIC YEAR (TINGGI 72PX) */}
+        <div className="bg-[#1E293B]/40 border border-white/10 rounded-xl px-3 py-2.5 flex items-center justify-between h-[72px]">
           <div>
             <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
               Tahun Ajaran Aktif
             </p>
-            <h3 className="text-[12px] font-bold text-white leading-none mt-1">
+            <h3 className="text-[14px] font-bold text-white mt-0.5 leading-tight">
               2024 / 2025
             </h3>
-            <p className="text-[10px] text-[#94A3B8] mt-1 leading-none">
+            <p className="text-[10px] text-[#94A3B8] mt-0.5">
               Semester Genap
             </p>
           </div>
 
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/5 border border-white/10 shrink-0">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 border border-white/10 shrink-0">
             <GraduationCap className="h-4 w-4 text-indigo-400" />
           </div>
         </div>
 
         {/* DATE & TIME */}
-        <div className="flex items-center justify-between px-2 bg-transparent shrink-0">
+        <div className="flex items-center justify-between px-2 bg-transparent">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-slate-500" />
             <div className="leading-tight">
@@ -365,22 +358,23 @@ export default function Sidebar() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-indigo-500/20 bg-[#21264c] px-2.5 py-0.5">
+          <div className="rounded-lg border border-indigo-500/20 bg-[#21264c] px-2.5 py-1">
             <span className="text-[10px] font-bold tracking-wider text-indigo-300">
               {timeLabel} AM
             </span>
           </div>
         </div>
 
-        {/* AI ASSISTANT CARD (Tinggi ditekan menjadi 100px untuk menghemat ruang vertikal) */}
-        <div className="relative overflow-hidden rounded-xl border border-indigo-500/20 bg-gradient-to-br from-[#1b214d] to-[#121635] p-3 h-[100px] flex flex-col justify-between shrink-0">
-          <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-indigo-500/25 blur-2xl" />
+        {/* AI ASSISTANT CARD (TINGGI 120PX, FLAT 3D ROBOT, BUTTON KECIL) */}
+        {/* Mengarahkan langsung ke halaman AI Tools (/ai-tools) */}
+        <div className="relative overflow-hidden rounded-xl border border-indigo-500/20 bg-gradient-to-br from-[#1b214d] to-[#121635] p-3.5 h-[120px] flex flex-col justify-between">
+          <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-indigo-500/25 blur-2xl" />
 
           <div className="relative z-10 max-w-[65%] leading-tight">
             <h3 className="text-[12px] font-bold text-white">
               AI Assistant
             </h3>
-            <p className="mt-0.5 text-[10px] text-slate-400 leading-normal">
+            <p className="mt-1 text-[10px] text-slate-400 leading-normal">
               Tanya apa saja tentang kelas dan siswa Anda
             </p>
           </div>
@@ -388,7 +382,7 @@ export default function Sidebar() {
           <div className="relative z-10">
             <Link
               href="/ai-tools"
-              className="inline-flex h-[30px] items-center gap-1.5 rounded-[8px] bg-white px-2.5 text-[10px] font-bold text-[#0F172A] transition hover:bg-slate-100 shadow-sm"
+              className="inline-flex h-[34px] items-center gap-1.5 rounded-[10px] bg-white px-3 text-[10px] font-bold text-[#0F172A] transition hover:bg-slate-100 shadow-sm"
             >
               <span>Mulai Chat</span>
               <span className="text-[8px] text-slate-400">&gt;</span>
@@ -396,8 +390,8 @@ export default function Sidebar() {
           </div>
 
           {/* Vektor Robot AI Flat 3D Modern */}
-          <div className="absolute right-1 bottom-1 w-14 h-14 pointer-events-none z-10">
-            <svg viewBox="0 0 100 100" fill="none" className="w-full h-full drop-shadow-sm">
+          <div className="absolute right-1 bottom-1 w-16 h-16 pointer-events-none z-10">
+            <svg viewBox="0 0 100 100" fill="none" className="w-full h-full drop-shadow-md">
               <circle cx="50" cy="50" r="30" fill="url(#botGlow)" opacity="0.25"/>
               <rect x="25" y="24" width="50" height="38" rx="16" fill="#E2E8F0"/>
               <rect x="29" y="28" width="42" height="30" rx="12" fill="#0F172A"/>
@@ -437,20 +431,20 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Gunakan max-h-screen & h-screen untuk memaksa tinggi layout sejajar tinggi layar */}
+      {/* Lebar Sidebar 270px, Scrollbar sepenuhnya dihapus (overflow-hidden) */}
       <aside
         style={{
           background: 'linear-gradient(180deg, #0F172A 0%, #111827 55%, #1E293B 100%)',
-          borderRight: '1px solid rgba(255,255,255,0.05)',
+          borderRight: '1px solid rgba(255,255,255,0.05)'
         }}
         className={clsx(
-          "fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col overflow-hidden h-screen max-h-screen",
+          "fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col overflow-hidden",
           "transition-transform duration-300",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
           "lg:static shrink-0"
         )}
       >
-        <div className="relative flex h-full flex-col overflow-hidden justify-between">
+        <div className="relative flex h-full flex-col overflow-hidden">
           <NavContent />
         </div>
       </aside>
