@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   UserCircle, Building2, Calendar, LogOut,
-  Save, CheckCircle, Camera, Pencil
+  Save, CheckCircle, Camera, Pencil, ChevronDown, ShieldAlert
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -36,6 +36,34 @@ const emptyProfile: ProfileData = {
 const emptySchool: SchoolData = {
   name: '', npsn: '', address: '', principalName: '', accreditation: 'A',
 }
+
+// ── SKELETON LOADER FOR PREMIUM UX ──
+const SettingsSkeleton = () => (
+  <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 animate-pulse">
+    <div className="space-y-3">
+      {[1, 2, 3, 4].map(n => (
+        <div key={n} className="h-11 bg-slate-100 rounded-xl w-full" />
+      ))}
+    </div>
+    <div className="lg:col-span-3 bg-white border border-slate-100 rounded-2xl p-6 space-y-6 shadow-sm">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 rounded-2xl bg-slate-150" />
+        <div className="space-y-2">
+          <div className="h-5 bg-slate-150 rounded w-40" />
+          <div className="h-4 bg-slate-100 rounded w-24" />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        {[1, 2, 3, 4, 5].map(n => (
+          <div key={n} className="space-y-2">
+            <div className="h-3 bg-slate-100 rounded w-16" />
+            <div className="h-10 bg-slate-100 rounded-xl w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)
 
 export default function PengaturanPage() {
   const supabase = createClient()
@@ -185,126 +213,290 @@ export default function PengaturanPage() {
   const initials = (profile.full_name || 'Guru').split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 
   const tabs = [
-    { id: 'profil', label: 'Profil', icon: UserCircle },
+    { id: 'profil', label: 'Profil Akun', icon: UserCircle },
     { id: 'sekolah', label: 'Data Sekolah', icon: Building2 },
     { id: 'tahun', label: 'Tahun Ajaran', icon: Calendar },
   ] as const
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64 text-slate-400 text-sm">Memuat...</div>
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 space-y-6">
+        <div className="border-b border-slate-100 pb-5">
+          <div className="h-8 bg-slate-100 rounded w-48 animate-pulse mb-2" />
+          <div className="h-4 bg-slate-50 rounded w-80 animate-pulse" />
+        </div>
+        <SettingsSkeleton />
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-sm text-slate-500 mt-0.5">Profil, data sekolah, dan tahun ajaran.</p>
+    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      {/* HEADER BAR */}
+      <div className="border-b border-slate-100 pb-5">
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Pengaturan</h1>
+        <p className="text-sm text-slate-500 mt-1">Konfigurasi data profil guru, riwayat lembaga sekolah, serta tahun ajaran aktif.</p>
       </div>
 
-      {error && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</div>}
+      {error && (
+        <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-start gap-3 text-rose-800 text-sm">
+          <ShieldAlert className="w-5 h-5 shrink-0 text-rose-500 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-        <div className="card p-2 h-fit">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        {/* LEFT COLUMN: NAVIGATION SIDEBAR */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm h-fit space-y-1">
           {tabs.map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
               className={clsx(
-                'flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                tab === t.id ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+                'flex items-center gap-3 w-full px-4 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all duration-150',
+                tab === t.id 
+                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-100' 
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               )}
             >
-              <t.icon className="w-4 h-4" /> {t.label}
+              <t.icon className={clsx('w-4 h-4 shrink-0', tab === t.id ? 'text-white' : 'text-slate-400')} /> 
+              {t.label}
             </button>
           ))}
-          <div className="border-t border-slate-100 mt-2 pt-2">
+          <div className="border-t border-slate-100 mt-3 pt-3">
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-xs sm:text-sm font-bold text-rose-600 hover:bg-rose-50/70 transition-all duration-150"
             >
-              <LogOut className="w-4 h-4" /> Keluar
+              <LogOut className="w-4 h-4 shrink-0" /> Keluar
             </button>
           </div>
         </div>
 
+        {/* RIGHT COLUMN: ACTIVE TAB PANEL */}
         <div className="lg:col-span-3">
           {tab === 'profil' && (
-            <div className="card p-6">
-              <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xl font-bold overflow-hidden">
-                      {profile.avatar_url ? <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" /> : initials}
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+                <div className="flex items-center gap-5">
+                  <div className="relative group">
+                    <div className="w-18 h-18 rounded-2xl bg-indigo-550 flex items-center justify-center text-white text-2xl font-black overflow-hidden shadow-sm border border-indigo-100">
+                      {profile.avatar_url ? (
+                        <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        initials
+                      )}
                     </div>
-                    <label className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full border border-slate-200 flex items-center justify-center cursor-pointer">
-                      <Camera className="w-3 h-3 text-slate-500" />
-                      <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} disabled={uploadingPhoto} />
+                    <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-full border border-slate-250 flex items-center justify-center cursor-pointer hover:border-indigo-500 shadow-sm transition-all duration-200">
+                      <Camera className="w-3.5 h-3.5 text-slate-500 group-hover:text-indigo-600 transition-colors" />
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handlePhotoChange} 
+                        disabled={uploadingPhoto} 
+                      />
                     </label>
                   </div>
                   <div>
-                    <h2 className="font-semibold text-slate-900">{profile.full_name || 'Guru'}</h2>
-                    <p className="text-sm text-slate-500">{profile.position}</p>
+                    <h2 className="font-extrabold text-slate-900 text-lg leading-snug">{profile.full_name || 'Guru'}</h2>
+                    <p className="text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-full px-2.5 py-0.5 mt-1 inline-block">
+                      {profile.position}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2">
-                  <label className="label">Nama Lengkap</label>
-                  <input className="input" value={profile.full_name} onChange={e => setProfile({ ...profile, full_name: e.target.value })} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="sm:col-span-2 space-y-1.5">
+                  <label className="text-xs font-bold text-slate-450 uppercase tracking-wider block">Nama Lengkap</label>
+                  <input 
+                    className="w-full bg-white border border-slate-250 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none" 
+                    value={profile.full_name} 
+                    onChange={e => setProfile({ ...profile, full_name: e.target.value })} 
+                  />
                 </div>
-                <div><label className="label">NIP</label><input className="input" value={profile.nip} onChange={e => setProfile({ ...profile, nip: e.target.value })} /></div>
-                <div><label className="label">Jabatan</label>
-                  <select className="input" value={profile.position} onChange={e => setProfile({ ...profile, position: e.target.value })}>
-                    <option>Guru</option><option>Wali Kelas</option><option>Guru BK</option><option>Kepala Sekolah</option>
-                  </select>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-450 uppercase tracking-wider block">NIP</label>
+                  <input 
+                    className="w-full bg-white border border-slate-250 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none" 
+                    value={profile.nip} 
+                    onChange={e => setProfile({ ...profile, nip: e.target.value })} 
+                  />
                 </div>
-                <div><label className="label">Email</label><input className="input" value={email} disabled style={{ backgroundColor: '#f8fafc', cursor: 'not-allowed' }} /></div>
-                <div><label className="label">Nomor Telepon</label><input className="input" value={profile.phone} onChange={e => setProfile({ ...profile, phone: e.target.value })} /></div>
-                <div><label className="label">Mata Pelajaran</label><input className="input" value={profile.subject} onChange={e => setProfile({ ...profile, subject: e.target.value })} /></div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-450 uppercase tracking-wider block">Jabatan</label>
+                  <div className="relative">
+                    <select 
+                      className="w-full bg-white border border-slate-250 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl pl-4 pr-10 py-2.5 text-sm font-semibold text-slate-800 appearance-none cursor-pointer" 
+                      value={profile.position} 
+                      onChange={e => setProfile({ ...profile, position: e.target.value })}
+                    >
+                      <option>Guru</option>
+                      <option>Wali Kelas</option>
+                      <option>Guru BK</option>
+                      <option>Kepala Sekolah</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-450 uppercase tracking-wider block">Email Terdaftar</label>
+                  <input 
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-450 cursor-not-allowed outline-none" 
+                    value={email} 
+                    disabled 
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-slate-450 uppercase tracking-wider block">Nomor Telepon</label>
+                  <input 
+                    className="w-full bg-white border border-slate-250 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none" 
+                    value={profile.phone} 
+                    onChange={e => setProfile({ ...profile, phone: e.target.value })} 
+                  />
+                </div>
+
+                <div className="sm:col-span-2 space-y-1.5">
+                  <label className="text-xs font-bold text-slate-450 uppercase tracking-wider block">Mata Pelajaran Utama</label>
+                  <input 
+                    className="w-full bg-white border border-slate-250 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none" 
+                    value={profile.subject} 
+                    onChange={e => setProfile({ ...profile, subject: e.target.value })} 
+                  />
+                </div>
               </div>
 
-              <button onClick={handleSaveProfile} disabled={savingProfile} className={`btn-primary w-full justify-center mt-5 ${savedProfile ? 'bg-emerald-600' : ''}`}>
-                {savedProfile ? <><CheckCircle className="w-4 h-4" /> Tersimpan!</> : <><Save className="w-4 h-4" /> {savingProfile ? 'Menyimpan...' : 'Simpan Profil'}</>}
+              <button 
+                onClick={handleSaveProfile} 
+                disabled={savingProfile} 
+                className={clsx(
+                  "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 active:scale-[0.98] w-full",
+                  savedProfile ? "bg-emerald-600 shadow-emerald-100" : "bg-indigo-600 shadow-indigo-150 hover:bg-indigo-500"
+                )}
+              >
+                {savedProfile ? (
+                  <>
+                    <CheckCircle className="w-4 h-4" /> Tersimpan!
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" /> {savingProfile ? 'Menyimpan...' : 'Simpan Profil'}
+                  </>
+                )}
               </button>
             </div>
           )}
 
           {tab === 'sekolah' && (
-            <div className="card p-6">
-              <div className="flex items-center justify-between mb-5">
-                <h2 className="font-semibold text-slate-900">Data Sekolah</h2>
-                <button onClick={() => setEditingSchool(!editingSchool)} className="btn-secondary text-xs">
-                  <Pencil className="w-3.5 h-3.5" /> {editingSchool ? 'Batal' : 'Edit'}
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-150">
+                <h2 className="font-extrabold text-slate-900 text-base">Informasi Lembaga Sekolah</h2>
+                <button 
+                  onClick={() => setEditingSchool(!editingSchool)} 
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-250 bg-white px-3 py-1.5 text-xs font-bold text-slate-750 hover:bg-slate-50 transition-all active:scale-95 shadow-sm"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> {editingSchool ? 'Batal' : 'Edit Data'}
                 </button>
               </div>
 
               {editingSchool ? (
                 <div className="space-y-4">
-                  <div><label className="label">Nama Sekolah</label><input className="input" value={school.name} onChange={e => setSchool({ ...school, name: e.target.value })} /></div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div><label className="label">NPSN</label><input className="input" value={school.npsn} onChange={e => setSchool({ ...school, npsn: e.target.value })} /></div>
-                    <div><label className="label">Akreditasi</label>
-                      <select className="input" value={school.accreditation} onChange={e => setSchool({ ...school, accreditation: e.target.value })}>
-                        <option>A</option><option>B</option><option>C</option>
-                      </select>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-450 uppercase tracking-wider block">Nama Sekolah</label>
+                    <input 
+                      className="w-full bg-white border border-slate-250 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none" 
+                      value={school.name} 
+                      onChange={e => setSchool({ ...school, name: e.target.value })} 
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-450 uppercase tracking-wider block">NPSN</label>
+                      <input 
+                        className="w-full bg-white border border-slate-250 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none" 
+                        value={school.npsn} 
+                        onChange={e => setSchool({ ...school, npsn: e.target.value })} 
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-450 uppercase tracking-wider block">Akreditasi</label>
+                      <div className="relative">
+                        <select 
+                          className="w-full bg-white border border-slate-250 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl pl-4 pr-10 py-2.5 text-sm font-semibold text-slate-800 appearance-none cursor-pointer" 
+                          value={school.accreditation} 
+                          onChange={e => setSchool({ ...school, accreditation: e.target.value })}
+                        >
+                          <option>A</option>
+                          <option>B</option>
+                          <option>C</option>
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                      </div>
                     </div>
                   </div>
-                  <div><label className="label">Alamat</label><input className="input" value={school.address} onChange={e => setSchool({ ...school, address: e.target.value })} /></div>
-                  <div><label className="label">Kepala Sekolah</label><input className="input" value={school.principalName} onChange={e => setSchool({ ...school, principalName: e.target.value })} /></div>
-                  <button onClick={handleSaveSchool} disabled={savingSchool} className={`btn-primary w-full justify-center ${savedSchool ? 'bg-emerald-600' : ''}`}>
-                    {savedSchool ? <><CheckCircle className="w-4 h-4" /> Tersimpan!</> : <><Save className="w-4 h-4" /> {savingSchool ? 'Menyimpan...' : 'Simpan'}</>}
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-450 uppercase tracking-wider block">Alamat Sekolah</label>
+                    <input 
+                      className="w-full bg-white border border-slate-250 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none" 
+                      value={school.address} 
+                      onChange={e => setSchool({ ...school, address: e.target.value })} 
+                    />
+                  </div>
+
+                  <div className="space-y-1.5 pb-2">
+                    <label className="text-xs font-bold text-slate-450 uppercase tracking-wider block">Nama Kepala Sekolah</label>
+                    <input 
+                      className="w-full bg-white border border-slate-250 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-800 outline-none" 
+                      value={school.principalName} 
+                      onChange={e => setSchool({ ...school, principalName: e.target.value })} 
+                    />
+                  </div>
+
+                  <button 
+                    onClick={handleSaveSchool} 
+                    disabled={savingSchool} 
+                    className={clsx(
+                      "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-200 active:scale-[0.98] w-full",
+                      savedSchool ? "bg-emerald-600 shadow-emerald-100" : "bg-indigo-600 shadow-indigo-150 hover:bg-indigo-500"
+                    )}
+                  >
+                    {savedSchool ? (
+                      <>
+                        <CheckCircle className="w-4 h-4" /> Tersimpan!
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" /> {savingSchool ? 'Menyimpan...' : 'Simpan Data'}
+                      </>
+                    )}
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {[
-                    ['Nama Sekolah', school.name || '-'], ['NPSN', school.npsn || '-'],
-                    ['Akreditasi', school.accreditation], ['Kepala Sekolah', school.principalName || '-'],
-                    ['Alamat', school.address || '-'],
+                    ['Nama Sekolah', school.name || '-'], 
+                    ['NPSN', school.npsn || '-'],
+                    ['Akreditasi', school.accreditation], 
+                    ['Kepala Sekolah', school.principalName || '-'],
+                    ['Alamat Lengkap', school.address || '-'],
                   ].map(([k, v]) => (
-                    <div key={k} className="bg-slate-50 rounded-lg px-3 py-2.5">
-                      <p className="text-xs text-slate-400 uppercase">{k}</p>
-                      <p className="font-medium text-slate-800 mt-0.5">{v}</p>
+                    <div 
+                      key={k} 
+                      className={clsx(
+                        "bg-slate-50/50 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between",
+                        k === 'Alamat Lengkap' ? 'sm:col-span-2' : ''
+                      )}
+                    >
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{k}</p>
+                      <p className="font-bold text-slate-800 mt-1.5 text-sm leading-relaxed">{v}</p>
                     </div>
                   ))}
                 </div>
@@ -313,19 +505,36 @@ export default function PengaturanPage() {
           )}
 
           {tab === 'tahun' && (
-            <div className="card p-6">
-              <h2 className="font-semibold text-slate-900 mb-4">Tahun Ajaran</h2>
-              <div className="space-y-3">
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+              <div className="pb-4 border-b border-slate-150">
+                <h2 className="font-extrabold text-slate-900 text-base">Manajemen Tahun Ajaran</h2>
+              </div>
+              <div className="space-y-4">
                 {[
                   { year: '2024/2025', semester: 'Semester Genap', active: true },
                   { year: '2024/2025', semester: 'Semester Ganjil', active: false },
                 ].map((ta, i) => (
-                  <div key={i} className={`flex items-center justify-between p-3 rounded-lg border ${ta.active ? 'border-indigo-200 bg-indigo-50' : 'border-slate-100 bg-slate-50'}`}>
+                  <div 
+                    key={i} 
+                    className={clsx(
+                      'flex items-center justify-between p-4 rounded-2xl border transition-all duration-200',
+                      ta.active 
+                        ? 'border-indigo-100 bg-indigo-50/40 shadow-sm' 
+                        : 'border-slate-150 bg-slate-50/30'
+                    )}
+                  >
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{ta.year}</p>
-                      <p className="text-xs text-slate-500">{ta.semester}</p>
+                      <p className="text-sm font-bold text-slate-900 leading-snug">{ta.year}</p>
+                      <p className="text-xs font-semibold text-slate-450 mt-0.5">{ta.semester}</p>
                     </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${ta.active ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-500'}`}>
+                    <span 
+                      className={clsx(
+                        'px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border',
+                        ta.active 
+                          ? 'bg-indigo-100 text-indigo-700 border-indigo-200/50' 
+                          : 'bg-slate-100 text-slate-500 border-slate-200/40'
+                      )}
+                    >
                       {ta.active ? 'Aktif' : 'Selesai'}
                     </span>
                   </div>
