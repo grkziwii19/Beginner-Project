@@ -118,7 +118,7 @@ ${contextText}
 
     // 3. Panggil Gemini
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-flash-latest',
       generationConfig: {
         responseMimeType: 'application/json',
       }
