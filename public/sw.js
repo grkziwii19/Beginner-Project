@@ -2,7 +2,7 @@
 // Pendekatan manual sederhana (tanpa library) agar kompatibel dengan
 // Next.js 15 App Router + Turbopack tanpa konflik konfigurasi build.
 
-const CACHE_VERSION = 'v4'; // dinaikkan karena perubahan daftar precache
+const CACHE_VERSION = 'v5'; // dinaikkan karena perubahan daftar precache
 const CACHE_NAME = `gr-assistant-${CACHE_VERSION}`;
 const OFFLINE_URL = '/offline.html';
 
@@ -70,6 +70,13 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
+  // Jangan pernah intercept API AI
+if (
+ url.pathname.startsWith('/api/ai/')
+) {
+ return;
+}
+
   // KRITIS: Jangan sentuh sama sekali request terkait autentikasi.
   if (
     url.pathname.startsWith('/auth/') ||
@@ -107,26 +114,46 @@ self.addEventListener('fetch', (event) => {
 
   // ── Navigasi halaman (HTML/route) -> Network First, fallback ke cache, lalu offline page ──
   if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        if (response.ok) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME)
+            .then((cache) => cache.put(request, responseClone));
+        }
+
+        return response;
+      })
+      .catch(async () => {
+
+        const cached = await caches.match(request);
+
+        if (cached) return cached;
+
+        const cachedNoSearch =
+          await caches.match(url.pathname);
+
+        if (cachedNoSearch) return cachedNoSearch;
+
+        const offline =
+          await caches.match(OFFLINE_URL);
+
+        return offline || new Response(
+          "Offline",
+          {
+            status: 503,
+            headers: {
+              "Content-Type": "text/plain"
+            }
           }
-          return response;
-        })
-        .catch(async () => {
-          const cached = await caches.match(request);
-          if (cached) return cached;
-          // Coba juga tanpa query string, kadang Next.js menambahkan param RSC
-          const cachedNoSearch = await caches.match(url.pathname);
-          if (cachedNoSearch) return cachedNoSearch;
-          return caches.match(OFFLINE_URL);
-        })
-    );
-    return;
-  }
+        );
+
+      })
+  );
+
+  return;
+}
 
   // ── Aset statis lain (JS/CSS/gambar/font di luar _next/static) -> Cache First + update background ──
   if (
@@ -153,16 +180,38 @@ self.addEventListener('fetch', (event) => {
   }
 
   // ── Default (termasuk RSC data fetch dari Next.js navigasi client-side) ──
-  // Network first, fallback ke cache kalau offline
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response.ok && request.method === 'GET') {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
+// Network first, fallback ke cache kalau offline
+
+event.respondWith(
+  fetch(request)
+    .then((response) => {
+
+      if (response.ok) {
+        const responseClone = response.clone();
+
+        caches.open(CACHE_NAME)
+          .then((cache) => {
+            cache.put(request, responseClone);
+          });
+      }
+
+      return response;
+    })
+    .catch(async () => {
+
+      const cached = await caches.match(request);
+
+      return cached || new Response(
+        "Offline",
+        {
+          status: 503,
+          headers: {
+            "Content-Type": "text/plain"
+          }
         }
-        return response;
-      })
-      .catch(() => caches.match(request))
-  );
+      );
+
+    })
+);
+
 });
