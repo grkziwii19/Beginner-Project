@@ -17,12 +17,11 @@ interface ProfileData {
   position: string
   phone: string
   subject: string
-  school: string
   avatar_url: string | null
 }
 
 const emptyProfile: ProfileData = {
-  full_name: '', nip: '', position: 'Guru', phone: '', subject: '', school: '', avatar_url: null,
+  full_name: '', nip: '', position: 'Guru', phone: '', subject: '', avatar_url: null,
 }
 
 export default function AkunPage() {
@@ -47,10 +46,10 @@ export default function AkunPage() {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-  setLoading(false)
-  router.push('/login')
-  return
-}
+        setLoading(false)
+        router.push('/login')
+        return
+      }
       setEmail(user.email ?? '')
 
       const { data } = await supabase
@@ -66,7 +65,6 @@ export default function AkunPage() {
           position: data.position ?? 'Guru',
           phone: data.phone ?? '',
           subject: data.subject ?? '',
-          school: data.school ?? '',
           avatar_url: data.avatar_url ?? null,
         })
       }
@@ -88,7 +86,6 @@ export default function AkunPage() {
       position: profile.position.trim() || 'Guru',
       phone: profile.phone.trim() || null,
       subject: profile.subject.trim() || null,
-      school: profile.school.trim() || null,
       onboarding_completed: true,
       updated_at: new Date().toISOString(),
     })
@@ -182,20 +179,23 @@ export default function AkunPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-        {/* Vertical tab sidebar */}
+        {/* Tab Sidebar Lokal */}
         <div className="card p-2 h-fit">
-          {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={clsx(
-                'flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                tab === t.id ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
-              )}
-            >
-              <t.icon className="w-4 h-4" /> {t.label}
-            </button>
-          ))}
+          {tabs.map(t => {
+            const IconComponent = t.icon
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={clsx(
+                  'flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  tab === t.id ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-50'
+                )}
+              >
+                <IconComponent className="w-4 h-4" /> {t.label}
+              </button>
+            )
+          })}
           <div className="border-t border-slate-100 mt-2 pt-2">
             <button
               onClick={handleLogout}
@@ -226,7 +226,7 @@ export default function AkunPage() {
                   </div>
                   <div>
                     <h2 className="font-semibold text-slate-900">{profile.full_name || 'Guru'}</h2>
-                    <p className="text-sm text-slate-500">{profile.position} {profile.school && `· ${profile.school}`}</p>
+                    <p className="text-sm text-slate-500">{profile.position}</p>
                     <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">Akun Aktif</span>
                   </div>
                 </div>
@@ -253,8 +253,7 @@ export default function AkunPage() {
                 </div>
                 <div><label className="label">Email</label><input className="input" value={email} disabled style={{ backgroundColor: '#f8fafc', cursor: 'not-allowed' }} /></div>
                 <div><label className="label">Nomor Telepon</label><input className="input" value={profile.phone} onChange={e => setProfile({ ...profile, phone: e.target.value })} /></div>
-                <div><label className="label">Mata Pelajaran</label><input className="input" placeholder="Contoh: Matematika" value={profile.subject} onChange={e => setProfile({ ...profile, subject: e.target.value })} /></div>
-                <div><label className="label">Nama Sekolah</label><input className="input" value={profile.school} onChange={e => setProfile({ ...profile, school: e.target.value })} /></div>
+                <div className="col-span-2"><label className="label">Mata Pelajaran</label><input className="input" placeholder="Contoh: Matematika" value={profile.subject} onChange={e => setProfile({ ...profile, subject: e.target.value })} /></div>
               </div>
 
               {error && (
