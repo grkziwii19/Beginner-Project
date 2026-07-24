@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard, ClipboardCheck, Award, FileBarChart,
   Settings, Menu, X, Calendar, Building2, IdCard, GraduationCap,
-  ChevronDown, UserCircle, LogOut, Sparkles, MessageSquare
+  ChevronDown, UserCircle, LogOut, Sparkles
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
@@ -50,6 +50,7 @@ export default function Sidebar() {
 
   const [schoolName, setSchoolName] = useState('')
   const [now, setNow] = useState(new Date())
+  const [mounted, setMounted] = useState(false) // State untuk mendeteksi client-mount
 
   const [email, setEmail] = useState('')
   const [userName, setUserName] = useState('Guru')
@@ -57,6 +58,8 @@ export default function Sidebar() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
   useEffect(() => {
+    setMounted(true) // Menandakan bahwa komponen telah terpasang di client
+
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
@@ -101,9 +104,10 @@ export default function Sidebar() {
     router.refresh()
   }
 
-  const dayLabel = now.toLocaleDateString('id-ID', { weekday: 'long' })
-  const dateLabel = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-  const timeLabel = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+  // Format tanggal hanya jika sudah mounted di client guna mencegah perbedaan SSR vs CSR
+  const dayLabel = mounted ? now.toLocaleDateString('id-ID', { weekday: 'long' }) : ''
+  const dateLabel = mounted ? now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+  const timeLabel = mounted ? now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }) : ''
 
   const NavContent = () => (
     <>
@@ -229,12 +233,12 @@ export default function Sidebar() {
           <div className="flex items-start gap-2">
             <Calendar className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />
             <div className="leading-tight">
-              <p className="text-xs font-semibold text-slate-200">{dayLabel}</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">{dateLabel}</p>
+              <p className="text-xs font-semibold text-slate-200">{dayLabel || '...'}</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">{dateLabel || '...'}</p>
             </div>
           </div>
-          <div className="bg-[#1C1F37] border border-indigo-500/20 px-2 py-1 rounded-lg text-[10px] font-bold text-indigo-400">
-            {timeLabel}
+          <div className="bg-[#1C1F37] border border-indigo-500/20 px-2.5 py-1 rounded-lg text-[10px] font-bold text-indigo-400 min-w-[70px] text-center">
+            {timeLabel || '...'}
           </div>
         </div>
 
@@ -245,7 +249,6 @@ export default function Sidebar() {
               <p className="text-xs font-bold text-white tracking-wide">AI Assistant</p>
               <p className="text-[10px] text-slate-400 leading-snug">Tanya apa saja tentang kelas dan siswa Anda</p>
             </div>
-            {/* Robot 3D Placeholder */}
             <div className="w-10 h-10 rounded-full bg-indigo-600/20 border border-indigo-400/30 flex items-center justify-center shadow-lg shrink-0">
               <span className="text-base">🤖</span>
             </div>
