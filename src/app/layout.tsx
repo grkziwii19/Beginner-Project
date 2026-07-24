@@ -1,6 +1,13 @@
 import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google' // 1. Impor font Inter dari Next.js
 import './globals.css'
 import ServiceWorkerRegister from '@/components/pwa/ServiceWorkerRegister'
+
+// 2. Konfigurasi font Inter secara optimal
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'GR-Assistant',
@@ -36,15 +43,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="bg-slate-50 text-slate-900 antialiased font-sans">
+      {/* 
+        3. Tag <head> manual dihapus sepenuhnya. 
+        Next.js akan menyisipkan metadata dan link optimasi font secara otomatis.
+      */}
+      <body className={`${inter.className} bg-slate-50 text-slate-900 antialiased font-sans`}>
         {children}
         <ServiceWorkerRegister />
       </body>
