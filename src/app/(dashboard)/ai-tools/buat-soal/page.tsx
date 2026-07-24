@@ -8,8 +8,7 @@ import jsPDF from 'jspdf'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx'
 import {
   ArrowLeft, FileText, UploadCloud, HelpCircle,
-  Settings2, Sparkles, Download, Database, CheckCircle2, AlertTriangle,
-  ChevronDown, BookOpen, Layers, Info, Trash2
+  Settings2, Sparkles, Download, Database, CheckCircle2, AlertTriangle
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -335,203 +334,157 @@ function BuatSoalAI() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-      {/* HEADER BAR */}
-      <div className="flex items-center gap-4 pb-4 border-b border-slate-100">
-        <Link 
-          href="/ai-tools" 
-          className="inline-flex items-center justify-center p-2.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl border border-slate-200/80 bg-white transition-all shadow-sm active:scale-95"
-        >
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <Link href="/ai-tools" className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg border border-slate-200 bg-white transition-colors">
           <ArrowLeft className="w-4 h-4" />
         </Link>
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight sm:text-3xl">Pembuat Soal AI</h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">Rancang bank soal berkualitas tinggi berbasis kurikulum modern dalam hitungan detik.</p>
-        </div>
+        <h1 className="text-xl font-bold text-slate-900">Buat Soal AI</h1>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* LEFT COLUMN: CONFIGURATION PANEL */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-6">
-            <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100">
-              <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
-                <Settings2 className="w-4 h-4" />
-              </div>
-              <h3 className="font-extrabold text-slate-900 text-sm">Sumber & Metode</h3>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1 space-y-4">
+          <div className="card p-5 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4">
+            <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <Settings2 className="w-4 h-4 text-indigo-600" /> Sumber & Metode
+            </h3>
 
-            {/* SEGMENTED CONTROL */}
-            <div className="grid grid-cols-2 gap-1 p-1 bg-slate-100 rounded-xl">
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
               <button
                 type="button"
                 onClick={() => setMethod('prompt')}
-                className={`py-2 text-xs font-bold rounded-lg transition-all duration-200 ${
-                  method === 'prompt' 
-                    ? 'bg-white text-indigo-700 shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-950'
-                }`}
+                className={`py-1.5 text-xs font-bold rounded-lg transition-all ${method === 'prompt' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 Manual Prompt
               </button>
               <button
                 type="button"
                 onClick={() => setMethod('upload')}
-                className={`py-2 text-xs font-bold rounded-lg transition-all duration-200 ${
-                  method === 'upload' 
-                    ? 'bg-white text-indigo-700 shadow-sm' 
-                    : 'text-slate-500 hover:text-slate-950'
-                }`}
+                className={`py-1.5 text-xs font-bold rounded-lg transition-all ${method === 'upload' ? 'bg-white text-indigo-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 Upload Modul
               </button>
             </div>
 
-            {/* INPUT METHOD: PROMPT OR UPLOAD */}
             {method === 'prompt' ? (
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-450 uppercase tracking-wider">Rincian Instruksi Pembuatan</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rincian Instruksi</label>
                 <textarea
-                  className="w-full bg-white border border-slate-250 hover:border-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl p-4 text-sm font-semibold text-slate-800 placeholder:text-slate-400 placeholder:font-normal outline-none min-h-[140px]"
-                  placeholder='Contoh: "Buat 10 soal IPA kelas 5 SD bab 2 tentang siklus air dengan pendekatan HOTS..."'
+                  className="input min-h-[120px] text-sm py-2 bg-white border border-slate-300 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 w-full"
+                  placeholder='Contoh: "Buat 10 soal IPA kelas 5 SD bab 2 tentang siklus air..."'
                   value={promptText}
                   onChange={e => setPromptText(e.target.value)}
                 />
               </div>
             ) : (
               <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-450 uppercase tracking-wider block">Unggah Dokumen Modul</label>
-                <div className="border-2 border-dashed border-slate-250 hover:border-indigo-500 hover:bg-indigo-50/20 transition-all rounded-xl p-6 text-center bg-slate-50/50 cursor-pointer relative group">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Unggah Modul (.TXT / .PDF / .DOCX)</label>
+                <div className="border-2 border-dashed border-slate-300 rounded-xl p-5 text-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative">
                   <input
                     type="file"
                     accept=".txt,.pdf,.docx"
                     onChange={handleFileUpload}
                     className="absolute inset-0 opacity-0 cursor-pointer"
                   />
-                  <UploadCloud className="w-10 h-10 text-slate-400 group-hover:text-indigo-600 transition-colors mx-auto mb-3" />
-                  <p className="text-sm font-bold text-slate-750">Pilih dokumen Anda</p>
-                  <p className="text-xs text-slate-400 mt-1">Mendukung .txt, .pdf, .docx — maks 10 MB</p>
+                  <UploadCloud className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                  <p className="text-xs font-semibold text-slate-700">Klik untuk upload dokumen</p>
+                  <p className="text-[10px] text-slate-400 mt-1">Mendukung .txt, .pdf, .docx — maks 10 MB</p>
                 </div>
-
                 {fileInfo && (
-                  <div className="p-3 bg-indigo-50/50 border border-indigo-100 rounded-xl flex items-center gap-3">
-                    <div className="p-2 bg-indigo-100 text-indigo-700 rounded-lg shrink-0">
-                      <FileText className="w-5 h-5" />
-                    </div>
+                  <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-indigo-600 shrink-0" />
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold text-slate-800 truncate">{fileInfo.name}</p>
-                      <p className="text-[10px] text-indigo-500 font-semibold">{(fileInfo.size / 1024).toFixed(1)} KB</p>
+                      <p className="text-[10px] text-slate-400">{(fileInfo.size / 1024).toFixed(1)} KB</p>
                     </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* CONFIGURATION OPTIONS */}
-            <div className="space-y-4 pt-4 border-t border-slate-100">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-450 uppercase tracking-wider block">Kelas</label>
-                  <div className="relative">
-                    <select
-                      className="w-full bg-white border border-slate-250 hover:border-slate-450 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl pl-3 pr-8 py-2 text-sm font-bold text-slate-800 appearance-none cursor-pointer h-10"
-                      value={grade}
-                      onChange={e => setGrade(e.target.value)}
-                    >
-                      {GRADE_OPTIONS.map(g => (
-                        <option key={g.value} value={g.value}>{g.label}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  </div>
+            <div className="space-y-3 pt-3 border-t border-slate-150">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Kelas</label>
+                  <select
+                    className="input bg-white border border-slate-300 rounded-lg text-sm h-[38px] w-full"
+                    value={grade}
+                    onChange={e => setGrade(e.target.value)}
+                  >
+                    {GRADE_OPTIONS.map(g => (
+                      <option key={g.value} value={g.value}>{g.label}</option>
+                    ))}
+                  </select>
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-450 uppercase tracking-wider block">Tipe Soal</label>
-                  <div className="relative">
-                    <select
-                      className="w-full bg-white border border-slate-250 hover:border-slate-450 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl pl-3 pr-8 py-2 text-sm font-bold text-slate-800 appearance-none cursor-pointer h-10"
-                      value={questionType}
-                      onChange={e => setQuestionType(e.target.value)}
-                    >
-                      <option value="pilihan_ganda">Pilihan Ganda</option>
-                      <option value="essay">Essay</option>
-                      <option value="true_false">Benar / Salah</option>
-                      <option value="fill_in_the_blank">Isi Bagian Rumpang</option>
-                      <option value="matching">Menjodohkan (Matching)</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Tipe Soal</label>
+                  <select
+                    className="input bg-white border border-slate-300 rounded-lg text-sm h-[38px] w-full"
+                    value={questionType}
+                    onChange={e => setQuestionType(e.target.value)}
+                  >
+                    <option value="pilihan_ganda">Pilihan Ganda</option>
+                    <option value="essay">Essay</option>
+                    <option value="true_false">Benar / Salah</option>
+                    <option value="fill_in_the_blank">Isi Bagian Rumpang</option>
+                    <option value="matching">Menjodohkan (Matching)</option>
+                  </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-450 uppercase tracking-wider block">Jumlah Soal</label>
-                  <div className="relative">
-                    <select
-                      className="w-full bg-white border border-slate-250 hover:border-slate-450 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl pl-3 pr-8 py-2 text-sm font-bold text-slate-800 appearance-none cursor-pointer h-10"
-                      value={count}
-                      onChange={e => setCount(Number(e.target.value))}
-                    >
-                      <option value={5}>5 Soal</option>
-                      <option value={10}>10 Soal</option>
-                      <option value={20}>20 Soal</option>
-                      <option value={50}>50 Soal</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Jumlah Soal</label>
+                  <select
+                    className="input bg-white border border-slate-300 rounded-lg text-sm h-[38px] w-full"
+                    value={count}
+                    onChange={e => setCount(Number(e.target.value))}
+                  >
+                    <option value={5}>5 Soal</option>
+                    <option value={10}>10 Soal</option>
+                    <option value={20}>20 Soal</option>
+                    <option value={50}>50 Soal</option>
+                  </select>
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-450 uppercase tracking-wider block">Tingkat Kesulitan</label>
-                  <div className="relative">
-                    <select
-                      className="w-full bg-white border border-slate-250 hover:border-slate-450 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl pl-3 pr-8 py-2 text-sm font-bold text-slate-800 appearance-none cursor-pointer h-10"
-                      value={difficulty}
-                      onChange={e => setDifficulty(e.target.value)}
-                    >
-                      <option value="Mudah">Mudah</option>
-                      <option value="Sedang">Sedang</option>
-                      <option value="Sulit">Sulit</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Tingkat</label>
+                  <select
+                    className="input bg-white border border-slate-300 rounded-lg text-sm h-[38px] w-full"
+                    value={difficulty}
+                    onChange={e => setDifficulty(e.target.value)}
+                  >
+                    <option value="Mudah">Mudah</option>
+                    <option value="Sedang">Sedang</option>
+                    <option value="Sulit">Sulit</option>
+                  </select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-450 uppercase tracking-wider block">Bahasa</label>
-                  <div className="relative">
-                    <select
-                      className="w-full bg-white border border-slate-250 hover:border-slate-450 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl pl-3 pr-8 py-2 text-sm font-bold text-slate-800 appearance-none cursor-pointer h-10"
-                      value={language}
-                      onChange={e => setLanguage(e.target.value)}
-                    >
-                      <option value="Indonesia">Indonesia</option>
-                      <option value="Inggris">Inggris</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Bahasa</label>
+                  <select
+                    className="input bg-white border border-slate-300 rounded-lg text-sm h-[38px] w-full"
+                    value={language}
+                    onChange={e => setLanguage(e.target.value)}
+                  >
+                    <option value="Indonesia">Indonesia</option>
+                    <option value="Inggris">Inggris</option>
+                  </select>
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-450 uppercase tracking-wider block">Standar Kurikulum</label>
-                  <div className="relative">
-                    <select
-                      className="w-full bg-white border border-slate-250 hover:border-slate-455 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all rounded-xl pl-3 pr-8 py-2 text-sm font-bold text-slate-800 appearance-none cursor-pointer h-10"
-                      value={standard}
-                      onChange={e => setStandard(e.target.value)}
-                    >
-                      <option value="Umum">Kurikulum Umum</option>
-                      <option value="Kurikulum Merdeka">Kurikulum Merdeka</option>
-                      <option value="Kurikulum 2013">Kurikulum 2013</option>
-                      <option value="AKM">AKM (Asesmen Kompetensi Minimum)</option>
-                      <option value="Ujian Sekolah">Ujian Sekolah</option>
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                  </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Standar</label>
+                  <select
+                    className="input bg-white border border-slate-300 rounded-lg text-sm h-[38px] w-full"
+                    value={standard}
+                    onChange={e => setStandard(e.target.value)}
+                  >
+                    <option value="Umum">Kurikulum Umum</option>
+                    <option value="Kurikulum Merdeka">Kurikulum Merdeka</option>
+                    <option value="Kurikulum 2013">Kurikulum 2013</option>
+                    <option value="AKM">AKM (Asesmen Kompetensi Minimum)</option>
+                    <option value="Ujian Sekolah">Ujian Sekolah</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -539,101 +492,73 @@ function BuatSoalAI() {
             <button
               onClick={handleGenerate}
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-sm shadow-indigo-150 hover:bg-indigo-500 hover:shadow transition-all duration-200 active:scale-[0.98] w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:pointer-events-none"
+              className="btn-primary justify-center w-full py-2.5 rounded-xl text-sm font-semibold shadow-sm"
             >
-              <Sparkles className="w-4 h-4 animate-pulse" /> 
-              {loading ? 'Sedang Merancang...' : 'Mulai Generate Soal'}
+              <Sparkles className="w-4 h-4 mr-2 animate-pulse" /> {loading ? 'Sedang Membuat...' : 'Mulai Generate Soal'}
             </button>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: PREVIEW & ACTION PANEL */}
-        <div className="lg:col-span-8 space-y-6">
+        <div className="lg:col-span-2 space-y-4">
           {error && (
-            <div className="p-4 bg-rose-50 border border-rose-100 rounded-2xl flex items-start gap-3 text-rose-800 text-sm">
-              <AlertTriangle className="w-5 h-5 shrink-0 text-rose-500 mt-0.5" />
+            <div className="p-4 bg-red-50 border border-red-150 rounded-2xl flex items-start gap-2.5 text-red-700 text-sm">
+              <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-start gap-3 text-emerald-800 text-sm animate-fade-in">
-              <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600 mt-0.5" />
+            <div className="p-4 bg-emerald-50 border border-emerald-150 rounded-2xl flex items-start gap-2.5 text-emerald-700 text-sm animate-fade-in">
+              <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
               <span>{successMsg}</span>
             </div>
           )}
 
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm min-h-[500px] flex flex-col justify-between p-6">
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4">
-                <h3 className="font-extrabold text-slate-900 text-base">Pratinjau Hasil Soal</h3>
+          <div className="card p-5 bg-white border border-slate-200 rounded-2xl shadow-sm min-h-[400px] flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between border-b border-slate-150 pb-3 mb-4">
+                <h3 className="font-bold text-slate-900 text-sm">Pratinjau Soal Tergenerate</h3>
                 {questions.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    <button 
-                      onClick={downloadPDF} 
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-250 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
-                    >
-                      <Download className="w-3.5 h-3.5" /> PDF
+                    <button onClick={downloadPDF} className="btn-secondary py-1.5 px-3 text-xs font-semibold">
+                      <Download className="w-3.5 h-3.5 mr-1" /> Unduh (.PDF)
                     </button>
-                    <button 
-                      onClick={downloadDOCX} 
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-250 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
-                    >
-                      <Download className="w-3.5 h-3.5" /> DOCX
+                    <button onClick={downloadDOCX} className="btn-secondary py-1.5 px-3 text-xs font-semibold">
+                      <Download className="w-3.5 h-3.5 mr-1" /> Unduh (.DOCX)
                     </button>
-                    <button 
-                      onClick={downloadJSON} 
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-250 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
-                    >
-                      <Download className="w-3.5 h-3.5" /> JSON
+                    <button onClick={downloadJSON} className="btn-secondary py-1.5 px-3 text-xs font-semibold">
+                      <Download className="w-3.5 h-3.5 mr-1" /> Unduh (.JSON)
                     </button>
-                    <button 
-                      onClick={handleSaveToBank} 
-                      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-650 px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-indigo-650/90 transition-all active:scale-95"
-                    >
-                      <Database className="w-3.5 h-3.5" /> Simpan ke Bank Soal
+                    <button onClick={handleSaveToBank} className="btn-primary py-1.5 px-3 text-xs font-semibold">
+                      <Database className="w-3.5 h-3.5 mr-1" /> Simpan ke Bank Soal
                     </button>
                   </div>
                 )}
               </div>
 
               {loading ? (
-                <div className="py-24 text-center text-slate-400 text-sm flex flex-col items-center justify-center gap-4">
-                  <div className="animate-spin rounded-full h-9 w-9 border-2 border-slate-200 border-t-indigo-600" />
-                  <div className="space-y-1">
-                    <p className="font-bold text-slate-800">Menghubungkan asisten Gemini AI...</p>
-                    <p className="text-xs text-slate-400">Harap tunggu, proses ini memerlukan waktu sekitar 10-20 detik.</p>
-                  </div>
+                <div className="py-20 text-center text-slate-400 text-sm">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-3" />
+                  Mengontak Gemini AI... Mohon tunggu sebentar.
                 </div>
               ) : questions.length === 0 ? (
-                <div className="py-24 text-center max-w-sm mx-auto space-y-4">
-                  <div className="p-4 bg-slate-50 text-slate-450 border border-slate-100 rounded-2xl inline-block">
-                    <HelpCircle className="w-8 h-8" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="font-bold text-slate-800 text-base">Hasil Soal Belum Tergenerate</p>
-                    <p className="text-xs text-slate-400 leading-relaxed">
-                      Konfigurasikan preferensi jenis soal, kelas, dan instruksi Anda di panel sebelah kiri, kemudian klik tombol generate.
-                    </p>
-                  </div>
+                <div className="py-20 text-center text-slate-400">
+                  <HelpCircle className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                  <p className="text-sm font-medium text-slate-500">Hasil generate soal akan muncul di sini.</p>
+                  <p className="text-xs text-slate-400 mt-1">Lakukan konfigurasi di sebelah kiri untuk memulai.</p>
                 </div>
               ) : (
-                <div className="space-y-5 max-h-[600px] overflow-y-auto pr-2 divide-y divide-slate-100">
+                <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
                   {questions.map((q, idx) => (
-                    <div key={idx} className={`pt-5 ${idx === 0 ? 'pt-0' : ''} space-y-3`}>
-                      <div className="flex gap-3">
-                        <span className="flex items-center justify-center w-6 h-6 rounded-lg bg-indigo-50 text-indigo-700 font-extrabold text-xs shrink-0 mt-0.5">
-                          {idx + 1}
-                        </span>
-                        <p className="font-bold text-slate-900 text-sm leading-relaxed">
-                          {q.question}
-                        </p>
-                      </div>
+                    <div key={idx} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                      <p className="font-bold text-slate-900 text-sm">
+                        {idx + 1}. {q.question}
+                      </p>
 
                       {q.options && q.options.length > 0 && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-9">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-4">
                           {q.options.map((opt, oIdx) => (
-                            <div key={oIdx} className="text-xs font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-2.5 hover:bg-slate-100/55 transition-colors">
+                            <div key={oIdx} className="text-xs font-medium text-slate-700">
                               {opt}
                             </div>
                           ))}
@@ -641,49 +566,41 @@ function BuatSoalAI() {
                       )}
 
                       {q.pairs && q.pairs.length > 0 && (
-                        <div className="space-y-2 pl-9">
+                        <div className="space-y-1.5 pl-4">
                           {q.pairs.map((p, pIdx) => (
-                            <div key={pIdx} className="text-xs text-slate-700 flex items-center gap-3 bg-slate-50 border border-slate-150 rounded-lg p-2 max-w-md">
-                              <span className="font-extrabold text-indigo-650 bg-indigo-50 px-2 py-0.5 rounded">[{p.left}]</span>
-                              <span className="text-slate-400">↔</span>
-                              <span className="font-semibold text-slate-800">{p.right}</span>
+                            <div key={pIdx} className="text-xs text-slate-700 flex gap-4">
+                              <span className="font-bold text-slate-600">[{p.left}]</span>
+                              <span>↔</span>
+                              <span className="font-medium text-slate-800">{p.right}</span>
                             </div>
                           ))}
                         </div>
                       )}
 
-                      {/* ANSWER & EXPLANATION KEY */}
-                      <div className="pl-9">
-                        <div className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-3.5 space-y-2 text-xs">
-                          <p className="text-emerald-800 font-extrabold flex items-center gap-1.5">
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                            Kunci Jawaban: {q.correct_answer}
+                      <div className="pt-2 border-t border-slate-150 text-xs space-y-1 bg-white/60 p-2.5 rounded-lg">
+                        <p className="text-emerald-700 font-bold">
+                          Kunci Jawaban: {q.correct_answer}
+                        </p>
+                        {q.explanation && (
+                          <p className="text-slate-600 font-medium">
+                            <span className="font-bold text-slate-700">Pembahasan:</span> {q.explanation}
                           </p>
-                          {q.explanation && (
-                            <p className="text-slate-600 leading-relaxed">
-                              <span className="font-bold text-slate-700 block mb-0.5">Pembahasan:</span> {q.explanation}
-                            </p>
-                          )}
-                          {q.rubric && (
-                            <p className="text-slate-600 leading-relaxed">
-                              <span className="font-bold text-slate-700 block mb-0.5">Kriteria Penilaian:</span> {q.rubric}
-                            </p>
-                          )}
-                        </div>
+                        )}
+                        {q.rubric && (
+                          <p className="text-slate-600 font-medium">
+                            <span className="font-bold text-slate-700">Kriteria Penilaian:</span> {q.rubric}
+                          </p>
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
             {questions.length > 0 && (
-              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2 text-[10px] text-slate-400 bg-slate-50 p-3 rounded-xl">
-                <Info className="w-3.5 h-3.5 text-slate-450 shrink-0" />
-                <span>
-                  Hasil di atas disimpan sementara dalam memori lokal halaman. Pastikan klik <strong>Simpan ke Bank Soal</strong> agar tersimpan permanen.
-                </span>
-              </div>
+              <p className="text-[10px] text-slate-400 mt-4 text-right">
+                *Catatan: Data di atas disimpan dalam *state* lokal dan akan terhapus apabila di-generate ulang atau halaman ditutup tanpa menyimpannya ke Bank Soal.
+              </p>
             )}
           </div>
         </div>
