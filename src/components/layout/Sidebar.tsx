@@ -58,7 +58,9 @@ export default function Sidebar() {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   const [schoolName, setSchoolName] = useState('')
-  const [now, setNow] = useState(new Date())
+  // now diinisialisasi null agar render pertama di server & client sama (hindari hydration mismatch),
+  // lalu diisi dengan waktu asli setelah komponen mount di client.
+  const [now, setNow] = useState<Date | null>(null)
 
   // Profil pengguna — dipindahkan dari Topbar ke sini
   const [email, setEmail] = useState('')
@@ -94,6 +96,7 @@ export default function Sidebar() {
 
     load()
 
+    setNow(new Date())
     const interval = setInterval(() => setNow(new Date()), 60000)
     return () => clearInterval(interval)
   }, [])
@@ -111,9 +114,9 @@ export default function Sidebar() {
     router.refresh()
   }
 
-  const dayLabel = now.toLocaleDateString('id-ID', { weekday: 'long' })
-  const dateLabel = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-  const timeLabel = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+  const dayLabel = now ? now.toLocaleDateString('id-ID', { weekday: 'long' }) : ''
+  const dateLabel = now ? now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+  const timeLabel = now ? now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '--:--'
 
   const NavContent = () => (
     <>
@@ -139,7 +142,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
+      <nav className="flex-1 min-h-0 px-3 py-2 space-y-1 overflow-y-auto [scrollbar-width:thin] [scrollbar-color:#475569_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-600 [&::-webkit-scrollbar-thumb]:rounded-full">
         {navRows.map((row, idx) => {
           if (isSection(row)) {
             return (
@@ -279,7 +282,7 @@ export default function Sidebar() {
       {mobileOpen && <div className="fixed inset-0 bg-black/30 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
       <aside className={clsx(
-        'fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-slate-900 to-indigo-950 flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto',
+        'fixed inset-y-0 left-0 z-50 w-64 h-screen bg-gradient-to-b from-slate-900 to-indigo-950 flex flex-col transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto',
         mobileOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
         <NavContent />
