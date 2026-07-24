@@ -65,6 +65,7 @@ export default function LaporanPage() {
   // State Bobot Nilai
   const [weights, setWeights] = useState<WeightSettings>(defaultWeights)
   const [weightError, setWeightError] = useState('')
+  const [showWeightModal, setShowWeightModal] = useState(false)
   
   // State Navigasi Tab
   const [activeTab, setActiveTab] = useState<ReportTab>('rekap-absensi')
@@ -276,7 +277,15 @@ export default function LaporanPage() {
         setAcademicGrades({})
       }
       
-      setStep('set_weights')
+      // Memeriksa konfigurasi bobot nilai sebelumnya dari penyimpanan lokal
+      const savedWeights = localStorage.getItem(`weights_${cls.id}`)
+      if (savedWeights) {
+        setWeights(JSON.parse(savedWeights))
+        setStep('view_reports') // Langsung masuk ke dasbor laporan utama
+      } else {
+        setWeights(defaultWeights)
+        setStep('set_weights') // Pertama kali membuka kelas wajib mengisi konfigurasi awal
+      }
     } catch (err: any) {
       console.error(err)
       setError('Gagal memuat data kelas: ' + err.message)
@@ -293,7 +302,20 @@ export default function LaporanPage() {
       return
     }
     setWeightError('')
+    localStorage.setItem(`weights_${selectedClass!.id}`, JSON.stringify(weights))
     setStep('view_reports')
+  }
+
+  // Menyimpan data perubahan bobot melalui dialog modal internal
+  const handleSaveModalWeights = () => {
+    const total = Number(weights.formative) + Number(weights.uts) + Number(weights.uas)
+    if (total !== 100) {
+      setWeightError(`Akumulasi bobot saat ini ${total}%. Pengaturan bobot harus berjumlah tepat 100%.`)
+      return
+    }
+    setWeightError('')
+    localStorage.setItem(`weights_${selectedClass!.id}`, JSON.stringify(weights))
+    setShowWeightModal(false)
   }
 
   // Menyimpan data non-akademik ke database
@@ -569,10 +591,13 @@ export default function LaporanPage() {
                 <p className="text-xs font-bold text-slate-700">Harian {weights.formative}% · UTS {weights.uts}% · UAS {weights.uas}%</p>
               </div>
               <button 
-                onClick={() => setStep('set_weights')} 
-                className="btn-secondary text-xs flex items-center gap-1.5"
+                onClick={() => {
+                  setWeightError('')
+                  setShowWeightModal(true)
+                }} 
+                className="btn-secondary text-xs flex items-center gap-1.5 animate-pulse"
               >
-                <Settings2 className="w-3.5 h-3.5" /> Ubah Bobot
+                <Settings2 className="w-3.5 h-3.5" /> Edit Bobot Nilai
               </button>
               <button 
                 onClick={() => setStep('select_class')} 
@@ -1142,6 +1167,99 @@ export default function LaporanPage() {
 
             </div>
           )}
+        </div>
+      )}
+
+      {/* ======================================= */}
+      {/* DIALOG MODAL: EDIT BOBOT NILAI RAPOR */}
+      {/* ======================================= */}
+      {showWeightModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-xl border border-slate-200 p-6 max-w-md w-full shadow-xl animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <Settings2 className="w-4 h-4 text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Edit Bobot Nilai Rapor</h3>
+                <p className="text-[11px] text-slate-400">Kelas: {selectedClass?.name}</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Tugas, Sikap & Harian (Sumatif Materi)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={weights.formative}
+                    onChange={e => setWeights({ ...weights, formative: Number(e.target.value) })}
+                    className="input py-1.5 px-2.5 text-xs w-24"
+                    min="0"
+                    max="100"
+                  />
+                  <span className="text-xs text-slate-500">%</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Ujian Tengah Semester (UTS)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={weights.uts}
+                    onChange={e => setWeights({ ...weights, uts: Number(e.target.value) })}
+                    className="input py-1.5 px-2.5 text-xs w-24"
+                    min="0"
+                    max="100"
+                  />
+                  <span className="text-xs text-slate-500">%</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700 block mb-1">Ujian Akhir Semester (UAS)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={weights.uas}
+                    onChange={e => setWeights({ ...weights, uas: Number(e.target.value) })}
+                    className="input py-1.5 px-2.5 text-xs w-24"
+                    min="0"
+                    max="100"
+                  />
+                  <span className="text-xs text-slate-500">%</span>
+                </div>
+              </div>
+
+              {weightError && (
+                <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2.5 flex items-start gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <span>{weightError}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2.5 mt-6 border-t border-slate-100 pt-4">
+              <button
+                onClick={() => {
+                  const saved = localStorage.getItem(`weights_${selectedClass?.id}`)
+                  if (saved) setWeights(JSON.parse(saved))
+                  setShowWeightModal(false)
+                  setWeightError('')
+                }}
+                className="btn-secondary text-xs flex-1 justify-center py-2"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSaveModalWeights}
+                className="btn-primary text-xs flex-1 justify-center py-2"
+              >
+                Simpan Perubahan
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
