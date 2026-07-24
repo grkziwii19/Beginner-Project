@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import dynamic from 'next/dynamic' // Tambahkan import dynamic
+import dynamic from 'next/dynamic'
+import { useSearchParams } from 'next/navigation' // Tambahkan import ini
 import { createClient } from '@/lib/supabase/client'
 import { type Student, type ClassItem, getInitials, formatDateShort } from '@/types'
 import StudentDetailModal from '@/components/students/StudentDetailModal'
@@ -36,9 +37,12 @@ function getAcademicYear() {
   return new Date().getMonth() + 1 >= 7 ? `${y}/${y + 1}` : `${y - 1}/${y}`
 }
 
-// Ubah nama fungsi utama menjadi KelasPageContent
 function KelasPageContent() {
   const supabase = createClient()
+  const searchParams = useSearchParams() // Membaca query parameter
+
+  // Mengambil kata kunci pencarian dari URL (?q=...)
+  const searchQuery = searchParams.get('q') || ''
 
   // ── State Kelas & Siswa ──
   const [classes, setClasses] = useState<ClassItem[]>([])
@@ -49,7 +53,6 @@ function KelasPageContent() {
 
   // ── State Navigasi & Filter ──
   const [activeTab, setActiveTab] = useState<TabType>('daftar')
-  const [search, setSearch] = useState('')
   const [viewFilter, setViewFilter] = useState<ViewFilter>('identitas')
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
 
@@ -205,9 +208,20 @@ function KelasPageContent() {
     else setIsSemesterMode(false)
   }
 
-  // ── Filter Pencarian Siswa ──
+  // ── Filter Pencarian Kelas (Tampilan Utama Dashboard Kelas) ──
+  const filteredClasses = classes.filter(c => {
+    const q = searchQuery.toLowerCase()
+    if (!q) return true
+    return (
+      c.name.toLowerCase().includes(q) ||
+      (c.homeroom_teacher ?? '').toLowerCase().includes(q) ||
+      (c.subjects ?? []).some(sub => sub.toLowerCase().includes(q))
+    );
+  });
+
+  // ── Filter Pencarian Siswa (Tampilan Detail Kelas Terpilih) ──
   const filteredStudents = students.filter(s => {
-    const q = search.toLowerCase()
+    const q = searchQuery.toLowerCase()
     if (!q) return true
     return (
       s.name.toLowerCase().includes(q) ||
@@ -252,9 +266,15 @@ function KelasPageContent() {
               <Plus className="w-4 h-4" /> Buat Kelas Pertama
             </button>
           </div>
+        ) : filteredClasses.length === 0 ? (
+          /* Tampilan jika hasil pencarian kelas di Topbar tidak ditemukan */
+          <div className="card p-10 text-center bg-slate-50/50">
+            <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+            <p className="text-slate-500 text-sm font-medium">Tidak ada kelas yang cocok dengan pencarian.</p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {classes.map(c => (
+            {filteredClasses.map(c => (
               <div
                 key={c.id}
                 onClick={() => setSelectedClassId(c.id)}
@@ -360,7 +380,7 @@ function KelasPageContent() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Input</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Input Data</span>
             <div className="relative">
               <select
                 className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none pr-9 text-sm py-1.5 h-[38px] w-full font-bold text-slate-800"
@@ -422,20 +442,16 @@ function KelasPageContent() {
             </button>
           </div>
 
+          {/* Menampilkan pemilih filter (Kolom Pencarian Lokal telah dihapus) */}
           {students.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="relative flex-1 min-w-[180px]">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  className="input pl-8 text-sm font-medium border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-1.5"
-                  placeholder="Cari nama, NIS, NISN, atau orang tua..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                />
-              </div>
+            <div className="flex justify-end">
               <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1.5 rounded-md border border-slate-200">
                 <Filter className="w-4 h-4 text-slate-500" />
-                <select className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer p-0" value={viewFilter} onChange={e => setViewFilter(e.target.value as ViewFilter)}>
+                <select 
+                  className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer p-0" 
+                  value={viewFilter} 
+                  onChange={e => setViewFilter(e.target.value as ViewFilter)}
+                >
                   {VIEW_OPTIONS.map(v => <option key={v.key} value={v.key}>{v.label}</option>)}
                 </select>
               </div>
@@ -454,9 +470,10 @@ function KelasPageContent() {
                 </button>
               </div>
             ) : filteredStudents.length === 0 ? (
+              /* Tampilan jika hasil pencarian siswa di Topbar tidak ditemukan */
               <div className="p-10 text-center bg-slate-50/50">
                 <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                <p className="text-slate-500 text-sm font-medium">Tidak ada siswa yang cocok.</p>
+                <p className="text-slate-500 text-sm font-medium">Tidak ada siswa yang cocok dengan pencarian.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -712,7 +729,6 @@ function KelasPageContent() {
 }
 
 // ── BUNGKUS DENGAN DYNAMIC IMPORT SSR: FALSE ──
-// Cara ini menonaktifkan SSR pada komponen ini, sehingga menjamin bebas dari error #418 secara total.
 const KelasPage = dynamic(() => Promise.resolve(KelasPageContent), {
   ssr: false,
   loading: () => (

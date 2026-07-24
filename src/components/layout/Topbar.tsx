@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Bell, Search, AlertCircle, CheckCircle, HardDrive, UserPlus } from 'lucide-react'
 
@@ -14,9 +14,6 @@ interface NotifItem {
   time: string
 }
 
-// Judul halaman ditebak otomatis dari pathname, supaya setiap halaman
-// tidak perlu mengirim judulnya sendiri secara manual. Tambahkan entri
-// baru di sini setiap kali ada route baru yang butuh judul khusus.
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/kelas': 'Kelas',
@@ -31,7 +28,6 @@ const PAGE_TITLES: Record<string, string> = {
 function getPageTitle(pathname: string): string {
   if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname]
 
-  // Cocokkan prefix terpanjang untuk route dinamis, mis. /classes/123
   const match = Object.keys(PAGE_TITLES)
     .filter(p => pathname.startsWith(p))
     .sort((a, b) => b.length - a.length)[0]
@@ -42,9 +38,32 @@ function getPageTitle(pathname: string): string {
 export default function Topbar() {
   const supabase = createClient()
   const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
   const [showNotif, setShowNotif] = useState(false)
+  const [searchValue, setSearchValue] = useState('')
 
   const title = getPageTitle(pathname)
+
+  // Sinkronisasi kolom pencarian dengan parameter URL saat pertama kali dimuat atau saat URL berubah
+  useEffect(() => {
+    setSearchValue(searchParams.get('q') || '')
+  }, [searchParams])
+
+  // Fungsi untuk meng-update parameter URL secara dinamis
+  const handleSearchChange = (val: string) => {
+    setSearchValue(val)
+    const params = new URLSearchParams(searchParams.toString())
+    
+    if (val) {
+      params.set('q', val)
+    } else {
+      params.delete('q')
+    }
+
+    router.replace(`${pathname}?${params.toString()}`)
+  }
 
   const notifications: NotifItem[] = [
     { id: '1', icon: AlertCircle, iconColor: 'text-amber-500 bg-amber-50', title: 'Nilai UTS belum diinput', desc: 'Ada kelas yang menunggu nilai', time: 'Baru saja' },
@@ -55,23 +74,26 @@ export default function Topbar() {
 
   return (
     <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 gap-4">
-      {/* Judul halaman, menggantikan posisi search yang lama */}
+      {/* Judul Halaman */}
       <h1 className="text-lg sm:text-xl font-bold text-slate-900 ml-8 lg:ml-0 truncate">
         {title}
       </h1>
 
-      {/* Search + Notifikasi, digeser ke kanan */}
+      {/* Kontrol Kanan */}
       <div className="flex items-center gap-3 shrink-0">
+        {/* Kolom Pencarian Utama */}
         <div className="relative hidden sm:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
-            placeholder="Cari apapun..."
+            placeholder={pathname === '/kelas' ? "Cari kelas, wali kelas, atau siswa..." : "Cari apapun..."}
+            value={searchValue}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="w-56 pl-9 pr-3 py-2 text-sm border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition placeholder:text-slate-400"
           />
         </div>
 
-        {/* Tombol search ringkas untuk mobile (search penuh disembunyikan di layar kecil) */}
+        {/* Tombol Search Mobile */}
         <button className="sm:hidden w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors">
           <Search className="w-5 h-5 text-slate-500" />
         </button>
