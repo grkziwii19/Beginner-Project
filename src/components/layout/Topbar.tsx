@@ -14,27 +14,57 @@ interface NotifItem {
   time: string
 }
 
-// Menyelaraskan rute judul halaman tepat seperti isi menu Sidebar terbaru
-const PAGE_TITLES: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/kelas': 'Kelas',
-  '/sekolah': 'Sekolah',
-  '/laporan': 'Laporan',
-  '/pengaturan': 'Pengaturan',
-  '/akun': 'Pusat Akun',
+interface HeaderContent {
+  title: string
+  subtitle: string
 }
 
-function getPageTitle(pathname: string): string {
-  if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname]
-
-  const match = Object.keys(PAGE_TITLES)
-    .filter(p => pathname.startsWith(p))
-    .sort((a, b) => b.length - a.length)[0]
-
-  return match ? PAGE_TITLES[match] : 'Dashboard'
+// Menghasilkan konten judul & sub-judul secara dinamis sesuai rute halaman aktif
+function getHeaderContent(pathname: string, userName: string): HeaderContent {
+  if (pathname === '/dashboard') {
+    return {
+      title: `Selamat datang, ${userName}`,
+      subtitle: 'Kelola ringkasan kelas, pantau perkembangan belajar siswa, dan susun rapor secara praktis.'
+    }
+  }
+  if (pathname.startsWith('/kelas')) {
+    return {
+      title: 'Daftar Kelas',
+      subtitle: 'Pilih kelas di bawah ini untuk mulai mengelola siswa, absensi, dan nilai.'
+    }
+  }
+  if (pathname.startsWith('/sekolah')) {
+    return {
+      title: 'Informasi Sekolah',
+      subtitle: 'Kelola profil institusi yang akan digunakan sebagai data resmi dokumen dan lembar rapor siswa.'
+    }
+  }
+  if (pathname.startsWith('/laporan')) {
+    return {
+      title: 'Laporan Rapor',
+      subtitle: 'Susun, cetak, dan unduh lembar penilaian serta dokumen rapor resmi siswa secara instan.'
+    }
+  }
+  if (pathname.startsWith('/pengaturan')) {
+    return {
+      title: 'Pengaturan Akun',
+      subtitle: 'Konfigurasi profil pribadi Anda, kelola keamanan kata sandi, dan atur preferensi sistem.'
+    }
+  }
+  if (pathname.startsWith('/akun')) {
+    return {
+      title: 'Pusat Akun',
+      subtitle: 'Konfigurasi informasi pribadi Anda dan pengaturan keamanan akun.'
+    }
+  }
+  
+  return {
+    title: 'Asisten Digital Guru',
+    subtitle: 'Selamat bekerja dan membimbing masa depan generasi bangsa.'
+  }
 }
 
-// Kolom pencarian dipisah dan dibungkus Suspense agar Next.js tidak mengalami build error
+// Komponen pencarian yang dibungkus Suspense agar Next.js tidak memicu build error
 function SearchBar() {
   const searchParams = useSearchParams()
   const pathname = usePathname()
@@ -82,8 +112,35 @@ export default function Topbar() {
   const supabase = createClient()
   const pathname = usePathname()
   const [showNotif, setShowNotif] = useState(false)
+  const [userName, setUserName] = useState('Guru')
 
-  const title = getPageTitle(pathname)
+  // Memuat nama asli akun secara dinamis untuk sapaan di Dashboard
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        if (profile?.full_name) {
+          setUserName(profile.full_name)
+        } else {
+          const fallback = user.email?.split('@')[0] ?? 'Guru'
+          setUserName(fallback)
+        }
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    load()
+  }, [])
+
+  const headerContent = getHeaderContent(pathname, userName)
 
   const notifications: NotifItem[] = [
     { id: '1', icon: AlertCircle, iconColor: 'text-amber-500 bg-amber-50', title: 'Nilai UTS belum diinput', desc: 'Ada kelas yang menunggu nilai', time: 'Baru saja' },
@@ -93,11 +150,16 @@ export default function Topbar() {
   ]
 
   return (
-    <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 gap-4">
-      {/* Judul Halaman (ml-12 di layar kecil agar tidak bertabrakan dengan burger menu sidebar) */}
-      <h1 className="text-lg sm:text-xl font-bold text-slate-900 ml-12 lg:ml-0 truncate">
-        {title}
-      </h1>
+    <header className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 gap-4">
+      {/* Kolom Judul & Sub-judul bertumpuk (ml-12 di layar kecil agar pas dengan burger menu) */}
+      <div className="flex flex-col ml-12 lg:ml-0 min-w-0">
+        <h1 className="text-base sm:text-lg lg:text-xl font-bold text-slate-900 tracking-tight truncate leading-tight">
+          {headerContent.title}
+        </h1>
+        <p className="text-[11px] sm:text-xs text-slate-500 leading-normal truncate hidden md:block mt-0.5">
+          {headerContent.subtitle}
+        </p>
+      </div>
 
       {/* Kontrol Kanan */}
       <div className="flex items-center gap-3 shrink-0">
