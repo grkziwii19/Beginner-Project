@@ -41,62 +41,73 @@ export default function SekolahPage() {
 
   useEffect(() => {
     const load = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
 
-if (!user) {
-  setLoading(false)
-  return
-}
+        if (!user) {
+          setLoading(false)
+          return
+        }
 
-      const { data } = await supabase
-        .from('school_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle()
+        const { data } = await supabase
+          .from('school_profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle()
 
-      if (data) {
-        setProfile({
-          name: data.name ?? '',
-          npsn: data.npsn ?? '',
-          nss: data.nss ?? '',
-          address: data.address ?? '',
-          principalName: data.principal_name ?? '',
-          principalNip: data.principal_nip ?? '',
-          phone: data.phone ?? '',
-          email: data.email ?? '',
-          website: data.website ?? '',
-          accreditation: data.accreditation ?? 'A',
-        })
+        if (data) {
+          setProfile({
+            name: data.name ?? '',
+            npsn: data.npsn ?? '',
+            nss: data.nss ?? '',
+            address: data.address ?? '',
+            principalName: data.principal_name ?? '',
+            principalNip: data.principal_nip ?? '',
+            phone: data.phone ?? '',
+            email: data.email ?? '',
+            website: data.website ?? '',
+            accreditation: data.accreditation ?? 'A',
+          })
+        }
+
+        const [{ count: students }, { count: classes }] = await Promise.all([
+          supabase.from('students').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+          supabase.from('classes').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+        ])
+
+        setStats({ students: students ?? 0, classes: classes ?? 0 })
+      } catch (err: any) {
+        console.error('Error loading school data:', err)
+      } finally {
+        setLoading(false)
       }
-
-      const [{ count: students }, { count: classes }] = await Promise.all([
-        supabase.from('students').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-        supabase.from('classes').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-      ])
-
-      setStats({ students: students ?? 0, classes: classes ?? 0 })
-      setLoading(false)
     }
     load()
   }, [])
 
   const handleSave = async () => {
     setError('')
+    
+    if (!profile.name || !profile.name.trim()) {
+      setError('Nama Sekolah tidak boleh kosong.')
+      return
+    }
+
     setSaving(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setSaving(false); return }
 
     const { error: dbError } = await supabase.from('school_profiles').upsert({
       user_id: user.id,
-      name: profile.name.trim(),
-      npsn: profile.npsn.trim() || null,
-      nss: profile.nss.trim() || null,
-      address: profile.address.trim() || null,
-      principal_name: profile.principalName.trim() || null,
-      principal_nip: profile.principalNip.trim() || null,
-      phone: profile.phone.trim() || null,
-      email: profile.email.trim() || null,
-      website: profile.website.trim() || null,
+      name: (profile.name || '').trim(),
+      npsn: profile.npsn?.trim() || null,
+      nss: profile.nss?.trim() || null,
+      address: profile.address?.trim() || null,
+      principal_name: profile.principalName?.trim() || null,
+      principal_nip: profile.principalNip?.trim() || null,
+      phone: profile.phone?.trim() || null,
+      email: profile.email?.trim() || null,
+      website: profile.website?.trim() || null,
       accreditation: profile.accreditation,
     })
 
@@ -125,15 +136,12 @@ if (!user) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Informasi Sekolah</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Konfigurasi identitas institusi dan dokumen resmi unit pendidikan.</p>
-        </div>
-        <div className="bg-indigo-50 rounded-lg px-4 py-2 text-right">
-          <p className="text-xs text-indigo-500 font-medium uppercase">Tahun Ajaran Aktif</p>
-          <p className="text-sm font-bold text-indigo-700">2024/2025 Genap</p>
-        </div>
+      {/* Header Halaman (Tanpa duplikasi Tahun Ajaran) */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Informasi Sekolah</h1>
+        <p className="text-sm text-slate-500 mt-0.5">
+          Konfigurasi identitas institusi dan dokumen resmi unit pendidikan.
+        </p>
       </div>
 
       {/* Tabs */}
@@ -229,17 +237,20 @@ if (!user) {
               { label: 'Total Kelas', value: stats.classes, icon: BookOpen, color: 'bg-emerald-50 text-emerald-600' },
               { label: 'Total Siswa', value: stats.students, icon: GraduationCap, color: 'bg-indigo-50 text-indigo-600' },
               { label: 'Akreditasi', value: profile.accreditation, icon: Award, color: 'bg-amber-50 text-amber-600' },
-            ].map(s => (
-              <div key={s.label} className="card p-4 flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${s.color}`}>
-                  <s.icon className="w-5 h-5" />
+            ].map(s => {
+              const IconComponent = s.icon
+              return (
+                <div key={s.label} className="card p-4 flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${s.color}`}>
+                    <IconComponent className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-bold text-slate-900">{s.value}</p>
+                    <p className="text-xs text-slate-400">{s.label}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xl font-bold text-slate-900">{s.value}</p>
-                  <p className="text-xs text-slate-400">{s.label}</p>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
