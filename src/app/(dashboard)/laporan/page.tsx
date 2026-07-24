@@ -14,7 +14,8 @@ type ReportTab = 'rekap-absensi' | 'rekap-nilai' | 'penilaian-pendukung' | 'nila
 interface ClassItem {
   id: string
   name: string
-  level: string
+  normalized_name: string | null
+  level: string // Kita buat dinamis di frontend
 }
 
 interface StudentItem {
@@ -84,29 +85,32 @@ export default function LaporanPage() {
           return
         }
 
-        // 1. Ambil rombongan belajar aktif milik guru secara aman.
-        // Mencoba menggunakan kolom 'teacher_id' terlebih dahulu.
-        let { data: classData, error: classError } = await supabase
+        // Ambil data menggunakan kolom yang valid (id, name, normalized_name)
+        const { data: classData, error: classError } = await supabase
           .from('classes')
-          .select('id, name, level')
-          .eq('teacher_id', user.id)
+          .select('id, name, normalized_name')
+          .eq('user_id', user.id)
 
-        // 2. Fallback jika kolom 'teacher_id' tidak terdefinisi di skema tabel Anda
         if (classError) {
-          const fallback = await supabase
-            .from('classes')
-            .select('id, name, level')
-            .eq('user_id', user.id)
-          
-          if (!fallback.error) {
-            classData = fallback.data
-          } else {
-            console.error('Error loading classes with both teacher_id and user_id:', classError, fallback.error)
-          }
+          console.error('Error fetching classes:', classError)
+          setError('Gagal memuat kelas: ' + classError.message)
+          setLoading(false)
+          return
         }
 
         if (classData) {
-          setClasses(classData)
+          // Buat nilai 'level' secara dinamis dengan mengekstrak angka/karakter romawi di awal nama kelas
+          const mappedClasses: ClassItem[] = classData.map(cls => {
+            const match = cls.name.trim().match(/^(\d+|[IVXLCDM]+)/i)
+            const extractedLevel = match ? match[1] : (cls.normalized_name || '-')
+            return {
+              id: cls.id,
+              name: cls.name,
+              normalized_name: cls.normalized_name,
+              level: extractedLevel
+            }
+          })
+          setClasses(mappedClasses)
         }
 
         // Cek profil sekolah untuk pengesahan tanda tangan rapor
