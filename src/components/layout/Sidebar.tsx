@@ -212,7 +212,7 @@ export default function Sidebar() {
       {/* ========================= */}
       {/* NAVIGATION (SCROLL DIHAPUS) */}
       {/* ========================= */}
-      <nav className="flex-1 px-4 py-3 space-y-1 overflow-hidden">
+      <nav className="flex-1 px-4 py-3 space-y-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {navRows.map((row) => {
           if (isSection(row)) {
             return (
@@ -291,7 +291,7 @@ export default function Sidebar() {
               </p>
             </div>
 
-            <ChevronDown className="h-3.5 w-3.5 text-slate-500 transition-colors group-hover:text-white" />
+            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-500 transition-colors group-hover:text-white" />
           </button>
 
           {showProfileMenu && (
