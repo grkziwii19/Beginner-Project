@@ -5,12 +5,12 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   Users, BookOpen, CalendarCheck, Star, Download,
-  Plus, UserPlus, Upload, BarChart3, Sparkle, ChevronRight, ChevronDown
+  Plus, UserPlus, Upload, BarChart3, Sparkle
 } from 'lucide-react'
 import Link from 'next/link'
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
-  Tooltip, LabelList
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer,
+  LineChart, Line, Tooltip
 } from 'recharts'
 import QuickAttendanceModal from '@/components/dashboard/QuickAttendanceModal'
 
@@ -27,7 +27,6 @@ export default function DashboardPage() {
   const router = useRouter()
   const [userName, setUserName] = useState('Guru')
   const [loading, setLoading] = useState(true)
-  const [mounted, setMounted] = useState(false)
   const [showAttendanceModal, setShowAttendanceModal] = useState(false)
 
   const [totalStudents, setTotalStudents] = useState(0)
@@ -42,10 +41,10 @@ export default function DashboardPage() {
   const fetchAll = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
-      setLoading(false)
-      router.push('/login')
-      return
-    }
+  setLoading(false)
+  router.push('/login')
+  return
+}
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -159,35 +158,18 @@ export default function DashboardPage() {
     setLoading(false)
   }
 
-  useEffect(() => {
-    setMounted(true)
-    fetchAll()
-  }, [])
+  useEffect(() => { fetchAll() }, [])
 
   const handleAttendanceModalClose = () => {
     setShowAttendanceModal(false)
     fetchAll() // refresh data setelah absen disimpan
   }
 
-  // Ringkasan turunan untuk tampilan
-  const avgWeeklyAttendance = weeklyAttendance.length
-    ? Math.round(weeklyAttendance.reduce((a, b) => a + b.rate, 0) / weeklyAttendance.length)
-    : 0
-  const highestAttendance = weeklyAttendance.length
-    ? weeklyAttendance.reduce((a, b) => (b.rate > a.rate ? b : a))
-    : null
-  const lowestAttendance = weeklyAttendance.length
-    ? weeklyAttendance.reduce((a, b) => (b.rate < a.rate ? b : a))
-    : null
-  const gradeImprovement = gradeTrend.length >= 2
-    ? gradeTrend[gradeTrend.length - 1].avg - gradeTrend[0].avg
-    : 0
-
   const stats = [
-    { label: 'Total Siswa', value: totalStudents, sub: 'siswa aktif', icon: Users, iconBg: 'bg-indigo-50 text-indigo-600' },
-    { label: 'Total Kelas', value: totalClasses, sub: 'rombongan belajar', icon: BookOpen, iconBg: 'bg-emerald-50 text-emerald-600' },
-    { label: 'Kehadiran Hari Ini', value: `${attendanceRate}%`, sub: 'tingkat hadir', icon: CalendarCheck, iconBg: 'bg-amber-50 text-amber-600' },
-    { label: 'Rata-rata Nilai', value: avgScore || '-', sub: 'semua kelas', icon: Star, iconBg: 'bg-purple-50 text-purple-600' },
+    { label: 'Total Siswa', value: totalStudents, sub: 'siswa aktif', icon: Users, color: 'bg-indigo-50 text-indigo-600' },
+    { label: 'Total Kelas', value: totalClasses, sub: 'rombongan belajar', icon: BookOpen, color: 'bg-emerald-50 text-emerald-600' },
+    { label: 'Kehadiran Hari Ini', value: `${attendanceRate}%`, sub: 'tingkat hadir', icon: CalendarCheck, color: 'bg-amber-50 text-amber-600' },
+    { label: 'Rata-rata Nilai', value: avgScore || '-', sub: 'semua kelas', icon: Star, color: 'bg-purple-50 text-purple-600' },
   ]
 
   const quickActions = [
@@ -197,165 +179,85 @@ export default function DashboardPage() {
     { label: 'Lihat Laporan', sub: 'Statistik lengkap', icon: BarChart3, color: 'bg-slate-700', href: '/students' },
   ]
 
-  // Mencegah proses render asinkronus yang belum siap di sisi client selama siklus hidrasi awal
-  if (!mounted || loading) {
+  if (loading) {
     return <div className="flex items-center justify-center h-64 text-slate-400 text-sm">Memuat dashboard...</div>
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">Selamat datang kembali, {userName} 👋</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Berikut adalah update dan aktivitas kelas hari ini.</p>
-      </div>
-
-      <div className="flex flex-wrap gap-2.5">
-        <button
-          onClick={() => setShowAttendanceModal(true)}
-          className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
-        >
+      <p className="text-sm text-slate-500">Selamat datang kembali, {userName}. Berikut adalah update hari ini.</p>
+      <div className="flex gap-2 mt-1">
+        <button onClick={() => setShowAttendanceModal(true)} className="btn-secondary text-sm">
           <CalendarCheck className="w-4 h-4" /> Absensi
         </button>
-        <Link
-          href="/import"
-          className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors shadow-sm"
-        >
+        <Link href="/import" className="btn-secondary text-sm">
           <Download className="w-4 h-4" /> Export Data
         </Link>
-        <Link
-          href="/kelas"
-          className="flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 transition-all shadow-sm shadow-indigo-200"
-        >
+        <Link href="/kelas" className="btn-primary text-sm">
           <Plus className="w-4 h-4" /> Tambah Nilai
         </Link>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map(({ label, value, sub, icon: Icon, iconBg }) => (
-          <div key={label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow">
-            <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 ${iconBg}`}>
-              <Icon className="w-5 h-5" />
+        {stats.map(({ label, value, sub, icon: Icon, color }) => (
+          <div key={label} className="card p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className={`p-2.5 rounded-xl ${color}`}>
+                <Icon className="w-5 h-5" />
+              </div>
             </div>
-            <p className="text-2xl font-extrabold text-slate-900">{value}</p>
+            <p className="text-2xl font-bold text-slate-900">{value}</p>
             <p className="text-sm text-slate-500 mt-0.5">{label}</p>
-            <p className="text-xs text-slate-400 mt-1.5">{sub}</p>
           </div>
         ))}
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-          <div className="flex items-start justify-between mb-1">
-            <div>
-              <h2 className="font-bold text-slate-900 text-sm">Kehadiran Minggu Ini</h2>
-              <p className="text-xs text-slate-400">Persentase hadir per hari</p>
-            </div>
-            <span className="flex items-center gap-1 text-xs font-medium text-slate-500 border border-slate-200 rounded-lg px-2.5 py-1.5 bg-slate-50">
-              Semua Kelas <ChevronDown className="w-3.5 h-3.5" />
-            </span>
-          </div>
+        <div className="card p-5">
+          <h2 className="font-semibold text-slate-900 text-sm">Kehadiran Minggu Ini</h2>
+          <p className="text-xs text-slate-400 mb-4">Persentase hadir per hari</p>
           {weeklyAttendance.length === 0 ? (
             <div className="h-48 flex items-center justify-center text-xs text-slate-400">Belum ada data absensi</div>
           ) : (
-            <ResponsiveContainer width="100%" height={230}>
-              <AreaChart data={weeklyAttendance} margin={{ top: 24, right: 8, left: -12, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="attendanceFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#7c3aed" stopOpacity={0.25} />
-                    <stop offset="100%" stopColor="#7c3aed" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={weeklyAttendance}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="day" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} unit="%" domain={[0, 100]} />
+                <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} unit="%" />
                 <Tooltip />
-                <Area
-                  type="monotone"
-                  dataKey="rate"
-                  stroke="#7c3aed"
-                  strokeWidth={2.5}
-                  fill="url(#attendanceFill)"
-                  dot={{ r: 4, fill: '#7c3aed', strokeWidth: 0 }}
-                  activeDot={{ r: 5 }}
-                >
-                  <LabelList dataKey="rate" position="top" formatter={(v: any) => `${v}%`} style={{ fontSize: 11, fill: '#64748b', fontWeight: 600 }} />
-                </Area>
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-          <div className="grid grid-cols-4 gap-2 mt-2 pt-4 border-t border-slate-100">
-            <div>
-              <p className="text-xs text-slate-400">Rata-rata Kehadiran</p>
-              <p className="text-sm font-bold text-slate-900 mt-0.5">{avgWeeklyAttendance}%</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400">Tertinggi</p>
-              <p className="text-sm font-bold text-slate-900 mt-0.5">{highestAttendance ? `${highestAttendance.rate}%` : '-'}</p>
-              <p className="text-[11px] text-slate-400">{highestAttendance?.day ?? ''}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400">Terendah</p>
-              <p className="text-sm font-bold text-slate-900 mt-0.5">{lowestAttendance ? `${lowestAttendance.rate}%` : '-'}</p>
-              <p className="text-[11px] text-slate-400">{lowestAttendance?.day ?? ''}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400">Total Siswa</p>
-              <p className="text-sm font-bold text-slate-900 mt-0.5">{totalStudents}</p>
-              <p className="text-[11px] text-slate-400">Aktif</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-          <div className="flex items-start justify-between mb-1">
-            <div>
-              <h2 className="font-bold text-slate-900 text-sm">Tren Nilai</h2>
-              <p className="text-xs text-slate-400">Rata-rata nilai per bulan</p>
-            </div>
-            <span className="flex items-center gap-1 text-xs font-medium text-slate-500 border border-slate-200 rounded-lg px-2.5 py-1.5 bg-slate-50">
-              Semua Kelas <ChevronDown className="w-3.5 h-3.5" />
-            </span>
-          </div>
-          {gradeTrend.length === 0 ? (
-            <div className="h-48 flex items-center justify-center text-xs text-slate-400">Belum ada data nilai</div>
-          ) : (
-            <ResponsiveContainer width="100%" height={230}>
-              <BarChart data={gradeTrend} margin={{ top: 24, right: 8, left: -12, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} domain={[0, 100]} />
-                <Tooltip />
-                <Bar dataKey="avg" fill="#6366f1" radius={[8, 8, 0, 0]} maxBarSize={38}>
-                  <LabelList dataKey="avg" position="top" style={{ fontSize: 11, fill: '#64748b', fontWeight: 600 }} />
-                </Bar>
+                <Bar dataKey="rate" fill="#facc15" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
-          <div className="grid grid-cols-2 gap-2 mt-2 pt-4 border-t border-slate-100">
-            <div>
-              <p className="text-xs text-slate-400">Rata-rata Nilai</p>
-              <p className="text-sm font-bold text-slate-900 mt-0.5">{avgScore || '-'}</p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400">Peningkatan</p>
-              <p className={`text-sm font-bold mt-0.5 ${gradeImprovement >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                {gradeImprovement >= 0 ? '+' : ''}{gradeImprovement} dari bulan lalu
-              </p>
-            </div>
-          </div>
+        </div>
+
+        <div className="card p-5">
+          <h2 className="font-semibold text-slate-900 text-sm">Tren Nilai</h2>
+          <p className="text-xs text-slate-400 mb-4">Rata-rata nilai per bulan</p>
+          {gradeTrend.length === 0 ? (
+            <div className="h-48 flex items-center justify-center text-xs text-slate-400">Belum ada data nilai</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={gradeTrend}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: '#94a3b8' }} axisLine={false} tickLine={false} domain={[60, 100]} />
+                <Tooltip />
+                <Line type="monotone" dataKey="avg" stroke="#6366f1" strokeWidth={2} dot={{ r: 4, fill: '#6366f1' }} />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
       {/* Activity + Quick actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 lg:col-span-2">
+        <div className="card p-5 lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bold text-slate-900 text-sm">Aktivitas Terbaru</h2>
-            <button className="flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:underline">
-              Lihat Semua <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+            <h2 className="font-semibold text-slate-900 text-sm">Aktivitas Terbaru</h2>
+            <button className="text-xs text-indigo-600 hover:underline">Lihat Semua</button>
           </div>
           {activities.length === 0 ? (
             <div className="text-center py-10">
@@ -366,11 +268,11 @@ export default function DashboardPage() {
             <div className="space-y-1">
               {activities.map(act => (
                 <div key={act.id} className="flex items-start gap-3 py-2.5 border-b border-slate-50 last:border-0">
-                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${act.iconBg}`}>
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${act.iconBg}`}>
                     <act.icon className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 truncate">{act.title}</p>
+                    <p className="text-sm font-medium text-slate-800 truncate">{act.title}</p>
                     <p className="text-xs text-slate-400 truncate">{act.subtitle}</p>
                   </div>
                 </div>
@@ -379,45 +281,37 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-          <h2 className="font-bold text-slate-900 text-sm mb-4">Tindakan Cepat</h2>
+        <div className="card p-5">
+          <h2 className="font-semibold text-slate-900 text-sm mb-4">Tindakan Cepat</h2>
           <div className="space-y-2.5">
             {quickActions.map(qa => {
               const content = (
                 <>
-                  <div className={`w-9 h-9 ${qa.color} rounded-xl flex items-center justify-center shrink-0`}>
+                  <div className={`w-9 h-9 ${qa.color} rounded-lg flex items-center justify-center shrink-0`}>
                     <qa.icon className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800">{qa.label}</p>
+                    <p className="text-sm font-medium text-slate-800">{qa.label}</p>
                     <p className="text-xs text-slate-400 truncate">{qa.sub}</p>
                   </div>
                 </>
               )
               if (qa.onClick) {
                 return (
-                  <div
+                  <button
                     key={qa.label}
-                    role="button"
-                    tabIndex={0}
                     onClick={qa.onClick}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        e.preventDefault()
-                        qa.onClick()
-                      }
-                    }}
-                    className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100 w-full text-left cursor-pointer select-none"
+                    className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-50 transition-colors border border-slate-100 w-full text-left"
                   >
                     {content}
-                  </div>
+                  </button>
                 )
               }
               return (
                 <Link
                   key={qa.label}
                   href={qa.href!}
-                  className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors border border-slate-100"
+                  className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-slate-50 transition-colors border border-slate-100"
                 >
                   {content}
                 </Link>
