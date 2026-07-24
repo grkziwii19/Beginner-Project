@@ -25,6 +25,22 @@ interface Question {
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 const MAX_TEXT_CHARS = 45000
 
+const GRADE_OPTIONS = [
+  { value: 'PAUD', label: 'PAUD' },
+  { value: 'I', label: 'I (SD)' },
+  { value: 'II', label: 'II (SD)' },
+  { value: 'III', label: 'III (SD)' },
+  { value: 'IV', label: 'IV (SD)' },
+  { value: 'V', label: 'V (SD)' },
+  { value: 'VI', label: 'VI (SD)' },
+  { value: 'VII', label: 'VII (SMP)' },
+  { value: 'VIII', label: 'VIII (SMP)' },
+  { value: 'IX', label: 'IX (SMP)' },
+  { value: 'X', label: 'X (SMA)' },
+  { value: 'XI', label: 'XI (SMA)' },
+  { value: 'XII', label: 'XII (SMA)' },
+]
+
 function BuatSoalAI() {
   const supabase = createClient()
 
@@ -34,6 +50,7 @@ function BuatSoalAI() {
   const [promptText, setPromptText] = useState('')
 
   // Konfigurasi soal
+  const [grade, setGrade] = useState('I')
   const [questionType, setQuestionType] = useState('pilihan_ganda')
   const [count, setCount] = useState(10)
   const [difficulty, setDifficulty] = useState('Sedang')
@@ -46,7 +63,6 @@ function BuatSoalAI() {
   const [questions, setQuestions] = useState<Question[]>([])
   const [successMsg, setSuccessMsg] = useState('')
 
-  // Menerapkan batas panjang teks & memberi peringatan jika dipotong
   const finalizeExtractedText = (text: string) => {
     if (!text.trim()) {
       setError('Dokumen yang Anda unggah kosong atau tidak ada teks yang bisa dibaca.')
@@ -62,7 +78,6 @@ function BuatSoalAI() {
     }
   }
 
-  // Menangani pembacaan berkas TXT, PDF, dan DOCX di client-side
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError('')
     setFileText('')
@@ -118,7 +133,6 @@ function BuatSoalAI() {
     }
   }
 
-  // Generate Soal via Next.js API Route
   const handleGenerate = async () => {
     setError('')
     setSuccessMsg('')
@@ -147,7 +161,8 @@ function BuatSoalAI() {
           count,
           difficulty,
           language,
-          standard
+          standard,
+          grade
         })
       })
 
@@ -164,7 +179,6 @@ function BuatSoalAI() {
     }
   }
 
-  // Mengunduh Data Soal ke format JSON langsung dari Client
   const downloadJSON = () => {
     if (questions.length === 0) return
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(questions, null, 2))
@@ -176,7 +190,6 @@ function BuatSoalAI() {
     downloadAnchor.remove()
   }
 
-  // Mengunduh hasil soal ke format PDF
   const downloadPDF = () => {
     if (questions.length === 0) return
     const doc = new jsPDF()
@@ -248,7 +261,6 @@ function BuatSoalAI() {
     doc.save(`soal_ai_${questionType}.pdf`)
   }
 
-  // Mengunduh hasil soal ke format Word (.docx)
   const downloadDOCX = async () => {
     if (questions.length === 0) return
 
@@ -295,7 +307,6 @@ function BuatSoalAI() {
     URL.revokeObjectURL(url)
   }
 
-  // Menyimpan data hasil generate ke database Supabase secara aman
   const handleSaveToBank = async () => {
     setError('')
     setSuccessMsg('')
@@ -332,14 +343,12 @@ function BuatSoalAI() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Kolom Kiri: Input & Konfigurasi */}
         <div className="lg:col-span-1 space-y-4">
           <div className="card p-5 bg-white border border-slate-200 rounded-2xl shadow-sm space-y-4">
             <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
               <Settings2 className="w-4 h-4 text-indigo-600" /> Sumber & Metode
             </h3>
 
-            {/* Switch metode */}
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl">
               <button
                 type="button"
@@ -357,7 +366,6 @@ function BuatSoalAI() {
               </button>
             </div>
 
-            {/* Form Input berdasarkan metode */}
             {method === 'prompt' ? (
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rincian Instruksi</label>
@@ -394,21 +402,34 @@ function BuatSoalAI() {
               </div>
             )}
 
-            {/* Konfigurasi detail */}
             <div className="space-y-3 pt-3 border-t border-slate-150">
-              <div>
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Tipe Soal</label>
-                <select
-                  className="input bg-white border border-slate-300 rounded-lg text-sm h-[38px] w-full"
-                  value={questionType}
-                  onChange={e => setQuestionType(e.target.value)}
-                >
-                  <option value="pilihan_ganda">Pilihan Ganda</option>
-                  <option value="essay">Essay</option>
-                  <option value="true_false">Benar / Salah</option>
-                  <option value="fill_in_the_blank">Isi Bagian Rumpang</option>
-                  <option value="matching">Menjodohkan (Matching)</option>
-                </select>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Kelas</label>
+                  <select
+                    className="input bg-white border border-slate-300 rounded-lg text-sm h-[38px] w-full"
+                    value={grade}
+                    onChange={e => setGrade(e.target.value)}
+                  >
+                    {GRADE_OPTIONS.map(g => (
+                      <option key={g.value} value={g.value}>{g.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Tipe Soal</label>
+                  <select
+                    className="input bg-white border border-slate-300 rounded-lg text-sm h-[38px] w-full"
+                    value={questionType}
+                    onChange={e => setQuestionType(e.target.value)}
+                  >
+                    <option value="pilihan_ganda">Pilihan Ganda</option>
+                    <option value="essay">Essay</option>
+                    <option value="true_false">Benar / Salah</option>
+                    <option value="fill_in_the_blank">Isi Bagian Rumpang</option>
+                    <option value="matching">Menjodohkan (Matching)</option>
+                  </select>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -478,9 +499,7 @@ function BuatSoalAI() {
           </div>
         </div>
 
-        {/* Kolom Kanan: Preview Hasil */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Status Penanganan Pesan Error */}
           {error && (
             <div className="p-4 bg-red-50 border border-red-150 rounded-2xl flex items-start gap-2.5 text-red-700 text-sm">
               <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
@@ -536,7 +555,6 @@ function BuatSoalAI() {
                         {idx + 1}. {q.question}
                       </p>
 
-                      {/* Tipe: Pilihan Ganda */}
                       {q.options && q.options.length > 0 && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-4">
                           {q.options.map((opt, oIdx) => (
@@ -547,7 +565,6 @@ function BuatSoalAI() {
                         </div>
                       )}
 
-                      {/* Tipe: Matching (Pasangan) */}
                       {q.pairs && q.pairs.length > 0 && (
                         <div className="space-y-1.5 pl-4">
                           {q.pairs.map((p, pIdx) => (
