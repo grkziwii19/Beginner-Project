@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 export async function POST(req: NextRequest) {
-  const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+  const supabase = await createServerSupabaseClient()
 
   // 1. Autentikasi User
   const { data: { user } } = await supabase.auth.getUser()
@@ -118,15 +116,14 @@ ${contextText}
       userContent = `Gunakan instruksi manual berikut sebagai sumber acuan pembuatan soal: "${promptText}"`
     }
 
-    // 3. Panggil Gemini 1.5 Flash
+    // 3. Panggil Gemini
     const model = genAI.getGenerativeModel({
       model: 'gemini-2.5-flash',
       generationConfig: {
-        responseMimeType: 'application/json', // Memaksa output berupa JSON valid
+        responseMimeType: 'application/json',
       }
     })
 
-    // Cukup kirim string langsung
     const result = await model.generateContent(`${promptSystem}\n\n${userContent}`)
 
     const responseText = result.response.text()
