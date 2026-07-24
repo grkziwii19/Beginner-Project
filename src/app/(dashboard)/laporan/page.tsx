@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import {
   Building2, FileText, ClipboardCheck, Award, GraduationCap, 
   Settings2, Sparkles, Printer, CheckCircle, AlertTriangle, 
-  ChevronRight, CheckCircle2, XCircle, Save
+  ChevronRight, CheckCircle2, XCircle, Save,
+  User, MapPin, Calendar, BookOpen
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -15,7 +16,13 @@ interface ClassItem {
   id: string
   name: string
   normalized_name: string | null
-  level: string // Kita buat dinamis di frontend
+  level: string
+  homeroom_teacher: string | null
+  room: string | null
+  schedule_days: string | null
+  status: string | null
+  subjects: string[] | null
+  is_homeroom_only: boolean
 }
 
 interface StudentItem {
@@ -85,10 +92,10 @@ export default function LaporanPage() {
           return
         }
 
-        // Ambil data menggunakan kolom yang valid (id, name, normalized_name)
+        // Ambil data lengkap rombongan belajar aktif milik guru sesuai kolom database Anda
         const { data: classData, error: classError } = await supabase
           .from('classes')
-          .select('id, name, normalized_name')
+          .select('id, name, normalized_name, homeroom_teacher, room, schedule_days, status, subjects, is_homeroom_only')
           .eq('user_id', user.id)
 
         if (classError) {
@@ -107,6 +114,12 @@ export default function LaporanPage() {
               id: cls.id,
               name: cls.name,
               normalized_name: cls.normalized_name,
+              homeroom_teacher: cls.homeroom_teacher,
+              room: cls.room,
+              schedule_days: cls.schedule_days,
+              status: cls.status,
+              subjects: cls.subjects,
+              is_homeroom_only: cls.is_homeroom_only,
               level: extractedLevel
             }
           })
@@ -374,19 +387,90 @@ export default function LaporanPage() {
                 <p className="text-xs text-slate-400 mt-1">Silakan tambahkan rombongan belajar di menu Kelas terlebih dahulu.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+              /* KONTEN DAFTAR KELAS DISESUAIKAN DENGAN FORMAT MENU KELAS */
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                 {classes.map(cls => (
-                  <button
+                  <div
                     key={cls.id}
-                    onClick={() => handleSelectClass(cls)}
-                    className="flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-slate-50 hover:border-indigo-500 hover:bg-white transition group text-left"
+                    className="bg-white rounded-xl border border-slate-200 p-5 hover:border-indigo-500 hover:shadow-md transition duration-200 flex flex-col justify-between h-full group"
                   >
-                    <div>
-                      <h3 className="font-bold text-slate-800 text-base">{cls.name}</h3>
-                      <p className="text-xs text-slate-400 mt-1">Tingkat Kelas: {cls.level}</p>
+                    <div className="space-y-4">
+                      {/* Baris Atas: Nama Kelas dan Status */}
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-2xl font-extrabold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                            {cls.name}
+                          </h3>
+                          <p className="text-xs text-slate-400 mt-0.5">Tingkat Kelas: {cls.level}</p>
+                        </div>
+                        
+                        <div className="flex flex-col items-end gap-1.5">
+                          {/* Badge Status */}
+                          <span className={clsx(
+                            "px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase",
+                            cls.status === 'aktif' 
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+                              : "bg-slate-100 text-slate-600"
+                          )}>
+                            {cls.status || 'Aktif'}
+                          </span>
+                          
+                          {/* Badge Khusus Wali Kelas Saja */}
+                          {cls.is_homeroom_only && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase bg-indigo-50 text-indigo-700 border border-indigo-100">
+                              Wali Kelas
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Detail Informasi Kelas */}
+                      <div className="space-y-2.5 border-t border-slate-100 pt-4">
+                        <div className="flex items-center gap-2.5">
+                          <User className="w-4 h-4 text-slate-400 shrink-0" />
+                          <div className="text-xs">
+                            <p className="text-slate-400 font-medium">Wali Kelas</p>
+                            <p className="font-bold text-slate-700">{cls.homeroom_teacher || 'Belum diatur'}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5">
+                          <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
+                          <div className="text-xs">
+                            <p className="text-slate-400 font-medium">Ruang Kelas</p>
+                            <p className="font-semibold text-slate-700">{cls.room || '-'}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5">
+                          <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
+                          <div className="text-xs">
+                            <p className="text-slate-400 font-medium">Jadwal Hari</p>
+                            <p className="font-semibold text-slate-700">{cls.schedule_days || 'Belum diatur'}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2.5">
+                          <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
+                          <div className="text-xs">
+                            <p className="text-slate-400 font-medium">Mata Pelajaran</p>
+                            <p className="font-semibold text-slate-700">
+                              {Array.isArray(cls.subjects) ? cls.subjects.length : 0} Mapel Terdaftar
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-indigo-600 transition-colors" />
-                  </button>
+
+                    {/* Tombol Aksi */}
+                    <button
+                      onClick={() => handleSelectClass(cls)}
+                      className="w-full mt-5 py-2.5 px-4 rounded-lg bg-slate-50 hover:bg-indigo-600 hover:text-white border border-slate-200 hover:border-indigo-600 text-xs font-bold text-slate-700 flex items-center justify-center gap-1.5 transition-all duration-200"
+                    >
+                      Pilih Kelas Ini
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
