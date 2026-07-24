@@ -43,7 +43,7 @@ const navRows: NavRow[] = [
   { href: '/absensi', label: 'Absensi', icon: ClipboardCheck },
   { href: '/akademik/nilai', label: 'Nilai', icon: Award },
   { href: '/laporan', label: 'Laporan', icon: FileBarChart },
-  { href: '/ai-tools',label: 'AI Tools', icon: Sparkles},
+  { href: '/ai-tools',label: 'Bantuan AI', icon: Sparkles},
   { href: '/pengaturan', label: 'Pengaturan', icon: Settings },
 ]
 

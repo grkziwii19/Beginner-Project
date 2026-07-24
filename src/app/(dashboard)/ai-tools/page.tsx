@@ -99,7 +99,7 @@ function AIToolsDashboard() {
         ) : isAdmin ? (
           <div className="flex items-center gap-2 p-3.5 bg-indigo-50 border border-indigo-150 rounded-xl text-indigo-700 text-sm">
             <ShieldCheck className="w-5 h-5 shrink-0" />
-            <span className="font-semibold">Akun Admin: Anda memiliki akses tak terbatas ke semua fitur AI Tools.</span>
+            <span className="font-semibold">Akun Admin: Anda memiliki akses tak terbatas ke semua fitur Bantuan AI.</span>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
