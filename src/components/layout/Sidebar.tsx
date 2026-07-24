@@ -28,7 +28,6 @@ function isSection(row: NavRow): row is SectionLabel {
   return 'type' in row && row.type === 'section'
 }
 
-// Menu Sekolah ditambahkan di atas menu Laporan
 const navRows: NavRow[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/kelas', label: 'Kelas', icon: IdCard },
@@ -124,9 +123,9 @@ export default function Sidebar() {
         </div>
         <div>
           <p className="font-bold text-white text-sm leading-tight">GR Assistant</p>
-          <p className="text-xs text-slate-400 leading-tight">Asisten Digital Guru</p>
+          <p className="text-xs text-[#94A3B8] leading-tight">Asisten Digital Guru</p>
         </div>
-        <button onClick={() => setMobileOpen(false)} className="ml-auto p-1 text-slate-400 lg:hidden">
+        <button onClick={() => setMobileOpen(false)} className="ml-auto p-1 text-[#94A3B8] lg:hidden">
           <X className="w-4 h-4" />
         </button>
       </div>
@@ -138,7 +137,7 @@ export default function Sidebar() {
             return (
               <p
                 key={`section-${idx}`}
-                className="px-3 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 select-none"
+                className="px-3 pt-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#94A3B8] select-none"
               >
                 {row.label}
               </p>
@@ -151,12 +150,18 @@ export default function Sidebar() {
               key={`${row.href}-${row.label}`}
               href={row.href}
               onClick={() => setMobileOpen(false)}
+              style={active ? { background: 'linear-gradient(90deg, #4F46E5, #6366F1)' } : undefined}
               className={clsx(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
-                active ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                'group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150',
+                active 
+                  ? 'text-white' 
+                  : 'text-[#CBD5E1] hover:bg-white/[0.08] hover:text-white'
               )}
             >
-              <row.icon className="w-4 h-4 shrink-0" />
+              <row.icon className={clsx(
+                'w-4 h-4 shrink-0 transition-colors duration-150',
+                active ? 'text-white' : 'text-[#94A3B8] group-hover:text-white'
+              )} />
               {row.label}
             </Link>
           )
@@ -164,36 +169,37 @@ export default function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="p-3 mt-1 border-t border-slate-800 space-y-2.5 shrink-0">
+      <div className="p-3 mt-1 border-t border-white/[0.06] space-y-2.5 shrink-0">
         {/* Profile */}
         <div className="relative">
           <button
             onClick={() => setShowProfileMenu(v => !v)}
-            className="flex items-center gap-2.5 w-full px-1 py-1.5 rounded-lg hover:bg-slate-800 transition-colors duration-150"
+            className="flex items-center gap-2.5 w-full px-1 py-1.5 rounded-lg hover:bg-white/[0.08] transition-colors duration-150"
           >
             <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xs font-bold overflow-hidden shrink-0">
               {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
             </div>
             <div className="flex-1 text-left min-w-0">
               <p className="text-sm font-medium text-white truncate">{userName.split(' ')[0]}</p>
-              <p className="text-[11px] text-slate-400 truncate">{email}</p>
+              <p className="text-[11px] text-[#94A3B8] truncate">{email}</p>
             </div>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <ChevronDown className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
           </button>
 
           {showProfileMenu && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-              <div className="absolute left-0 bottom-full mb-2 w-full bg-slate-800 border border-slate-700 rounded-xl shadow-lg z-50 overflow-hidden">
+              {/* Dropdown yang disesuaikan dengan skema Navy Slate gelap */}
+              <div className="absolute left-0 bottom-full mb-2 w-full bg-[#1E293B] border border-white/[0.06] rounded-xl shadow-lg z-50 overflow-hidden">
                 <Link
                   href="/akun"
                   onClick={() => setShowProfileMenu(false)}
-                  className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-150"
+                  className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-[#CBD5E1] hover:bg-white/[0.08] hover:text-white transition-colors duration-150"
                 >
-                  <UserCircle className="w-4 h-4 text-slate-400" />
+                  <UserCircle className="w-4 h-4 text-[#94A3B8]" />
                   Akun
                 </Link>
-                <div className="border-t border-slate-700">
+                <div className="border-t border-white/[0.06]">
                   <button
                     onClick={handleLogout}
                     className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors duration-150"
@@ -209,23 +215,23 @@ export default function Sidebar() {
 
         {/* Sekolah */}
         <div className="flex items-center gap-2.5 px-1">
-          <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
-          <p className="text-xs text-slate-300 truncate">{schoolName || 'Sekolah belum diatur'}</p>
+          <Building2 className="w-4 h-4 text-[#94A3B8] shrink-0" />
+          <p className="text-xs text-[#CBD5E1] truncate">{schoolName || 'Sekolah belum diatur'}</p>
         </div>
 
         {/* Tahun Ajaran */}
-        <div className="bg-slate-800 rounded-lg px-3 py-2">
-          <p className="text-[10px] text-slate-400 uppercase tracking-wide font-semibold">Tahun Ajaran Aktif</p>
+        <div className="bg-[#1E293B] border border-white/[0.06] rounded-lg px-3 py-2">
+          <p className="text-[10px] text-[#94A3B8] uppercase tracking-wide font-semibold">Tahun Ajaran Aktif</p>
           <p className="text-sm font-bold text-white mt-0.5">2024 / 2025</p>
-          <p className="text-[11px] text-slate-400">Semester Genap</p>
+          <p className="text-[11px] text-[#94A3B8]">Semester Genap</p>
         </div>
 
         {/* Tanggal */}
         <div className="flex items-center gap-2.5 px-1">
-          <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+          <Calendar className="w-3.5 h-3.5 text-[#94A3B8] shrink-0" />
           <div className="leading-tight">
-            <p className="text-xs font-semibold text-slate-200">{dayLabel}</p>
-            <p className="text-[11px] text-slate-500">{dateLabel}</p>
+            <p className="text-xs font-semibold text-[#CBD5E1]">{dayLabel}</p>
+            <p className="text-[11px] text-[#94A3B8]">{dateLabel}</p>
           </div>
         </div>
 
@@ -286,10 +292,17 @@ export default function Sidebar() {
 
       {mobileOpen && <div className="fixed inset-0 bg-black/30 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />}
 
-      <aside className={clsx(
-        'fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 flex flex-col overflow-hidden transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto',
-        mobileOpen ? 'translate-x-0' : '-translate-x-full'
-      )}>
+      <aside 
+        style={{
+          background: 'radial-gradient(circle at top, rgba(99,102,241,.12), transparent 40%), linear-gradient(180deg, #1E293B 0%, #172554 45%, #0F172A 100%)',
+          borderRight: '1px solid rgba(255,255,255,.06)',
+          boxShadow: '8px 0 24px rgba(0,0,0,.18)'
+        }}
+        className={clsx(
+          'fixed inset-y-0 left-0 z-50 w-64 flex flex-col overflow-hidden transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto',
+          mobileOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
         <div className="relative flex h-full flex-col overflow-hidden">
           <NavContent />
         </div>

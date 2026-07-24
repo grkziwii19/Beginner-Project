@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   Building2, Save, CheckCircle, Pencil, Users, BookOpen, GraduationCap,
-  Award, FileText, Plus
+  Award, FileText
 } from 'lucide-react'
 import clsx from 'clsx'
 
-type SchoolTab = 'profil' | 'guru' | 'tahun' | 'dokumen'
+// Tab 'guru' telah dihapus agar fokus pada penggunaan guru personal
+type SchoolTab = 'profil' | 'tahun' | 'dokumen'
 
 interface SchoolProfileForm {
   name: string
@@ -124,14 +125,13 @@ export default function SekolahPage() {
     setTimeout(() => setSaved(false), 2000)
   }
 
+  // List tab tanpa Data Guru
   const tabs = [
     { id: 'profil', label: 'Profil Sekolah' },
-    { id: 'guru', label: 'Data Guru' },
     { id: 'tahun', label: 'Tahun Ajaran' },
     { id: 'dokumen', label: 'Pengaturan Dokumen' },
   ] as const
 
-  // Menyusun struktur tampilan data agar alamat/email/website yang panjang dapat mengambil ruang penuh (fullWidth)
   const profileDetails = [
     { key: 'NPSN', val: profile.npsn || '-', fullWidth: false },
     { key: 'NSS', val: profile.nss || '-', fullWidth: false },
@@ -150,7 +150,7 @@ export default function SekolahPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header Halaman (Tanpa duplikasi Tahun Ajaran) */}
+      {/* Header Halaman */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Informasi Sekolah</h1>
         <p className="text-sm text-slate-500 mt-0.5">
@@ -296,19 +296,6 @@ export default function SekolahPage() {
               )
             })}
           </div>
-        </div>
-      )}
-
-      {/* Data Guru */}
-      {tab === 'guru' && (
-        <div className="card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-slate-900">Data Guru</h2>
-            <button className="btn-primary text-xs"><Plus className="w-3.5 h-3.5" /> Tambah Guru</button>
-          </div>
-          <p className="text-sm text-slate-400 text-center py-10">
-            Fitur manajemen multi-guru akan tersedia setelah modul Sekolah terhubung ke akun guru lain.
-          </p>
         </div>
       )}
 
