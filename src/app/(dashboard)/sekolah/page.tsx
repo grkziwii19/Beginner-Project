@@ -90,8 +90,15 @@ export default function SekolahPage() {
   const handleSave = async () => {
     setError('')
     
+    // Validasi 1: Nama Sekolah wajib ada
     if (!profile.name || !profile.name.trim()) {
-      setError('Nama Sekolah tidak boleh kosong.')
+      setError('Nama Sekolah wajib diisi dan tidak boleh kosong.')
+      return
+    }
+
+    // Validasi 2: Kepala Sekolah wajib ada untuk penandatanganan rapor
+    if (!profile.principalName || !profile.principalName.trim()) {
+      setError('Nama Kepala Sekolah wajib diisi untuk tanda tangan pengesahan rapor.')
       return
     }
 
@@ -137,7 +144,8 @@ export default function SekolahPage() {
     { key: 'NSS', val: profile.nss || '-', fullWidth: false },
     { key: 'Akreditasi', val: profile.accreditation, fullWidth: false },
     { key: 'Telepon', val: profile.phone || '-', fullWidth: false },
-    { key: 'Kepala Sekolah', val: profile.principalName || '-', fullWidth: false },
+    // Menambahkan field required
+    { key: 'Kepala Sekolah', val: profile.principalName || '', fullWidth: false, required: true },
     { key: 'NIP Kepala Sekolah', val: profile.principalNip || '-', fullWidth: false },
     { key: 'Email Sekolah', val: profile.email || '-', fullWidth: true },
     { key: 'Alamat Sekolah', val: profile.address || '-', fullWidth: true },
@@ -188,9 +196,13 @@ export default function SekolahPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div>
-                    <label className="label">Nama Sekolah</label>
-                    <input className="input" value={profile.name || ''} onChange={e => setProfile({ ...profile, name: e.target.value })} placeholder="Contoh: SMAN 1 Sumarorong" />
-                    <span className="text-[10px] text-slate-400 block mt-1">Dicetak pada bagian nama institusi di rapor</span>
+                    <h2 className={clsx(
+                      "font-semibold",
+                      profile.name ? "text-slate-900" : "text-red-500 italic text-sm"
+                    )}>
+                      {profile.name || 'Nama Sekolah Belum Diatur (Wajib)'}
+                    </h2>
+                    <p className="text-xs text-slate-400">NSS: {profile.nss || '-'}</p>
                   </div>
                   <div>
                     <label className="label">NSS</label>
@@ -209,10 +221,13 @@ export default function SekolahPage() {
                       <option>Belum Terakreditasi</option>
                     </select>
                   </div>
+                  
                   <div>
-                    <label className="label">Kepala Sekolah</label>
-                    <input className="input" value={profile.principalName || ''} onChange={e => setProfile({ ...profile, principalName: e.target.value })} placeholder="Nama Lengkap & Gelar" />
-                    <span className="text-[10px] text-slate-400 block mt-1">Dicetak pada lembar tanda tangan pengesahan rapor</span>
+                    <label className="label flex items-center gap-1 font-semibold text-slate-700">
+                      Kepala Sekolah <span className="text-red-500">*</span>
+                    </label>
+                    <input className="input border-red-200 focus:border-red-500" value={profile.principalName || ''} onChange={e => setProfile({ ...profile, principalName: e.target.value })} placeholder="Nama Lengkap & Gelar" required />
+                    <span className="text-[10px] text-red-500 block mt-1">Wajib diisi - Dicetak pada lembar tanda tangan pengesahan rapor</span>
                   </div>
                   <div>
                     <label className="label">NIP Kepala Sekolah</label>
@@ -251,18 +266,29 @@ export default function SekolahPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                {profileDetails.map(item => (
-                  <div 
-                    key={item.key} 
-                    className={clsx(
-                      "bg-slate-50 rounded-lg px-3 py-2.5", 
-                      item.fullWidth && "md:col-span-2"
-                    )}
-                  >
-                    <p className="text-xs text-slate-400 uppercase font-semibold">{item.key}</p>
-                    <p className="font-medium text-slate-800 mt-0.5">{item.val}</p>
-                  </div>
-                ))}
+                {profileDetails.map(item => {
+                  const isMissingRequired = item.required && !item.val;
+                  return (
+                    <div 
+                      key={item.key} 
+                      className={clsx(
+                        "bg-slate-50 rounded-lg px-3 py-2.5 transition-colors", 
+                        item.fullWidth && "md:col-span-2",
+                        isMissingRequired && "bg-red-50 border border-red-200"
+                      )}
+                    >
+                      <p className="text-xs text-slate-400 uppercase font-semibold flex items-center gap-1">
+                        {item.key} {item.required && <span className="text-red-500">* (Wajib)</span>}
+                      </p>
+                      <p className={clsx(
+                        "font-medium mt-0.5",
+                        isMissingRequired ? "text-red-500 italic text-xs" : "text-slate-800"
+                      )}>
+                        {isMissingRequired ? "Belum diisi (Wajib untuk kelayakan Rapor)" : item.val}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
