@@ -28,14 +28,14 @@ function isSection(row: NavRow): row is SectionLabel {
   return 'type' in row && row.type === 'section'
 }
 
-// Menu Absensi dan Nilai telah dihapus.
-// Bantuan AI kini dipindahkan kembali ke bentuk Kartu Interaktif di bagian paling bawah.
+// Menu Sekolah ditambahkan di atas menu Laporan
 const navRows: NavRow[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 
   { type: 'section', label: 'Akademik' },
 
   { href: '/kelas', label: 'Kelas', icon: IdCard },
+  { href: '/sekolah', label: 'Sekolah', icon: Building2 },
   { href: '/laporan', label: 'Laporan', icon: FileBarChart },
   { href: '/pengaturan', label: 'Pengaturan', icon: Settings },
 ]
@@ -103,7 +103,6 @@ export default function Sidebar() {
     router.refresh()
   }
 
-  // Pengaman nilai Tanggal untuk mencegah Next.js Hydration Mismatch
   const dayLabel = mounted 
     ? now.toLocaleDateString('id-ID', { weekday: 'long' }) 
     : 'Jumat'
@@ -135,7 +134,7 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Nav - Terbungkus rapat tanpa scrollbar */}
+      {/* Nav */}
       <nav className="flex-1 px-3 py-2 space-y-1 overflow-hidden">
         {navRows.map((row, idx) => {
           if (isSection(row)) {
@@ -167,7 +166,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer: Profile + Sekolah + Tahun Ajaran + Tanggal + AI Assistant Card */}
+      {/* Footer */}
       <div className="p-3 mt-1 border-t border-slate-800 space-y-2.5 shrink-0">
         {/* Profile */}
         <div className="relative">
@@ -233,7 +232,7 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* AI Assistant Card (Interaktif, Tinggi 120px, Vektor Robot 3D Flat) */}
+        {/* AI Assistant Card */}
         <div className="relative overflow-hidden rounded-xl border border-indigo-500/20 bg-gradient-to-br from-[#4338CA] to-[#6366F1] p-3 h-[120px] flex flex-col justify-between">
           <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-indigo-500/25 blur-2xl" />
 
@@ -256,7 +255,7 @@ export default function Sidebar() {
             </Link>
           </div>
 
-          {/* Vektor Robot AI Flat 3D Modern */}
+          {/* Vektor Robot AI Flat 3D */}
           <div className="absolute right-1 bottom-1 w-14 h-14 pointer-events-none z-10">
             <svg viewBox="0 0 100 100" fill="none" className="w-full h-full drop-shadow-md">
               <circle cx="50" cy="50" r="30" fill="url(#botGlow)" opacity="0.25"/>
