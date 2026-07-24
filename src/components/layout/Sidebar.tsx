@@ -17,7 +17,6 @@ import {
   ChevronDown,
   UserCircle,
   LogOut,
-  Sparkles,
 } from 'lucide-react'
 
 import { useState, useEffect } from 'react'
@@ -40,7 +39,6 @@ function isSection(row: NavRow): row is SectionLabel {
   return 'type' in row && row.type === 'section'
 }
 
-// Hanya menampilkan Dashboard, Kelas, Laporan, dan Pengaturan
 const navRows: NavRow[] = [
   {
     href: '/dashboard',
@@ -177,10 +175,7 @@ export default function Sidebar() {
       {/* ========================= */}
       <div className="relative border-b border-white/5 px-4 py-4 shrink-0">
         <div className="relative flex items-center gap-3">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br
-from-[#4F46E5]
-to-[#6366F1]
- shadow-lg shadow-indigo-600/20">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#6366F1] shadow-lg shadow-indigo-600/20">
             <span className="text-[16px] font-black tracking-tight text-white">
               G
             </span>
@@ -205,9 +200,9 @@ to-[#6366F1]
       </div>
 
       {/* ========================= */}
-      {/* NAVIGATION (SCROLL DIHAPUS) */}
+      {/* NAVIGATION (TIDAK ADA SCROLLBAR & BEBAS KEDIP) */}
       {/* ========================= */}
-      <nav className="flex-1 px-4 py-3 space-y-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav className="flex-1 px-4 py-3 space-y-1 overflow-hidden">
         {navRows.map((row) => {
           if (isSection(row)) {
             return (
@@ -230,19 +225,19 @@ to-[#6366F1]
               href={row.href}
               onClick={() => setMobileOpen(false)}
               className={clsx(
-                "group flex items-center rounded-xl transition-all duration-200",
+                "group flex items-center rounded-xl transition-colors duration-150",
                 active
                   ? "bg-gradient-to-r from-[#4F46E5] to-[#6366F1] text-white shadow-md shadow-indigo-600/20"
-                  : "text-[#94A3B8] hover:bg-white/[0.05] hover:scale-[1.01] hover:text-white"
+                  : "text-[#94A3B8] hover:bg-white/[0.05] hover:text-white"
               )}
             >
               <div className="flex w-full items-center gap-3 px-3 py-[11px]">
                 <div className={clsx(
-                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-200",
+                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors duration-150",
                   active ? "bg-white/15" : "bg-white/5 group-hover:bg-white/10"
                 )}>
                   <row.icon className={clsx(
-                    "h-[16px] w-[16px] transition-colors duration-200",
+                    "h-[16px] w-[16px] transition-colors duration-150",
                     active ? "text-white" : "text-[#94A3B8] group-hover:text-white"
                   )} />
                 </div>
@@ -257,7 +252,7 @@ to-[#6366F1]
       </nav>
 
       {/* ========================= */}
-      {/* FOOTER (SATU GRUP KONSISTEN) */}
+      {/* FOOTER */}
       {/* ========================= */}
       <div className="p-4 space-y-3.5 shrink-0">
         
@@ -373,10 +368,8 @@ to-[#6366F1]
           </div>
         </div>
 
-        {/* AI ASSISTANT CARD (TINGGI 120PX, FLAT 3D ROBOT, BUTTON KECIL) */}
-        {/* Mengarahkan langsung ke halaman AI Tools (/ai-tools) */}
-        <div className="relative overflow-hidden rounded-xl border border-indigo-500/20 bg-gradient-to-br from-[#4338CA]
-to-[#6366F1] p-3.5 h-[120px] flex flex-col justify-between">
+        {/* AI ASSISTANT CARD */}
+        <div className="relative overflow-hidden rounded-xl border border-indigo-500/20 bg-gradient-to-br from-[#4338CA] to-[#6366F1] p-3.5 h-[120px] flex flex-col justify-between">
           <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-indigo-500/25 blur-2xl" />
 
           <div className="relative z-10 max-w-[65%] leading-tight">
@@ -440,7 +433,7 @@ to-[#6366F1] p-3.5 h-[120px] flex flex-col justify-between">
         />
       )}
 
-      {/* Lebar Sidebar 270px, Scrollbar sepenuhnya dihapus (overflow-hidden) */}
+      {/* Lebar Sidebar 270px, Terbungkus dalam 1 wadah mutlak tanpa scroll (overflow-hidden) */}
       <aside
         style={{
           background:
