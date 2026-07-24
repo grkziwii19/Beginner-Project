@@ -363,7 +363,7 @@ function BuatSoalAI() {
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Rincian Instruksi</label>
                 <textarea
                   className="input min-h-[120px] text-sm py-2 bg-white border border-slate-300 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 w-full"
-                  placeholder='Contoh: "Buat 10 soal HACCP Jepang bab 2 tentang keamanan pangan..."'
+                  placeholder='Contoh: "Buat 10 soal IPA kelas 5 SD bab 2 tentang siklus air..."'
                   value={promptText}
                   onChange={e => setPromptText(e.target.value)}
                 />
@@ -448,7 +448,6 @@ function BuatSoalAI() {
                     onChange={e => setLanguage(e.target.value)}
                   >
                     <option value="Indonesia">Indonesia</option>
-                    <option value="Jepang">Jepang</option>
                     <option value="Inggris">Inggris</option>
                   </select>
                 </div>
@@ -460,9 +459,10 @@ function BuatSoalAI() {
                     onChange={e => setStandard(e.target.value)}
                   >
                     <option value="Umum">Kurikulum Umum</option>
-                    <option value="JLPT N5-N1">Ujian JLPT</option>
-                    <option value="Tokutei Ginou">Tokutei Ginou</option>
                     <option value="Kurikulum Merdeka">Kurikulum Merdeka</option>
+                    <option value="Kurikulum 2013">Kurikulum 2013</option>
+                    <option value="AKM">AKM (Asesmen Kompetensi Minimum)</option>
+                    <option value="Ujian Sekolah">Ujian Sekolah</option>
                   </select>
                 </div>
               </div>

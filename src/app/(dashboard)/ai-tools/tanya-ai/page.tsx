@@ -98,7 +98,7 @@ function TanyaAIChat() {
             <Bot className="w-12 h-12 text-slate-300 mb-3 animate-bounce" />
             <h3 className="font-bold text-slate-800 text-sm">Ada yang bisa dibantu hari ini?</h3>
             <p className="text-xs text-slate-500 mt-1 max-w-sm">
-              Tanyakan rincian silabus, terjemahan kosakata bahasa Jepang, rincian soal, atau penjelasan materi pembelajaran secara langsung.
+              Tanyakan rincian silabus, penjelasan konsep, rincian soal, atau materi pembelajaran secara langsung.
             </p>
           </div>
         ) : (

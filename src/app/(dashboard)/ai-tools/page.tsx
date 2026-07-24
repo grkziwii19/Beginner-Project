@@ -76,7 +76,7 @@ function AIToolsDashboard() {
             </div>
             <h3 className="text-lg font-bold text-slate-900 mb-2">Tanya AI</h3>
             <p className="text-sm text-slate-500 mb-6">
-              Diskusikan materi ajar, terjemahan bahasa Jepang, rincian soal, atau rancangan metode ajar interaktif dengan asisten AI.
+              Diskusikan materi ajar, penjelasan konsep, rincian soal, atau rancangan metode ajar interaktif dengan asisten AI.
             </p>
           </div>
           <Link href="/ai-tools/tanya-ai" className="btn-primary justify-center bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500 py-2.5 rounded-xl text-sm font-semibold shadow-sm w-full">
