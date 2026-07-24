@@ -53,6 +53,7 @@ export default function Sidebar() {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   const [schoolName, setSchoolName] = useState('')
+  const [mounted, setMounted] = useState(false)
   const [now, setNow] = useState<Date | null>(null)
 
   // Profil pengguna
@@ -62,6 +63,7 @@ export default function Sidebar() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
   useEffect(() => {
+    setMounted(true)
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
@@ -271,12 +273,19 @@ export default function Sidebar() {
             <div className="flex items-center gap-2.5 min-w-0">
               <Calendar className="w-3.5 h-3.5 text-slate-500 shrink-0" />
               <div className="leading-tight min-w-0">
-                <p className="text-xs font-medium text-slate-200 truncate">{dayLabel}</p>
-                <p className="text-[11px] text-slate-500 truncate">{dateLabel}</p>
+                <p className="text-xs font-medium text-slate-200 truncate" suppressHydrationWarning>
+                  {mounted ? dayLabel : ''}
+                </p>
+                <p className="text-[11px] text-slate-500 truncate" suppressHydrationWarning>
+                  {mounted ? dateLabel : ''}
+                </p>
               </div>
             </div>
-            <span className="text-[11px] font-semibold text-indigo-200 bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-2 py-1 shrink-0">
-              {timeLabel}
+            <span 
+              className="text-[11px] font-semibold text-indigo-200 bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-2 py-1 shrink-0"
+              suppressHydrationWarning
+            >
+              {mounted ? timeLabel : '--:--'}
             </span>
           </div>
 
