@@ -31,9 +31,6 @@ function isSection(row: NavRow): row is SectionLabel {
 // Menu Sekolah ditambahkan di atas menu Laporan
 const navRows: NavRow[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-
-  { type: 'section', label: 'Akademik' },
-
   { href: '/kelas', label: 'Kelas', icon: IdCard },
   { href: '/sekolah', label: 'Sekolah', icon: Building2 },
   { href: '/laporan', label: 'Laporan', icon: FileBarChart },

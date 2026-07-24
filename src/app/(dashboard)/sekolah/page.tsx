@@ -6,6 +6,7 @@ import {
   Building2, Save, CheckCircle, Pencil, Users, BookOpen, GraduationCap,
   Award, FileText, Plus
 } from 'lucide-react'
+import clsx from 'clsx'
 
 type SchoolTab = 'profil' | 'guru' | 'tahun' | 'dokumen'
 
@@ -130,6 +131,19 @@ export default function SekolahPage() {
     { id: 'dokumen', label: 'Pengaturan Dokumen' },
   ] as const
 
+  // Menyusun struktur tampilan data agar alamat/email/website yang panjang dapat mengambil ruang penuh (fullWidth)
+  const profileDetails = [
+    { key: 'NPSN', val: profile.npsn || '-', fullWidth: false },
+    { key: 'NSS', val: profile.nss || '-', fullWidth: false },
+    { key: 'Akreditasi', val: profile.accreditation, fullWidth: false },
+    { key: 'Telepon', val: profile.phone || '-', fullWidth: false },
+    { key: 'Kepala Sekolah', val: profile.principalName || '-', fullWidth: false },
+    { key: 'NIP Kepala Sekolah', val: profile.principalNip || '-', fullWidth: false },
+    { key: 'Email Sekolah', val: profile.email || '-', fullWidth: true },
+    { key: 'Alamat Sekolah', val: profile.address || '-', fullWidth: true },
+    { key: 'Website', val: profile.website || '-', fullWidth: true },
+  ]
+
   if (loading) {
     return <div className="flex items-center justify-center h-64 text-slate-400 text-sm">Memuat...</div>
   }
@@ -140,7 +154,7 @@ export default function SekolahPage() {
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Informasi Sekolah</h1>
         <p className="text-sm text-slate-500 mt-0.5">
-          Konfigurasi identitas institusi dan dokumen resmi unit pendidikan.
+          Kelola profil institusi yang akan digunakan sebagai data resmi dokumen dan lembar rapor siswa.
         </p>
       </div>
 
@@ -180,25 +194,58 @@ export default function SekolahPage() {
 
             {editing ? (
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div><label className="label">Nama Sekolah</label><input className="input" value={profile.name} onChange={e => setProfile({ ...profile, name: e.target.value })} /></div>
-                  <div><label className="label">NSS</label><input className="input" value={profile.nss} onChange={e => setProfile({ ...profile, nss: e.target.value })} /></div>
-                  <div><label className="label">NPSN</label><input className="input" value={profile.npsn} onChange={e => setProfile({ ...profile, npsn: e.target.value })} /></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="label">Nama Sekolah</label>
+                    <input className="input" value={profile.name || ''} onChange={e => setProfile({ ...profile, name: e.target.value })} placeholder="Contoh: SMAN 1 Sumarorong" />
+                    <span className="text-[10px] text-slate-400 block mt-1">Dicetak pada bagian nama institusi di rapor</span>
+                  </div>
+                  <div>
+                    <label className="label">NSS</label>
+                    <input className="input" value={profile.nss || ''} onChange={e => setProfile({ ...profile, nss: e.target.value })} placeholder="12 digit nomor statistik" />
+                  </div>
+                  <div>
+                    <label className="label">NPSN</label>
+                    <input className="input" value={profile.npsn || ''} onChange={e => setProfile({ ...profile, npsn: e.target.value })} placeholder="8 digit nomor pokok" />
+                  </div>
                   <div>
                     <label className="label">Akreditasi</label>
-                    <select className="input" value={profile.accreditation} onChange={e => setProfile({ ...profile, accreditation: e.target.value })}>
-                      <option>A</option><option>B</option><option>C</option><option>Belum Terakreditasi</option>
+                    <select className="input" value={profile.accreditation || 'A'} onChange={e => setProfile({ ...profile, accreditation: e.target.value })}>
+                      <option>A</option>
+                      <option>B</option>
+                      <option>C</option>
+                      <option>Belum Terakreditasi</option>
                     </select>
                   </div>
-                  <div><label className="label">Kepala Sekolah</label><input className="input" value={profile.principalName} onChange={e => setProfile({ ...profile, principalName: e.target.value })} /></div>
-                  <div><label className="label">NIP Kepala Sekolah</label><input className="input" value={profile.principalNip} onChange={e => setProfile({ ...profile, principalNip: e.target.value })} /></div>
+                  <div>
+                    <label className="label">Kepala Sekolah</label>
+                    <input className="input" value={profile.principalName || ''} onChange={e => setProfile({ ...profile, principalName: e.target.value })} placeholder="Nama Lengkap & Gelar" />
+                    <span className="text-[10px] text-slate-400 block mt-1">Dicetak pada lembar tanda tangan pengesahan rapor</span>
+                  </div>
+                  <div>
+                    <label className="label">NIP Kepala Sekolah</label>
+                    <input className="input" value={profile.principalNip || ''} onChange={e => setProfile({ ...profile, principalNip: e.target.value })} placeholder="NIP tanpa spasi" />
+                    <span className="text-[10px] text-slate-400 block mt-1">Dicetak di bawah nama Kepala Sekolah</span>
+                  </div>
                 </div>
-                <div><label className="label">Alamat</label><input className="input" value={profile.address} onChange={e => setProfile({ ...profile, address: e.target.value })} /></div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><label className="label">Telepon</label><input className="input" value={profile.phone} onChange={e => setProfile({ ...profile, phone: e.target.value })} /></div>
-                  <div><label className="label">Email</label><input className="input" value={profile.email} onChange={e => setProfile({ ...profile, email: e.target.value })} /></div>
+                <div>
+                  <label className="label">Alamat Sekolah</label>
+                  <input className="input" value={profile.address || ''} onChange={e => setProfile({ ...profile, address: e.target.value })} placeholder="Jalan, RT/RW, Desa/Kelurahan, Kecamatan, Kabupaten" />
                 </div>
-                <div><label className="label">Website</label><input className="input" value={profile.website} onChange={e => setProfile({ ...profile, website: e.target.value })} /></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="label">Telepon Sekolah</label>
+                    <input className="input" value={profile.phone || ''} onChange={e => setProfile({ ...profile, phone: e.target.value })} placeholder="Nomor telepon resmi" />
+                  </div>
+                  <div>
+                    <label className="label">Email Sekolah</label>
+                    <input className="input" value={profile.email || ''} onChange={e => setProfile({ ...profile, email: e.target.value })} placeholder="email@sekolah.sch.id" />
+                  </div>
+                </div>
+                <div>
+                  <label className="label">Website Resmi</label>
+                  <input className="input" value={profile.website || ''} onChange={e => setProfile({ ...profile, website: e.target.value })} placeholder="www.sekolah.sch.id" />
+                </div>
 
                 {error && (
                   <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
@@ -211,20 +258,17 @@ export default function SekolahPage() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                {[
-                  ['NPSN', profile.npsn || '-'],
-                  ['Akreditasi', profile.accreditation],
-                  ['Kepala Sekolah', profile.principalName || '-'],
-                  ['NIP Kepala Sekolah', profile.principalNip || '-'],
-                  ['Alamat', profile.address || '-'],
-                  ['Telepon', profile.phone || '-'],
-                  ['Email', profile.email || '-'],
-                  ['Website', profile.website || '-'],
-                ].map(([k, v]) => (
-                  <div key={k} className="bg-slate-50 rounded-lg px-3 py-2.5">
-                    <p className="text-xs text-slate-400 uppercase">{k}</p>
-                    <p className="font-medium text-slate-800 mt-0.5">{v}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                {profileDetails.map(item => (
+                  <div 
+                    key={item.key} 
+                    className={clsx(
+                      "bg-slate-50 rounded-lg px-3 py-2.5", 
+                      item.fullWidth && "md:col-span-2"
+                    )}
+                  >
+                    <p className="text-xs text-slate-400 uppercase font-semibold">{item.key}</p>
+                    <p className="font-medium text-slate-800 mt-0.5">{item.val}</p>
                   </div>
                 ))}
               </div>
