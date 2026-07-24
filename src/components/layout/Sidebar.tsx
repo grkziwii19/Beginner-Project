@@ -10,7 +10,7 @@ import {
   Award,
   FileBarChart,
   Settings,
-  Menu,
+  Menu, // <-- Menambahkan Menu ke dalam baris impor
   X,
   Calendar,
   Building2,
@@ -177,7 +177,7 @@ export default function Sidebar() {
     ? now.toLocaleDateString('id-ID', {
         weekday: 'long',
       })
-    : ''
+    : 'Jumat'
 
   const dateLabel = mounted
     ? now.toLocaleDateString('id-ID', {
@@ -185,76 +185,60 @@ export default function Sidebar() {
         month: 'long',
         year: 'numeric',
       })
-    : ''
+    : '24 Juli 2026'
 
   const timeLabel = mounted
     ? now.toLocaleTimeString('id-ID', {
         hour: '2-digit',
         minute: '2-digit',
       })
-    : ''
+    : '09:41'
 
   const NavContent = () => (
     <>
       {/* ========================= */}
       {/* LOGO */}
       {/* ========================= */}
-
-      <div className="relative overflow-hidden border-b border-white/10 px-6 py-6">
-
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 via-transparent to-cyan-500/10" />
-
-        <div className="relative flex items-center gap-4">
-
-          <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-blue-600 shadow-[0_15px_40px_rgba(79,70,229,.45)]">
-
-            <div className="absolute inset-0 rounded-2xl border border-white/20" />
-
-            <span className="text-2xl font-black tracking-tight text-white">
+      <div className="relative border-b border-white/5 px-4 py-4">
+        <div className="relative flex items-center gap-3">
+          {/* Logo Box 40x40 */}
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#6366F1] shadow-lg shadow-indigo-600/20">
+            <span className="text-[16px] font-black tracking-tight text-white">
               G
             </span>
-
           </div>
 
           <div className="min-w-0">
-
-            <h1 className="truncate text-lg font-extrabold tracking-tight text-white">
+            {/* Title 14px, Subtitle 10px */}
+            <h1 className="truncate text-[14px] font-bold tracking-tight text-white">
               GR Assistant
             </h1>
-
-            <p className="mt-0.5 text-xs text-slate-400">
-              Smart Digital Teacher Platform
+            <p className="text-[10px] text-[#94A3B8]">
+              Asisten Digital Guru
             </p>
-
           </div>
 
           <button
             onClick={() => setMobileOpen(false)}
-            className="ml-auto rounded-xl p-2 text-slate-400 transition hover:bg-white/5 hover:text-white lg:hidden"
+            className="ml-auto rounded-xl p-1 text-[#94A3B8] transition hover:bg-white/5 hover:text-white lg:hidden"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
-
         </div>
-
       </div>
 
       {/* ========================= */}
       {/* NAVIGATION */}
       {/* ========================= */}
-
-      <nav className="flex-1 overflow-y-auto px-5 py-6 space-y-2 custom-scrollbar">
-        {navRows.map((row, index) => {
+      <nav className="flex-1 overflow-y-auto px-4 py-3 space-y-1 custom-scrollbar">
+        {navRows.map((row) => {
           if (isSection(row)) {
             return (
               <div
                 key={row.label}
-                className={clsx(
-                  index !== 0 && "pt-5",
-                  "px-3"
-                )}
+                className="mt-[18px] mb-[8px] px-3"
               >
-                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94A3B8]/50">
                   {row.label}
                 </span>
               </div>
@@ -269,61 +253,22 @@ export default function Sidebar() {
               href={row.href}
               onClick={() => setMobileOpen(false)}
               className={clsx(
-                "group relative flex items-center overflow-hidden rounded-2xl transition-all duration-300",
-
+                "group flex items-center rounded-xl transition-all duration-200",
                 active
-                  ? "bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-500 shadow-[0_15px_35px_rgba(79,70,229,.45)]"
-                  : "hover:bg-white/[0.05]"
+                  ? "bg-gradient-to-r from-[#4F46E5] to-[#6366F1] text-white shadow-md shadow-indigo-600/20"
+                  : "text-[#94A3B8] hover:bg-white/[0.05] hover:scale-[1.01] hover:text-white"
               )}
             >
-              {/* Active Indicator */}
-              {active && (
-                <>
-                  <div className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-white" />
+              <div className="flex w-full items-center gap-3 px-3 py-[11px]">
+                {/* Icon menyatu langsung di menu, ukuran 18px */}
+                <row.icon className={clsx(
+                  "h-[18px] w-[18px] shrink-0 transition-colors duration-200",
+                  active ? "text-white" : "text-[#94A3B8] group-hover:text-white"
+                )} />
 
-                  <div className="absolute right-0 top-0 h-full w-20 bg-white/10 blur-2xl" />
-                </>
-              )}
-
-              <div
-                className={clsx(
-                  "flex w-full items-center gap-4 px-4 py-3.5 transition-all duration-300",
-
-                  active
-                    ? "translate-x-1"
-                    : "group-hover:translate-x-1"
-                )}
-              >
-                <div
-                  className={clsx(
-                    "flex h-11 w-11 items-center justify-center rounded-xl transition-all",
-
-                    active
-                      ? "bg-white/15 text-white"
-                      : "bg-slate-800/70 text-slate-400 group-hover:bg-slate-700 group-hover:text-white"
-                  )}
-                >
-                  <row.icon className="h-[19px] w-[19px]" />
-                </div>
-
-                <div className="flex flex-1 items-center justify-between">
-
-                  <span
-                    className={clsx(
-                      "text-[14px] font-semibold transition-colors",
-
-                      active
-                        ? "text-white"
-                        : "text-slate-300 group-hover:text-white"
-                    )}
-                  >
-                    {row.label}
-                  </span>
-
-                  {active && (
-                    <div className="h-2 w-2 rounded-full bg-white shadow-[0_0_12px_rgba(255,255,255,.8)]" />
-                  )}
-                </div>
+                <span className="text-[14px] font-semibold">
+                  {row.label}
+                </span>
               </div>
             </Link>
           )
@@ -331,75 +276,44 @@ export default function Sidebar() {
       </nav>
 
       {/* ========================= */}
-      {/* FOOTER */}
+      {/* FOOTER (SATU GRUP KONSISTEN) */}
       {/* ========================= */}
-
-      <div className="border-t border-white/10 bg-gradient-to-b from-transparent to-slate-950/50 p-5 space-y-4">
-        {/* ========================= */}
+      <div className="border-t border-white/5 bg-slate-950/25 p-4 space-y-3.5">
+        
         {/* PROFILE CARD */}
-        {/* ========================= */}
-
         <div className="relative">
-
           <button
             onClick={() => setShowProfileMenu((v) => !v)}
-            className="group relative w-full overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/80 via-slate-900/60 to-slate-800/40 p-4 backdrop-blur-xl transition-all duration-300 hover:border-indigo-400/30 hover:shadow-[0_20px_40px_rgba(79,70,229,.25)]"
+            className="flex items-center gap-3 w-full px-2 py-1.5 rounded-xl hover:bg-white/[0.05] transition-colors"
           >
-            {/* Glow */}
-            <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-indigo-500/20 blur-3xl transition-all duration-500 group-hover:bg-indigo-500/30" />
-
-            <div className="relative flex items-center gap-4">
-
-              {/* Avatar */}
-              <div className="relative">
-
-                <div className="h-14 w-14 overflow-hidden rounded-2xl ring-2 ring-white/10">
-
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt={userName}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-500 to-violet-600 text-lg font-bold text-white">
-                      {initials}
-                    </div>
-                  )}
-
+            {/* Avatar 40x40 */}
+            <div className="relative h-10 w-10 shrink-0">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={userName}
+                  className="h-full w-full rounded-full object-cover border border-white/10"
+                />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-[#4F46E5] to-[#6366F1] text-[14px] font-bold text-white border border-white/10">
+                  {initials}
                 </div>
-
-                <span className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-[3px] border-slate-900 bg-emerald-400 shadow-lg shadow-emerald-400/40" />
-
-              </div>
-
-              {/* User */}
-              <div className="min-w-0 flex-1 text-left">
-
-                <h3 className="truncate text-[15px] font-bold text-white">
-                  {userName}
-                </h3>
-
-                <p className="truncate text-xs text-slate-400">
-                  {email}
-                </p>
-
-                <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1">
-
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-
-                  <span className="text-[10px] font-semibold text-emerald-300">
-                    Online
-                  </span>
-
-                </div>
-
-              </div>
-
-              <ChevronDown className="h-5 w-5 text-slate-500 transition group-hover:text-white group-hover:rotate-180" />
-
+              )}
+              {/* Indikator Online Kecil */}
+              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#111827] bg-[#10b981]" />
             </div>
 
+            {/* User Info (14px & 10px) */}
+            <div className="min-w-0 flex-1 text-left">
+              <h3 className="truncate text-[14px] font-bold text-white">
+                {userName}
+              </h3>
+              <p className="truncate text-[10px] text-[#94A3B8]">
+                {email}
+              </p>
+            </div>
+
+            <ChevronDown className="h-3.5 w-3.5 text-slate-500 transition-colors group-hover:text-white" />
           </button>
 
           {showProfileMenu && (
@@ -409,284 +323,126 @@ export default function Sidebar() {
                 onClick={() => setShowProfileMenu(false)}
               />
 
-              <div className="absolute bottom-full left-0 z-50 mb-3 w-full overflow-hidden rounded-2xl border border-slate-700 bg-[#111827] shadow-2xl">
-
+              <div className="absolute bottom-full left-0 z-50 mb-2 w-full overflow-hidden rounded-xl border border-white/10 bg-[#1E293B] p-1 shadow-lg">
                 <Link
                   href="/akun"
                   onClick={() => setShowProfileMenu(false)}
-                  className="flex items-center gap-3 px-5 py-3 text-sm text-slate-300 transition hover:bg-white/5 hover:text-white"
+                  className="flex items-center gap-2.5 px-3 py-2 text-[12px] text-[#94A3B8] transition rounded-lg hover:bg-white/5 hover:text-white"
                 >
                   <UserCircle className="h-4 w-4" />
                   Akun Saya
                 </Link>
 
-                <div className="border-t border-white/10" />
+                <div className="border-t border-white/5 my-1" />
 
                 <button
                   onClick={handleLogout}
-                  className="flex w-full items-center gap-3 px-5 py-3 text-sm text-red-400 transition hover:bg-red-500/10"
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-[12px] text-red-400 transition rounded-lg hover:bg-red-500/10"
                 >
                   <LogOut className="h-4 w-4" />
                   Keluar
                 </button>
-
               </div>
             </>
           )}
         </div>
 
-        {/* SCHOOL INFO */}
-        {/* ========================= */}
-        {/* SCHOOL INFO */}
-        {/* ========================= */}
-
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-4 backdrop-blur-xl">
-
-          <div className="flex items-start gap-3">
-
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500/20 to-indigo-500/20 border border-cyan-400/10">
-
-              <Building2 className="h-5 w-5 text-cyan-300" />
-
-            </div>
-
-            <div className="min-w-0 flex-1">
-
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
-                Sekolah
-              </p>
-
-              <h4 className="mt-1 truncate text-sm font-bold text-white">
-                {schoolName || 'SMAN 1 Sumarorong'}
-              </h4>
-
-              <p className="mt-1 text-xs text-slate-400">
-                Sistem Akademik Aktif
-              </p>
-
-            </div>
-
-          </div>
-
+        {/* SCHOOL INFO (TANPA CARD PUTIH) */}
+        <div className="flex items-center gap-2.5 px-2">
+          <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
+          <p className="text-[12px] text-slate-300 font-semibold truncate">
+            {schoolName || 'SMAN 1 Sumarorong'}
+          </p>
         </div>
 
-        {/* ========================= */}
-        {/* ACADEMIC YEAR */}
-        {/* ========================= */}
-
-        <div className="relative overflow-hidden rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-[#1B214D] via-[#161B3D] to-[#111827] p-5">
-
-          <div className="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-indigo-500/20 blur-3xl" />
-
-          <div className="relative flex items-start justify-between">
-
-            <div>
-
-              <p className="text-[10px] uppercase tracking-[0.22em] text-indigo-300">
-                Tahun Ajaran
-              </p>
-
-              <h3 className="mt-2 text-xl font-extrabold text-white">
-                2024 / 2025
-              </h3>
-
-              <p className="mt-1 text-sm text-indigo-200">
-                Semester Genap
-              </p>
-
-            </div>
-
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/10">
-
-              <GraduationCap className="h-7 w-7 text-indigo-300" />
-
-            </div>
-
+        {/* ACADEMIC YEAR (TINGGI 72PX) */}
+        <div className="bg-[#1E293B]/40 border border-white/10 rounded-xl px-3 py-2.5 flex items-center justify-between h-[72px]">
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+              Tahun Ajaran Aktif
+            </p>
+            <h3 className="text-[14px] font-bold text-white mt-0.5 leading-tight">
+              2024 / 2025
+            </h3>
+            <p className="text-[10px] text-[#94A3B8] mt-0.5">
+              Semester Genap
+            </p>
           </div>
 
-          <div className="relative mt-5 h-2 overflow-hidden rounded-full bg-white/10">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 border border-white/10 shrink-0">
+            <GraduationCap className="h-4 w-4 text-indigo-400" />
+          </div>
+        </div>
 
-            <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-indigo-400 via-violet-400 to-cyan-400" />
-
+        {/* DATE & TIME (BACKGROUND TRANSPARAN + BADGE WAKTU) */}
+        <div className="flex items-center justify-between px-2 bg-transparent">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-slate-500" />
+            <div className="leading-tight">
+              <p className="text-[12px] font-bold text-white">
+                {dayLabel}
+              </p>
+              <p className="text-[10px] text-slate-400">
+                {dateLabel}
+              </p>
+            </div>
           </div>
 
-          <div className="relative mt-2 flex items-center justify-between text-[11px]">
-
-            <span className="text-slate-400">
-              Progress Semester
+          <div className="rounded-lg border border-indigo-500/20 bg-[#21264c] px-2.5 py-1">
+            <span className="text-[10px] font-bold tracking-wider text-indigo-300">
+              {timeLabel} AM
             </span>
-
-            <span className="font-bold text-white">
-              72%
-            </span>
-
           </div>
-
         </div>
 
-        {/* ========================= */}
-        {/* DATE & TIME */}
-        {/* ========================= */}
-
-        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900/70 to-slate-900/30 p-5 backdrop-blur-xl">
-
-          <div className="flex items-center justify-between">
-
-            <div className="flex items-center gap-3">
-
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/15">
-
-                <Calendar className="h-5 w-5 text-indigo-300" />
-
-              </div>
-
-              <div>
-
-                <p className="text-sm font-bold text-white">
-                  {dayLabel}
-                </p>
-
-                <p className="text-xs text-slate-400">
-                  {dateLabel}
-                </p>
-
-              </div>
-
-            </div>
-
-            <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/10 px-4 py-2">
-
-              <span className="text-sm font-bold tracking-wider text-indigo-300">
-                {timeLabel}
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* ========================= */}
-        {/* AI ASSISTANT CARD */}
-        {/* ========================= */}
-        {/* AI ASSISTANT */}
-        {/* ========================= */}
-
-        <div className="group relative overflow-hidden rounded-3xl border border-indigo-500/20 bg-gradient-to-br from-[#1d2558] via-[#151a3f] to-[#101426] p-5">
-
+        {/* AI ASSISTANT CARD (TINGGI 120PX, FLAT 3D ROBOT, BUTTON KECIL) */}
+        <div className="relative overflow-hidden rounded-xl border border-indigo-500/20 bg-gradient-to-br from-[#1b214d] to-[#121635] p-3.5 h-[120px] flex flex-col justify-between">
           {/* Background Glow */}
-          <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-indigo-500/20 blur-3xl transition duration-500 group-hover:scale-125" />
+          <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-indigo-500/25 blur-2xl" />
 
-          <div className="absolute -bottom-12 -left-12 h-32 w-32 rounded-full bg-cyan-500/10 blur-3xl" />
-
-          <div className="relative z-10">
-
-            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-400/20 bg-indigo-500/10 px-3 py-1">
-
-              <Sparkles className="h-3.5 w-3.5 text-indigo-300" />
-
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-indigo-200">
-                AI Powered
-              </span>
-
-            </div>
-
-            <h3 className="mt-4 text-xl font-extrabold leading-tight text-white">
+          <div className="relative z-10 max-w-[65%] leading-tight">
+            <h3 className="text-[12px] font-bold text-white">
               AI Assistant
             </h3>
-
-            <p className="mt-2 text-sm leading-6 text-slate-300">
-              Tanya apa saja mengenai siswa, kelas,
-              nilai, absensi, maupun administrasi
-              sekolah secara instan.
+            <p className="mt-1 text-[10px] text-slate-400 leading-normal">
+              Tanya apa saja tentang kelas dan siswa Anda
             </p>
+          </div>
 
+          <div className="relative z-10">
             <Link
               href="/ai-tools"
-              className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-violet-500 px-5 py-3 text-sm font-bold text-white transition duration-300 hover:scale-[1.03] hover:shadow-[0_20px_35px_rgba(99,102,241,.45)]"
+              className="inline-flex h-[34px] items-center gap-1.5 rounded-[10px] bg-white px-3 text-[10px] font-bold text-[#0F172A] transition hover:bg-slate-100 shadow-sm"
             >
-              <Sparkles className="h-4 w-4" />
-              Mulai Chat AI
+              <span>Mulai Chat</span>
+              <span className="text-[8px] text-slate-400">&gt;</span>
             </Link>
-
           </div>
 
-          {/* Illustration */}
-
-          <div className="pointer-events-none absolute right-3 bottom-0 opacity-95">
-
-            <div className="relative">
-
-              <div className="absolute inset-0 rounded-full bg-indigo-500/30 blur-2xl" />
-
-              <svg
-                width="120"
-                height="120"
-                viewBox="0 0 120 120"
-                fill="none"
-              >
-                <circle
-                  cx="60"
-                  cy="60"
-                  r="34"
-                  fill="#EEF2FF"
-                />
-
-                <rect
-                  x="38"
-                  y="30"
-                  width="44"
-                  height="36"
-                  rx="18"
-                  fill="#1E293B"
-                />
-
-                <circle
-                  cx="52"
-                  cy="48"
-                  r="4"
-                  fill="#60A5FA"
-                />
-
-                <circle
-                  cx="68"
-                  cy="48"
-                  r="4"
-                  fill="#60A5FA"
-                />
-
-                <rect
-                  x="46"
-                  y="72"
-                  width="28"
-                  height="20"
-                  rx="8"
-                  fill="#CBD5E1"
-                />
-
-                <rect
-                  x="34"
-                  y="75"
-                  width="8"
-                  height="18"
-                  rx="4"
-                  fill="#CBD5E1"
-                />
-
-                <rect
-                  x="78"
-                  y="75"
-                  width="8"
-                  height="18"
-                  rx="4"
-                  fill="#CBD5E1"
-                />
-              </svg>
-
-            </div>
-
+          {/* Vektor Robot AI Flat 3D Modern */}
+          <div className="absolute right-1 bottom-1 w-16 h-16 pointer-events-none z-10">
+            <svg viewBox="0 0 100 100" fill="none" className="w-full h-full drop-shadow-md">
+              <circle cx="50" cy="50" r="30" fill="url(#botGlow)" opacity="0.25"/>
+              {/* Kepala Robot */}
+              <rect x="25" y="24" width="50" height="38" rx="16" fill="#E2E8F0"/>
+              <rect x="29" y="28" width="42" height="30" rx="12" fill="#0F172A"/>
+              {/* Mata */}
+              <circle cx="42" cy="43" r="3.5" fill="#38BDF8" className="animate-pulse" />
+              <circle cx="58" cy="43" r="3.5" fill="#38BDF8" className="animate-pulse" />
+              {/* Telinga */}
+              <rect x="20" y="34" width="5" height="12" rx="2.5" fill="#818CF8"/>
+              <rect x="75" y="34" width="5" height="12" rx="2.5" fill="#818CF8"/>
+              {/* Leher / Badan Mini */}
+              <rect x="42" y="66" width="16" height="10" rx="4" fill="#E2E8F0"/>
+              <ellipse cx="50" cy="72" rx="6" ry="2" fill="#818CF8" opacity="0.8"/>
+              <defs>
+                <radialGradient id="botGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#818cf8"/>
+                  <stop offset="100%" stopColor="#818cf8" stopOpacity="0"/>
+                </radialGradient>
+              </defs>
+            </svg>
           </div>
-
         </div>
 
       </div>
@@ -695,10 +451,9 @@ export default function Sidebar() {
 
   return (
     <>
-
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed left-4 top-4 z-40 rounded-2xl border border-slate-200 bg-white p-3 shadow-lg lg:hidden"
+        className="fixed left-4 top-4 z-40 rounded-xl border border-slate-200 bg-white p-2.5 shadow-md lg:hidden"
       >
         <Menu className="h-5 w-5 text-slate-700" />
       </button>
@@ -706,43 +461,27 @@ export default function Sidebar() {
       {mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+          className="fixed inset-0 z-40 bg-black/45 backdrop-blur-sm lg:hidden"
         />
       )}
 
+      {/* Lebar Sidebar 270px dengan CSS Linear Gradient & Border Sesuai Target */}
       <aside
+        style={{
+          background: 'linear-gradient(180deg, #0F172A 0%, #111827 55%, #1E293B 100%)',
+          borderRight: '1px solid rgba(255,255,255,0.05)'
+        }}
         className={clsx(
-          "fixed inset-y-0 left-0 z-50 flex w-[300px] flex-col overflow-hidden border-r border-white/10",
-          "bg-gradient-to-b from-[#081120] via-[#0d1629] to-[#111827]",
-          "shadow-[25px_0_60px_rgba(2,6,23,.45)]",
+          "fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col overflow-hidden",
           "transition-transform duration-300",
-
-          mobileOpen
-            ? "translate-x-0"
-            : "-translate-x-full lg:translate-x-0",
-
-          "lg:static"
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          "lg:static shrink-0"
         )}
       >
-
-        {/* Noise Overlay */}
-        <div className="pointer-events-none absolute inset-0 opacity-[0.035]">
-          <div
-            className="h-full w-full"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle,#fff 1px,transparent 1px)",
-              backgroundSize: "18px 18px",
-            }}
-          />
-        </div>
-
         <div className="relative flex h-full flex-col">
           <NavContent />
         </div>
-
       </aside>
-
     </>
   )
 }
