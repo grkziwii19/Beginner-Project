@@ -5,13 +5,11 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
-  LayoutDashboard, ClipboardCheck, Award, FileBarChart,
-  Settings, Menu, X, Calendar, Building2, IdCard, GraduationCap,
-  ChevronDown, UserCircle, LogOut
+  LayoutDashboard, FileBarChart, Settings, Menu, X, 
+  Calendar, Building2, IdCard, ChevronDown, UserCircle, LogOut
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
-import { Sparkles } from 'lucide-react'
 
 interface NavLeaf {
   href: string
@@ -30,16 +28,15 @@ function isSection(row: NavRow): row is SectionLabel {
   return 'type' in row && row.type === 'section'
 }
 
+// Menu Absensi dan Nilai telah dihapus.
+// Bantuan AI kini dipindahkan kembali ke bentuk Kartu Interaktif di bagian paling bawah.
 const navRows: NavRow[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
 
   { type: 'section', label: 'Akademik' },
 
   { href: '/kelas', label: 'Kelas', icon: IdCard },
-  { href: '/absensi', label: 'Absensi', icon: ClipboardCheck },
-  { href: '/akademik/nilai', label: 'Nilai', icon: Award },
   { href: '/laporan', label: 'Laporan', icon: FileBarChart },
-  { href: '/ai-tools', label: 'Bantuan AI', icon: Sparkles },
   { href: '/pengaturan', label: 'Pengaturan', icon: Settings },
 ]
 
@@ -138,7 +135,7 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Nav - Diubah menjadi overflow-hidden agar terbungkus rapat tanpa fungsi scroll */}
+      {/* Nav - Terbungkus rapat tanpa scrollbar */}
       <nav className="flex-1 px-3 py-2 space-y-1 overflow-hidden">
         {navRows.map((row, idx) => {
           if (isSection(row)) {
@@ -170,7 +167,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer: Profile + Sekolah + Tahun Ajaran + Tanggal */}
+      {/* Footer: Profile + Sekolah + Tahun Ajaran + Tanggal + AI Assistant Card */}
       <div className="p-3 mt-1 border-t border-slate-800 space-y-2.5 shrink-0">
         {/* Profile */}
         <div className="relative">
@@ -191,7 +188,6 @@ export default function Sidebar() {
           {showProfileMenu && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setShowProfileMenu(false)} />
-              {/* Menu dropdown dibuat bertema gelap (slate-800) agar harmonis dengan sidebar */}
               <div className="absolute left-0 bottom-full mb-2 w-full bg-slate-800 border border-slate-700 rounded-xl shadow-lg z-50 overflow-hidden">
                 <Link
                   href="/akun"
@@ -236,6 +232,52 @@ export default function Sidebar() {
             <p className="text-[11px] text-slate-500">{dateLabel}</p>
           </div>
         </div>
+
+        {/* AI Assistant Card (Interaktif, Tinggi 120px, Vektor Robot 3D Flat) */}
+        <div className="relative overflow-hidden rounded-xl border border-indigo-500/20 bg-gradient-to-br from-[#4338CA] to-[#6366F1] p-3 h-[120px] flex flex-col justify-between">
+          <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-indigo-500/25 blur-2xl" />
+
+          <div className="relative z-10 max-w-[65%] leading-tight">
+            <h3 className="text-[12px] font-bold text-white">
+              AI Assistant
+            </h3>
+            <p className="mt-1 text-[10px] text-slate-300/80 leading-normal">
+              Tanya apa saja tentang kelas dan siswa Anda
+            </p>
+          </div>
+
+          <div className="relative z-10">
+            <Link
+              href="/ai-tools"
+              className="inline-flex h-[32px] items-center gap-1.5 rounded-[8px] bg-[#6366F1] px-3 text-[10px] font-bold text-white hover:bg-[#4F46E5] transition shadow-sm"
+            >
+              <span>Mulai Chat</span>
+              <span className="text-[8px] text-slate-300">&gt;</span>
+            </Link>
+          </div>
+
+          {/* Vektor Robot AI Flat 3D Modern */}
+          <div className="absolute right-1 bottom-1 w-14 h-14 pointer-events-none z-10">
+            <svg viewBox="0 0 100 100" fill="none" className="w-full h-full drop-shadow-md">
+              <circle cx="50" cy="50" r="30" fill="url(#botGlow)" opacity="0.25"/>
+              <rect x="25" y="24" width="50" height="38" rx="16" fill="#E2E8F0"/>
+              <rect x="29" y="28" width="42" height="30" rx="12" fill="#0F172A"/>
+              <circle cx="42" cy="43" r="3.5" fill="#38BDF8" className="animate-pulse" />
+              <circle cx="58" cy="43" r="3.5" fill="#38BDF8" className="animate-pulse" />
+              <rect x="20" y="34" width="5" height="12" rx="2.5" fill="#818CF8"/>
+              <rect x="75" y="34" width="5" height="12" rx="2.5" fill="#818CF8"/>
+              <rect x="42" y="66" width="16" height="10" rx="4" fill="#E2E8F0"/>
+              <ellipse cx="50" cy="72" rx="6" ry="2" fill="#818CF8" opacity="0.8"/>
+              <defs>
+                <radialGradient id="botGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#818cf8"/>
+                  <stop offset="100%" stopColor="#818cf8" stopOpacity="0"/>
+                </radialGradient>
+              </defs>
+            </svg>
+          </div>
+        </div>
+
       </div>
     </>
   )
