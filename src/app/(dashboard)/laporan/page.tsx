@@ -84,11 +84,26 @@ export default function LaporanPage() {
           return
         }
 
-        // Ambil rombongan belajar aktif milik guru
-        const { data: classData } = await supabase
+        // 1. Ambil rombongan belajar aktif milik guru secara aman.
+        // Mencoba menggunakan kolom 'teacher_id' terlebih dahulu.
+        let { data: classData, error: classError } = await supabase
           .from('classes')
           .select('id, name, level')
-          .eq('user_id', user.id)
+          .eq('teacher_id', user.id)
+
+        // 2. Fallback jika kolom 'teacher_id' tidak terdefinisi di skema tabel Anda
+        if (classError) {
+          const fallback = await supabase
+            .from('classes')
+            .select('id, name, level')
+            .eq('user_id', user.id)
+          
+          if (!fallback.error) {
+            classData = fallback.data
+          } else {
+            console.error('Error loading classes with both teacher_id and user_id:', classError, fallback.error)
+          }
+        }
 
         if (classData) {
           setClasses(classData)
