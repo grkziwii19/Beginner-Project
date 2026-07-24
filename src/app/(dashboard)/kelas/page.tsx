@@ -239,7 +239,6 @@ useEffect(() => {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-slate-500">Pilih kelas di bawah ini untuk mulai mengelola siswa, absensi, dan nilai.</p>
           <button onClick={() => setShowAddClassModal(true)} className="btn-primary">
             <Plus className="w-4 h-4" /> Tambah Kelas
           </button>

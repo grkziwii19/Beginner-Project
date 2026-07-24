@@ -59,7 +59,6 @@ export default function LaporanPage() {
 
   return (
     <div className="space-y-5">
-      <p className="text-sm text-slate-500">Rekap nilai dan absensi siswa.</p>
 
       {/* Filter Global */}
       <div className="card p-4">

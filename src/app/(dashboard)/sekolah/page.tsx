@@ -150,14 +150,6 @@ export default function SekolahPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header Halaman */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Informasi Sekolah</h1>
-        <p className="text-sm text-slate-500 mt-0.5">
-          Kelola profil institusi yang akan digunakan sebagai data resmi dokumen dan lembar rapor siswa.
-        </p>
-      </div>
-
       {/* Tabs */}
       <div className="flex gap-6 border-b border-slate-200">
         {tabs.map(t => (

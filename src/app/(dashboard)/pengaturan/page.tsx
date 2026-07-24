@@ -183,11 +183,7 @@ export default function PengaturanPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Pengaturan</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Kelola profil pribadi, keamanan, dan preferensi akun Anda.</p>
-      </div>
-
+      
       {error && <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</div>}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
