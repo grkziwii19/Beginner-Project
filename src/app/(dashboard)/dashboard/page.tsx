@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const [userName, setUserName] = useState('Guru')
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const [showAttendanceModal, setShowAttendanceModal] = useState(false)
 
   const [totalStudents, setTotalStudents] = useState(0)
@@ -158,7 +159,10 @@ export default function DashboardPage() {
     setLoading(false)
   }
 
-  useEffect(() => { fetchAll() }, [])
+  useEffect(() => {
+    setMounted(true)
+    fetchAll()
+  }, [])
 
   const handleAttendanceModalClose = () => {
     setShowAttendanceModal(false)
@@ -193,7 +197,8 @@ export default function DashboardPage() {
     { label: 'Lihat Laporan', sub: 'Statistik lengkap', icon: BarChart3, color: 'bg-slate-700', href: '/students' },
   ]
 
-  if (loading) {
+  // Mencegah proses render asinkronus yang belum siap di sisi client selama siklus hidrasi awal
+  if (!mounted || loading) {
     return <div className="flex items-center justify-center h-64 text-slate-400 text-sm">Memuat dashboard...</div>
   }
 
