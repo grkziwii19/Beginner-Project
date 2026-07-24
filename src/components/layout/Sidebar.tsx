@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import clsx from 'clsx'
+import { Sparkles } from 'lucide-react'
 
 interface NavLeaf {
   href: string
@@ -42,6 +43,7 @@ const navRows: NavRow[] = [
   { href: '/absensi', label: 'Absensi', icon: ClipboardCheck },
   { href: '/akademik/nilai', label: 'Nilai', icon: Award },
   { href: '/laporan', label: 'Laporan', icon: FileBarChart },
+  { href: '/ai-tools',label: 'AI Tools', icon: Sparkles},
   { href: '/pengaturan', label: 'Pengaturan', icon: Settings },
 ]
 
