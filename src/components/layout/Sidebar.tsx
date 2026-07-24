@@ -6,11 +6,9 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard,
-  ClipboardCheck,
-  Award,
   FileBarChart,
   Settings,
-  Menu, // <-- Menambahkan Menu ke dalam baris impor
+  Menu,
   X,
   Calendar,
   Building2,
@@ -42,6 +40,7 @@ function isSection(row: NavRow): row is SectionLabel {
   return 'type' in row && row.type === 'section'
 }
 
+// Hanya menampilkan Dashboard, Kelas, Laporan, dan Pengaturan
 const navRows: NavRow[] = [
   {
     href: '/dashboard',
@@ -58,24 +57,9 @@ const navRows: NavRow[] = [
     icon: IdCard,
   },
   {
-    href: '/absensi',
-    label: 'Absensi',
-    icon: ClipboardCheck,
-  },
-  {
-    href: '/akademik/nilai',
-    label: 'Nilai',
-    icon: Award,
-  },
-  {
     href: '/laporan',
     label: 'Laporan',
     icon: FileBarChart,
-  },
-  {
-    href: '/ai-tools',
-    label: 'AI Tools',
-    icon: Sparkles,
   },
   {
     type: 'section',
@@ -199,9 +183,8 @@ export default function Sidebar() {
       {/* ========================= */}
       {/* LOGO */}
       {/* ========================= */}
-      <div className="relative border-b border-white/5 px-4 py-4">
+      <div className="relative border-b border-white/5 px-4 py-4 shrink-0">
         <div className="relative flex items-center gap-3">
-          {/* Logo Box 40x40 */}
           <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#6366F1] shadow-lg shadow-indigo-600/20">
             <span className="text-[16px] font-black tracking-tight text-white">
               G
@@ -209,7 +192,6 @@ export default function Sidebar() {
           </div>
 
           <div className="min-w-0">
-            {/* Title 14px, Subtitle 10px */}
             <h1 className="truncate text-[14px] font-bold tracking-tight text-white">
               GR Assistant
             </h1>
@@ -228,9 +210,9 @@ export default function Sidebar() {
       </div>
 
       {/* ========================= */}
-      {/* NAVIGATION */}
+      {/* NAVIGATION (SCROLL DIHAPUS) */}
       {/* ========================= */}
-      <nav className="flex-1 overflow-y-auto px-4 py-3 space-y-1 custom-scrollbar">
+      <nav className="flex-1 px-4 py-3 space-y-1 overflow-hidden">
         {navRows.map((row) => {
           if (isSection(row)) {
             return (
@@ -260,7 +242,6 @@ export default function Sidebar() {
               )}
             >
               <div className="flex w-full items-center gap-3 px-3 py-[11px]">
-                {/* Icon menyatu langsung di menu, ukuran 18px */}
                 <row.icon className={clsx(
                   "h-[18px] w-[18px] shrink-0 transition-colors duration-200",
                   active ? "text-white" : "text-[#94A3B8] group-hover:text-white"
@@ -278,7 +259,7 @@ export default function Sidebar() {
       {/* ========================= */}
       {/* FOOTER (SATU GRUP KONSISTEN) */}
       {/* ========================= */}
-      <div className="border-t border-white/5 bg-slate-950/25 p-4 space-y-3.5">
+      <div className="border-t border-white/5 bg-slate-950/25 p-4 space-y-3.5 shrink-0">
         
         {/* PROFILE CARD */}
         <div className="relative">
@@ -286,7 +267,6 @@ export default function Sidebar() {
             onClick={() => setShowProfileMenu((v) => !v)}
             className="flex items-center gap-3 w-full px-2 py-1.5 rounded-xl hover:bg-white/[0.05] transition-colors"
           >
-            {/* Avatar 40x40 */}
             <div className="relative h-10 w-10 shrink-0">
               {avatarUrl ? (
                 <img
@@ -299,11 +279,9 @@ export default function Sidebar() {
                   {initials}
                 </div>
               )}
-              {/* Indikator Online Kecil */}
               <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#111827] bg-[#10b981]" />
             </div>
 
-            {/* User Info (14px & 10px) */}
             <div className="min-w-0 flex-1 text-left">
               <h3 className="truncate text-[14px] font-bold text-white">
                 {userName}
@@ -347,7 +325,7 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* SCHOOL INFO (TANPA CARD PUTIH) */}
+        {/* SCHOOL INFO */}
         <div className="flex items-center gap-2.5 px-2">
           <Building2 className="w-4 h-4 text-slate-500 shrink-0" />
           <p className="text-[12px] text-slate-300 font-semibold truncate">
@@ -374,7 +352,7 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* DATE & TIME (BACKGROUND TRANSPARAN + BADGE WAKTU) */}
+        {/* DATE & TIME */}
         <div className="flex items-center justify-between px-2 bg-transparent">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-slate-500" />
@@ -396,8 +374,8 @@ export default function Sidebar() {
         </div>
 
         {/* AI ASSISTANT CARD (TINGGI 120PX, FLAT 3D ROBOT, BUTTON KECIL) */}
+        {/* Mengarahkan langsung ke halaman AI Tools (/ai-tools) */}
         <div className="relative overflow-hidden rounded-xl border border-indigo-500/20 bg-gradient-to-br from-[#1b214d] to-[#121635] p-3.5 h-[120px] flex flex-col justify-between">
-          {/* Background Glow */}
           <div className="absolute -right-6 -top-6 h-20 w-20 rounded-full bg-indigo-500/25 blur-2xl" />
 
           <div className="relative z-10 max-w-[65%] leading-tight">
@@ -423,16 +401,12 @@ export default function Sidebar() {
           <div className="absolute right-1 bottom-1 w-16 h-16 pointer-events-none z-10">
             <svg viewBox="0 0 100 100" fill="none" className="w-full h-full drop-shadow-md">
               <circle cx="50" cy="50" r="30" fill="url(#botGlow)" opacity="0.25"/>
-              {/* Kepala Robot */}
               <rect x="25" y="24" width="50" height="38" rx="16" fill="#E2E8F0"/>
               <rect x="29" y="28" width="42" height="30" rx="12" fill="#0F172A"/>
-              {/* Mata */}
               <circle cx="42" cy="43" r="3.5" fill="#38BDF8" className="animate-pulse" />
               <circle cx="58" cy="43" r="3.5" fill="#38BDF8" className="animate-pulse" />
-              {/* Telinga */}
               <rect x="20" y="34" width="5" height="12" rx="2.5" fill="#818CF8"/>
               <rect x="75" y="34" width="5" height="12" rx="2.5" fill="#818CF8"/>
-              {/* Leher / Badan Mini */}
               <rect x="42" y="66" width="16" height="10" rx="4" fill="#E2E8F0"/>
               <ellipse cx="50" cy="72" rx="6" ry="2" fill="#818CF8" opacity="0.8"/>
               <defs>
@@ -465,7 +439,7 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Lebar Sidebar 270px dengan CSS Linear Gradient & Border Sesuai Target */}
+      {/* Lebar Sidebar 270px, Scrollbar sepenuhnya dihapus (overflow-hidden) */}
       <aside
         style={{
           background: 'linear-gradient(180deg, #0F172A 0%, #111827 55%, #1E293B 100%)',
@@ -478,7 +452,7 @@ export default function Sidebar() {
           "lg:static shrink-0"
         )}
       >
-        <div className="relative flex h-full flex-col">
+        <div className="relative flex h-full flex-col overflow-hidden">
           <NavContent />
         </div>
       </aside>
