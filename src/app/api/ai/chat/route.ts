@@ -43,9 +43,8 @@ const supabase = await createServerSupabaseClient()
     const { message, history } = await req.json()
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: 'Anda adalah asisten pengajar yang ramah dan cerdas bernama GR Assistant. Bantu guru menjawab pertanyaan mengenai penyusunan materi, pembahasan soal, tata bahasa Jepang, dan penjelasan konsep pendidikan dengan ringkas, akurat, dan mudah dipahami.'
-    })
+  model: 'gemini-2.5-flash',
+})
 
     // Konversi riwayat lokal ke format Gemini API Chat
     const chatSession = model.startChat({
