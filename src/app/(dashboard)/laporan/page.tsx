@@ -123,6 +123,12 @@ export default function LaporanPage() {
               level: extractedLevel
             }
           })
+
+          // PERBAIKAN: Mengurutkan daftar kelas dari terbawah (A-Z) secara natural sebelum disimpan ke state
+          mappedClasses.sort((a, b) =>
+            a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+          )
+
           setClasses(mappedClasses)
         }
 
@@ -683,7 +689,7 @@ export default function LaporanPage() {
                           <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center">Persentase Kehadiran</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-150 text-slate-750">
+                      <tbody className="divide-y divide-slate-150 text-slate-755">
                         {students.map((st, i) => {
                           const sakit = supportData[st.id]?.sakit || 0
                           const izin = supportData[st.id]?.izin || 0
@@ -1176,7 +1182,7 @@ export default function LaporanPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">3. Ekstrakurikuler</p>
-                      <table className="w-full text-left border border-slate-200 font-medium">
+                      <table className="w-full text-left border-slate-200 font-medium">
                         <thead className="bg-slate-50 text-[10px] font-bold text-slate-500">
                           <tr className="border-b border-slate-200">
                             <th className="px-2 py-1.5">Jenis Kegiatan</th>
@@ -1194,7 +1200,7 @@ export default function LaporanPage() {
 
                     <div className="space-y-2">
                       <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">4. Kehadiran</p>
-                      <table className="w-full text-left border border-slate-200 font-medium">
+                      <table className="w-full text-left border-slate-200 font-medium">
                         <tbody>
                           <tr className="border-b border-slate-200">
                             <td className="px-2 py-1.5 text-slate-500">Sakit</td>

@@ -157,43 +157,44 @@ export default function AbsensiTab({ className, subject, date, attendanceMethod 
         </div>
       )}
 
-      {/* DROPDOWN SESI ABSEN — hanya muncul untuk metode Harian (2x) atau Harian (3x) */}
-      {sessionOptions.length > 0 && (
-        <div className="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0">Sesi Absen</span>
-          <div className="relative">
-            <select
-              className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none pr-9 text-sm py-1.5 h-[36px] font-bold text-slate-800"
-              value={session}
-              onChange={e => { setSession(e.target.value); setSaved(false) }}
-            >
-              {sessionOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-          </div>
-        </div>
-      )}
-
-      {/* BARIS UTAMA TINDAKAN & RINGKASAN DATA (Sejajar dan Compact) */}
-      <div className="flex flex-wrap items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+      {/* SATU BARIS UTAMA (Unified Control & Summary Bar) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
         
-        {/* Sisi Kiri: Tindakan & Progress Pengisian */}
-        <div className="flex items-center gap-2.5">
+        {/* Sisi Kiri: Sesi Absen, Tindakan & Progress Pengisian */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Dropdown Sesi Absen — hanya tampil jika harian_2x atau harian_3x */}
+          {sessionOptions.length > 0 && (
+            <div className="flex items-center gap-2 pr-2.5 border-r border-slate-100">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0">Sesi Absen</span>
+              <div className="relative">
+                <select
+                  className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none pr-7 text-xs py-1 h-[32px] font-bold text-slate-800 rounded-lg"
+                  value={session}
+                  onChange={e => { setSession(e.target.value); setSaved(false) }}
+                >
+                  {sessionOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+              </div>
+            </div>
+          )}
+
           <button 
             onClick={markAllHadir} 
-            className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1.5"
+            className="btn-secondary text-xs py-1 px-2.5 h-[32px] flex items-center gap-1.5"
           >
             <CheckCheck className="w-3.5 h-3.5" /> Tandai Hadir Semua
           </button>
-          <span className="text-xs text-slate-500 font-bold border-l border-slate-200 pl-3">
+
+          <span className="text-xs text-slate-500 font-bold border-l border-slate-200 pl-2.5 h-[16px] flex items-center shrink-0">
             {filledCount}/{students.length} Terisi
           </span>
         </div>
 
-        {/* Bagian Tengah: Jumlah H, S, I, A, B Berukuran Kecil & Rapi */}
-        <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5">
+        {/* Bagian Tengah: Jumlah H, S, I, A, B */}
+        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-100 rounded-lg px-2 py-1 shrink-0">
           <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
             H: <span className="font-extrabold">{summary.hadir}</span>
           </span>
@@ -216,7 +217,7 @@ export default function AbsensiTab({ className, subject, date, attendanceMethod 
           onClick={() => setShowConfirm(true)}
           disabled={saving}
           className={clsx(
-            'btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-sm',
+            'btn-primary text-xs py-1 px-3 h-[32px] flex items-center gap-1.5 shadow-sm shrink-0',
             saved && 'bg-emerald-600 hover:bg-emerald-700'
           )}
         >
@@ -249,7 +250,7 @@ export default function AbsensiTab({ className, subject, date, attendanceMethod 
         </div>
       )}
 
-      {/* TABEL DATA SISWA (Padding baris dipadatkan py-1.5 agar ramping) */}
+      {/* TABEL DATA SISWA */}
       <div className="card overflow-hidden border border-slate-200 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">

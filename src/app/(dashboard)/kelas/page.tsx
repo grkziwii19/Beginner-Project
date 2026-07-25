@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
-import { useSearchParams } from 'next/navigation' // Tambahkan import ini
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { type Student, type ClassItem, getInitials, formatDateShort } from '@/types'
+import { type Student, type ClassItem as BaseClassItem, getInitials, formatDateShort } from '@/types'
 import StudentDetailModal from '@/components/students/StudentDetailModal'
 import AddClassModal from '@/components/students/AddClassModal'
 import EditClassModal from '@/components/students/EditClassModal'
@@ -15,14 +15,19 @@ import CatatanTab from '@/components/mengajar/CatatanTab'
 import { type ClassFormData } from '@/components/students/ClassForm'
 import { normalizeClassName, formatClassName } from '@/lib/normalizeClassName'
 import {
-  Plus, Search, Users, Trash2, IdCard, Filter,
+  Plus, Search, Users, Trash2, Filter,
   PieChart, List, ChevronDown, Pencil, Upload,
   ArrowLeft, ClipboardCheck, Award, NotebookPen, GraduationCap
 } from 'lucide-react'
 
+// Memperluas tipe ClassItem lokal agar mendukung kolom metode absensi baru
+export interface ClassItem extends BaseClassItem {
+  attendance_method?: 'harian_1x' | 'harian_2x' | 'harian_3x' | 'per_mapel' | null
+}
+
 type TabType = 'daftar' | 'absensi' | 'nilai' | 'catatan' | 'statistik' | 'import'
 type ViewFilter = 'identitas' | 'akademik' | 'orang_tua'
-type AttendanceMethod = 'harian_1x' | 'harian_2x' | 'harian_3x' | 'per_mapel'
+export type AttendanceMethod = 'harian_1x' | 'harian_2x' | 'harian_3x' | 'per_mapel'
 
 const VIEW_OPTIONS: { key: ViewFilter; label: string }[] = [
   { key: 'identitas', label: 'Identitas' },
@@ -82,13 +87,34 @@ function KelasPageContent() {
   // Mata pelajaran selalu diambil dari data kelas — tidak ada lagi mode "wali kelas saja"
   const subjectOptions = selectedClass?.subjects ?? []
 
+  // Logika Filter Dinamis pada Bar Kontrol Atas
+  const showSessionDropdown = activeTab === 'absensi' && attendanceMethod !== 'per_mapel'
+  const dropdownLabel = showSessionDropdown ? 'Sesi Absen' : 'Mata Pelajaran'
+
+  // Menghitung opsi dropdown secara memoized agar mencegah render loop
+  const dropdownOptions = useMemo(() => {
+    if (!selectedClass) return []
+    if (showSessionDropdown) {
+      if (attendanceMethod === 'harian_1x') return ['Harian']
+      if (attendanceMethod === 'harian_2x') return ['Pagi', 'Sore']
+      if (attendanceMethod === 'harian_3x') return ['Pagi', 'Siang', 'Sore']
+    }
+    return selectedClass.subjects ?? []
+  }, [selectedClass, showSessionDropdown, attendanceMethod])
+
   // ── Ambil daftar kelas ──
   const fetchClasses = async () => {
     setLoadingClasses(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const { data } = await supabase.from('classes').select('*').eq('user_id', user.id).order('name')
-    setClasses(data ?? [])
+    
+    // PERBAIKAN: Mengurutkan daftar kelas dari terbawah (A-Z) secara natural
+    const sortedClasses = (data ?? []).sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+    )
+    
+    setClasses(sortedClasses)
     setLoadingClasses(false)
   }
 
@@ -111,11 +137,28 @@ function KelasPageContent() {
   }
 
   //  SESUDAH (Sudah bersih dari sisa pemanggilan)
-useEffect(() => {
-  fetchStudents()
-  setSelectedSubject('')
-  setActiveTab('daftar')
-}, [selectedClassId])
+  useEffect(() => {
+    fetchStudents()
+    setSelectedSubject('')
+    setActiveTab('daftar')
+  }, [selectedClassId])
+
+  // Sinkronisasi otomatis nilai dropdown saat berganti tab atau kelas secara cerdas
+  useEffect(() => {
+    if (!selectedClass) {
+      setSelectedSubject('')
+      return
+    }
+    if (showSessionDropdown) {
+      setSelectedSubject(dropdownOptions[0] || '')
+    } else {
+      const subjects = selectedClass.subjects ?? []
+      // Pertahankan mapel yang dipilih jika beralih antar-tab akademik
+      if (!subjects.includes(selectedSubject)) {
+        setSelectedSubject(subjects[0] || '')
+      }
+    }
+  }, [selectedClassId, activeTab, showSessionDropdown, dropdownOptions, selectedClass])
 
   // ── Tambah kelas baru ──
   const handleAddClass = async (form: ClassFormData) => {
@@ -344,17 +387,23 @@ useEffect(() => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mata Pelajaran</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{dropdownLabel}</span>
             <div className="relative">
               <select
                 className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none pr-9 text-sm py-1.5 h-[38px] w-full font-bold text-slate-800"
                 value={selectedSubject}
                 onChange={e => setSelectedSubject(e.target.value)}
               >
-                <option value="">-- Pilih mapel --</option>
-                {subjectOptions.map(s => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
+                {dropdownOptions.length === 0 ? (
+                  <option value="">-- Tidak ada pilihan --</option>
+                ) : (
+                  <>
+                    {activeTab !== 'absensi' && <option value="">-- Pilih mapel --</option>}
+                    {dropdownOptions.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </>
+                )}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
@@ -588,24 +637,24 @@ useEffect(() => {
       )}
 
       {/* ── TAB: Nilai ── */}
-{activeTab === 'nilai' && (
-  !selectedSubject ? (
-    <div className="card p-8 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
-      <GraduationCap className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-      <h3 className="font-bold text-slate-800 text-sm">Pilih mata pelajaran terlebih dahulu</h3>
-      <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Silakan pilih mata pelajaran dan tanggal pada bar kontrol di atas untuk mengisi nilai.</p>
-    </div>
-  ) : (
-    <NilaiTab
-      className={selectedClass.name}
-      subject={selectedSubject}
-      date={date}
-      semester={semester}
-      academicYear={academicYear}
-      inputType={inputType}
-    />
-    )
-  )}
+      {activeTab === 'nilai' && (
+        !selectedSubject ? (
+          <div className="card p-8 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
+            <GraduationCap className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+            <h3 className="font-bold text-slate-800 text-sm">Pilih mata pelajaran terlebih dahulu</h3>
+            <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Silakan pilih mata pelajaran dan tanggal pada bar kontrol di atas untuk mengisi nilai.</p>
+          </div>
+        ) : (
+          <NilaiTab
+            className={selectedClass.name}
+            subject={selectedSubject}
+            date={date}
+            semester={semester}
+            academicYear={academicYear}
+            inputType={inputType}
+          />
+        )
+      )}
 
       {/* ── TAB: Catatan ── */}
       {activeTab === 'catatan' && (
@@ -711,3 +760,4 @@ const KelasPage = dynamic(() => Promise.resolve(KelasPageContent), {
 })
 
 export default KelasPage
+
