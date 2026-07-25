@@ -4,16 +4,61 @@ import { createServerSupabaseClient } from '@/lib/supabase/server'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
+const ALLOWED_QUESTION_TYPES = ['pilihan_ganda', 'essay', 'true_false', 'fill_in_the_blank', 'matching']
+const ALLOWED_DIFFICULTY = ['Mudah', 'Sedang', 'Sulit']
+const ALLOWED_LANGUAGE = ['Indonesia', 'Inggris']
+const ALLOWED_STANDARD = ['Umum', 'Kurikulum Merdeka', 'Kurikulum 2013', 'AKM', 'Ujian Sekolah']
+const ALLOWED_GRADE = ['PAUD', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
+const ALLOWED_COUNT = [5, 10, 20, 50, 100]
+
+const GRADE_LABELS: Record<string, string> = {
+  PAUD: 'PAUD (usia dini)',
+  I: 'Kelas I SD', II: 'Kelas II SD', III: 'Kelas III SD',
+  IV: 'Kelas IV SD', V: 'Kelas V SD', VI: 'Kelas VI SD',
+  VII: 'Kelas VII SMP', VIII: 'Kelas VIII SMP', IX: 'Kelas IX SMP',
+  X: 'Kelas X SMA', XI: 'Kelas XI SMA', XII: 'Kelas XII SMA',
+}
+
+// ✅ Membersihkan simbol markdown (**, *, __, _, `, #) dari teks apa pun
+function stripMarkdown(text: unknown): unknown {
+  if (typeof text !== 'string') return text
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1')   // **bold**
+    .replace(/__(.*?)__/g, '$1')       // __bold__
+    .replace(/\*(.*?)\*/g, '$1')       // *italic*
+    .replace(/_(.*?)_/g, '$1')         // _italic_
+    .replace(/`{1,3}(.*?)`{1,3}/g, '$1') // `code`
+    .replace(/#{1,6}\s?/g, '')         // # heading
+    .replace(/\*/g, '')                // sisa tanda bintang lepas yang tidak berpasangan
+    .trim()
+}
+
+// ✅ Menyapu bersih seluruh field teks dalam array soal, apa pun tipe soalnya
+function sanitizeQuestions(questions: any[]): any[] {
+  return questions.map((q) => ({
+    ...q,
+    question: stripMarkdown(q.question),
+    correct_answer: stripMarkdown(q.correct_answer),
+    explanation: q.explanation !== undefined ? stripMarkdown(q.explanation) : q.explanation,
+    rubric: q.rubric !== undefined ? stripMarkdown(q.rubric) : q.rubric,
+    options: Array.isArray(q.options) ? q.options.map((opt: string) => stripMarkdown(opt)) : q.options,
+    pairs: Array.isArray(q.pairs)
+      ? q.pairs.map((p: any) => ({
+          left: stripMarkdown(p.left),
+          right: stripMarkdown(p.right),
+        }))
+      : q.pairs,
+  }))
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createServerSupabaseClient()
 
-  // 1. Autentikasi User
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
     return NextResponse.json({ error: 'Tidak terautentikasi' }, { status: 401 })
   }
 
-  // Ambil profil untuk cek apakah admin
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
@@ -23,7 +68,6 @@ export async function POST(req: NextRequest) {
   const isAdmin = profile?.role === 'admin'
   const today = new Date().toISOString().split('T')[0]
 
-  // 2. Cek Limit Harian (Kecuali Admin)
   if (!isAdmin) {
     const { data: usage } = await supabase
       .from('ai_usage_logs')
@@ -41,25 +85,50 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { method, contextText, promptText, questionType, count, difficulty, language, standard } = await req.json()
+    const { method, contextText, promptText, questionType, count, difficulty, language, standard, grade } = await req.json()
 
-    // ✅ Validasi panjang teks modul di sisi server (jangan cuma percaya client)
+    // ✅ Validasi ketat semua parameter — tolak sebelum sampai ke AI kalau ada nilai tak dikenal
+    if (!ALLOWED_QUESTION_TYPES.includes(questionType)) {
+      return NextResponse.json({ error: 'Tipe soal tidak valid.' }, { status: 400 })
+    }
+    if (!ALLOWED_DIFFICULTY.includes(difficulty)) {
+      return NextResponse.json({ error: 'Tingkat kesulitan tidak valid.' }, { status: 400 })
+    }
+    if (!ALLOWED_LANGUAGE.includes(language)) {
+      return NextResponse.json({ error: 'Bahasa tidak valid.' }, { status: 400 })
+    }
+    if (!ALLOWED_STANDARD.includes(standard)) {
+      return NextResponse.json({ error: 'Standar tidak valid.' }, { status: 400 })
+    }
+    if (!ALLOWED_GRADE.includes(grade)) {
+      return NextResponse.json({ error: 'Kelas tidak valid.' }, { status: 400 })
+    }
+    if (!ALLOWED_COUNT.includes(Number(count))) {
+      return NextResponse.json({ error: 'Jumlah soal tidak valid.' }, { status: 400 })
+    }
     if (method === 'upload' && contextText && contextText.length > 50000) {
       return NextResponse.json({
         error: 'Teks modul terlalu panjang. Maksimal ~50.000 karakter per generate.'
       }, { status: 400 })
     }
 
-    // Ambil maksimal soal yang boleh di-generate per request (max 50 untuk free user)
-    const safeCount = Math.min(count || 10, isAdmin ? 100 : 50)
+    const safeCount = Math.min(count, isAdmin ? 100 : 50)
+    const gradeLabel = GRADE_LABELS[grade]
 
-    let promptSystem = `Anda adalah asisten pembuat soal ujian profesional. Tugas Anda adalah membuat kumpulan soal berkualitas tinggi sebanyak ${safeCount} soal.
-Bahasa soal wajib menggunakan bahasa: ${language || 'Indonesia'}.
-Tingkat kesulitan soal: ${difficulty || 'Sedang'}.
-Tipe soal wajib berupa: ${questionType || 'pilihan_ganda'}.
-Standar kurikulum/ujian (jika ada): ${standard || 'Umum'}.
+    let promptSystem = `Anda adalah asisten pembuat soal ujian profesional untuk jenjang pendidikan Indonesia (PAUD hingga SMA).
 
-Format output wajib berupa ARRAY JSON murni dari objek soal sesuai dengan jenis tipe soal berikut, jangan sertakan teks pembuka atau markdown lainnya di luar array JSON:
+ATURAN WAJIB — jangan dilanggar dalam kondisi apa pun:
+1. Buat TEPAT ${safeCount} soal — tidak boleh kurang, tidak boleh lebih.
+2. SEMUA soal WAJIB bertipe "${questionType}" — jangan campur dengan tipe soal lain.
+3. Tingkat kesulitan WAJIB konsisten "${difficulty}" untuk seluruh soal.
+4. Bahasa soal WAJIB "${language}".
+5. Soal harus mengikuti standar/kurikulum "${standard}".
+6. Soal WAJIB disesuaikan dengan jenjang "${gradeLabel}" — sesuaikan kompleksitas bahasa, panjang kalimat, dan tingkat kesulitan konsep dengan usia dan kemampuan kognitif siswa di jenjang tersebut. Untuk PAUD/SD kelas awal gunakan bahasa sangat sederhana dan konkret; untuk SMA gunakan bahasa yang lebih akademis dan konsep lebih kompleks.
+7. JANGAN PERNAH menggunakan format markdown apa pun — tidak boleh ada tanda bintang (*, **), garis bawah ganda (__), tanda pagar (#), atau tanda kutip siku backtick (\`). Tulis SEMUA teks (pertanyaan, opsi jawaban, kunci jawaban, pembahasan, rubrik) sebagai teks polos murni tanpa simbol pemformatan apa pun. Kalau ingin menekankan sebuah kata, cukup tulis apa adanya tanpa simbol.
+
+Format output WAJIB berupa ARRAY JSON murni, jangan sertakan teks pembuka, penutup, atau markdown apa pun di luar array JSON tersebut.
+
+Format sesuai tipe soal:
 
 1. pilihan_ganda:
 [
@@ -111,7 +180,9 @@ Format output wajib berupa ARRAY JSON murni dari objek soal sesuai dengan jenis 
       {"left": "item kiri 2", "right": "pasangan kanan 2"}
     ]
   }
-]`
+]
+
+INGAT SEKALI LAGI: hasilkan TEPAT ${safeCount} soal, SEMUA bertipe "${questionType}", untuk jenjang ${gradeLabel}, TANPA simbol markdown apa pun (tanpa **, tanpa *, tanpa __, tanpa #, tanpa backtick).`
 
     let userContent = ''
     if (method === 'upload') {
@@ -127,15 +198,39 @@ ${contextText}
       model: 'gemini-flash-latest',
       generationConfig: {
         responseMimeType: 'application/json',
+        temperature: 0.4,
       }
     })
 
     const result = await model.generateContent(`${promptSystem}\n\n${userContent}`)
 
     const responseText = result.response.text()
-    const questionsData = JSON.parse(responseText)
+    let questionsData = JSON.parse(responseText)
 
-    // 4. Catat Log Penggunaan
+    // ✅ Validasi hasil dari AI — pastikan benar-benar sesuai parameter yang diminta
+    if (!Array.isArray(questionsData) || questionsData.length === 0) {
+      return NextResponse.json({
+        error: 'AI tidak menghasilkan format soal yang valid. Silakan coba generate ulang.'
+      }, { status: 502 })
+    }
+
+    if (questionsData.length !== safeCount) {
+      return NextResponse.json({
+        error: `Jumlah soal yang dihasilkan AI tidak sesuai (diminta ${safeCount}, didapat ${questionsData.length}). Silakan coba generate ulang.`
+      }, { status: 502 })
+    }
+
+    const invalidType = questionsData.some((q: any) => q.type !== questionType)
+    if (invalidType) {
+      return NextResponse.json({
+        error: 'AI menghasilkan tipe soal yang tidak sesuai dengan permintaan. Silakan coba generate ulang.'
+      }, { status: 502 })
+    }
+
+    // ✅ Bersihkan sisa simbol markdown yang mungkin masih terselip dari AI
+    questionsData = sanitizeQuestions(questionsData)
+
+    // 4. Catat Log Penggunaan (hanya setelah hasil dinyatakan valid)
     if (!isAdmin) {
       const { data: existingLog } = await supabase
         .from('ai_usage_logs')

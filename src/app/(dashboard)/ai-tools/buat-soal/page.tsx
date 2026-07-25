@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
 import mammoth from 'mammoth'
 import jsPDF from 'jspdf'
@@ -23,7 +22,7 @@ interface Question {
 }
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
-const MAX_TEXT_CHARS = 45000
+const MAX_TEXT_CHARS = 40000
 
 const GRADE_OPTIONS = [
   { value: 'PAUD', label: 'PAUD' },
@@ -89,9 +88,12 @@ function BuatSoalAI() {
       return
     }
 
-    setFileInfo({ name: file.name, size: file.size })
-
     try {
+      setFileInfo({
+        name: file.name,
+        size: file.size
+      })
+
       if (file.type === 'text/plain') {
         const text = await file.text()
         finalizeExtractedText(text)
@@ -169,6 +171,10 @@ function BuatSoalAI() {
       const data = await res.json()
       if (!res.ok) {
         throw new Error(data.error || 'Terjadi kesalahan sistem.')
+      }
+
+      if (!Array.isArray(data.questions)) {
+        throw new Error('Format jawaban AI tidak sesuai')
       }
 
       setQuestions(data.questions)
@@ -308,6 +314,11 @@ function BuatSoalAI() {
   }
 
   const handleSaveToBank = async () => {
+    if (questions.length === 0) {
+      setError('Belum ada soal untuk disimpan')
+      return
+    }
+
     setError('')
     setSuccessMsg('')
     const { data: { user } } = await supabase.auth.getUser()
@@ -609,5 +620,4 @@ function BuatSoalAI() {
   )
 }
 
-const Page = dynamic(() => Promise.resolve(BuatSoalAI), { ssr: false })
-export default Page
+export default BuatSoalAI
