@@ -176,7 +176,6 @@ export default function PengaturanPage() {
     <div className="space-y-6">
       {/* HEADER KONTROL UTAMA */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h1 className="text-xl font-bold text-slate-900">Pengaturan Sistem</h1>
         <button
           onClick={handleLogout}
           className="flex items-center gap-1.5 py-1.5 px-3 text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-all"
