@@ -2,9 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
-import { useSearchParams } from 'next/navigation' // Tambahkan import ini
+import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { type Student, type ClassItem, getInitials, formatDateShort } from '@/types'
+import { type Student, type ClassItem as BaseClassItem, getInitials, formatDateShort } from '@/types'
+
+// Memperluas tipe ClassItem lokal agar mendukung kolom baru
+export interface ClassItem extends BaseClassItem {
+  attendance_method?: 'harian_1x' | 'harian_2x' | 'harian_3x' | 'per_mapel' | null
+}
 import StudentDetailModal from '@/components/students/StudentDetailModal'
 import AddClassModal from '@/components/students/AddClassModal'
 import EditClassModal from '@/components/students/EditClassModal'
@@ -15,21 +20,20 @@ import CatatanTab from '@/components/mengajar/CatatanTab'
 import { type ClassFormData } from '@/components/students/ClassForm'
 import { normalizeClassName, formatClassName } from '@/lib/normalizeClassName'
 import {
-  Plus, Search, Users, Trash2, IdCard, Filter,
+  Plus, Search, Users, Trash2, Filter,
   PieChart, List, ChevronDown, Pencil, Upload,
   ArrowLeft, ClipboardCheck, Award, NotebookPen, GraduationCap
 } from 'lucide-react'
 
 type TabType = 'daftar' | 'absensi' | 'nilai' | 'catatan' | 'statistik' | 'import'
 type ViewFilter = 'identitas' | 'akademik' | 'orang_tua'
+export type AttendanceMethod = 'harian_1x' | 'harian_2x' | 'harian_3x' | 'per_mapel'
 
 const VIEW_OPTIONS: { key: ViewFilter; label: string }[] = [
   { key: 'identitas', label: 'Identitas' },
   { key: 'akademik', label: 'Akademik' },
   { key: 'orang_tua', label: 'Orang Tua' },
 ]
-
-const UMUM_VALUE = '__umum__'
 
 function getAcademicYear() {
   const y = new Date().getFullYear()
@@ -38,9 +42,8 @@ function getAcademicYear() {
 
 function KelasPageContent() {
   const supabase = createClient()
-  const searchParams = useSearchParams() // Membaca query parameter
+  const searchParams = useSearchParams()
 
-  // Mengambil kata kunci pencarian dari URL (?q=...)
   const searchQuery = searchParams.get('q') || ''
 
   // ── State Kelas & Siswa ──
@@ -55,26 +58,40 @@ function KelasPageContent() {
   const [viewFilter, setViewFilter] = useState<ViewFilter>('identitas')
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
 
-  // ── State Parameter Global ──
+  // ── State Parameter Global (Bisa bernilai Mapel atau Sesi) ──
   const [selectedSubject, setSelectedSubject] = useState('')
   const [date, setDate] = useState(() => new Date().toISOString().split('T')[0])
   const [inputType, setInputType] = useState('Harian')
 
   // ── State Nilai & Academic Year ──
   const [semester] = useState('1')
-  const [academicYear, setAcademicYear] = useState(() => getAcademicYear())
+  const [academicYear] = useState(() => getAcademicYear())
 
   // ── State Modals ──
-  const [showStudentModal, setShowStudentModal] = useState(false)
   const [showAddClassModal, setShowAddClassModal] = useState(false)
   const [showEditClassModal, setShowEditClassModal] = useState(false)
+  const [showStudentModal, setShowStudentModal] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<Student | null>(null)
 
   const selectedClass = classes.find(c => c.id === selectedClassId) ?? null
 
-  const subjectOptions = selectedClass?.is_homeroom_only
-    ? [UMUM_VALUE]
-    : (selectedClass?.subjects ?? [])
+  // Helper untuk menentukan metode absensi kelas saat ini (mendukung fallback data lama)
+  const currentMethod: AttendanceMethod = selectedClass
+    ? (selectedClass.attendance_method || (selectedClass.is_homeroom_only ? 'harian_1x' : 'per_mapel'))
+    : 'per_mapel'
+
+  // Logika Filter Dinamis pada Bar Kontrol Atas
+  const showSessionDropdown = activeTab === 'absensi' && currentMethod !== 'per_mapel'
+  const dropdownLabel = showSessionDropdown ? 'Sesi Absen' : 'Mata Pelajaran'
+
+  let dropdownOptions: string[] = []
+  if (showSessionDropdown) {
+    if (currentMethod === 'harian_1x') dropdownOptions = ['Harian']
+    else if (currentMethod === 'harian_2x') dropdownOptions = ['Pagi', 'Sore']
+    else if (currentMethod === 'harian_3x') dropdownOptions = ['Pagi', 'Siang', 'Sore']
+  } else {
+    dropdownOptions = selectedClass?.subjects ?? []
+  }
 
   // ── Ambil daftar kelas ──
   const fetchClasses = async () => {
@@ -104,16 +121,23 @@ function KelasPageContent() {
     setLoadingStudents(false)
   }
 
-  //  SESUDAH (Sudah bersih dari sisa pemanggilan)
-useEffect(() => {
-  fetchStudents()
-  if (selectedClass) {
-    setSelectedSubject(selectedClass.is_homeroom_only ? UMUM_VALUE : '')
-  } else {
-    setSelectedSubject('')
-  }
-  setActiveTab('daftar')
-}, [selectedClassId])
+  useEffect(() => {
+    fetchStudents()
+    setActiveTab('daftar')
+  }, [selectedClassId])
+
+  // Sinkronisasi otomatis nilai dropdown saat berganti tab atau kelas
+  useEffect(() => {
+    if (!selectedClass) {
+      setSelectedSubject('')
+      return
+    }
+    if (showSessionDropdown) {
+      setSelectedSubject(dropdownOptions[0] || '')
+    } else {
+      setSelectedSubject(selectedClass.subjects?.[0] || '')
+    }
+  }, [selectedClassId, activeTab, showSessionDropdown])
 
   // ── Tambah kelas baru ──
   const handleAddClass = async (form: ClassFormData) => {
@@ -132,7 +156,9 @@ useEffect(() => {
         status: 'aktif',
         subjects: form.subjects,
         homeroom_teacher: form.homeroomTeacher.trim() || null,
-        is_homeroom_only: form.isHomeroomOnly,
+        // Menyimpan status untuk backward compatibility & kolom baru
+        attendance_method: form.attendanceMethod,
+        is_homeroom_only: form.attendanceMethod !== 'per_mapel',
       })
       .select()
       .single()
@@ -159,7 +185,8 @@ useEffect(() => {
         normalized_name: normalized,
         subjects: form.subjects,
         homeroom_teacher: form.homeroomTeacher.trim() || null,
-        is_homeroom_only: form.isHomeroomOnly,
+        attendance_method: form.attendanceMethod,
+        is_homeroom_only: form.attendanceMethod !== 'per_mapel',
       })
       .eq('id', id)
 
@@ -200,7 +227,7 @@ useEffect(() => {
     setShowStudentModal(true)
   }
 
-  // ── Filter Pencarian Kelas (Tampilan Utama Dashboard Kelas) ──
+  // ── Filter Pencarian Kelas ──
   const filteredClasses = classes.filter(c => {
     const q = searchQuery.toLowerCase()
     if (!q) return true
@@ -208,10 +235,10 @@ useEffect(() => {
       c.name.toLowerCase().includes(q) ||
       (c.homeroom_teacher ?? '').toLowerCase().includes(q) ||
       (c.subjects ?? []).some(sub => sub.toLowerCase().includes(q))
-    );
-  });
+    )
+  })
 
-  // ── Filter Pencarian Siswa (Tampilan Detail Kelas Terpilih) ──
+  // ── Filter Pencarian Siswa ──
   const filteredStudents = students.filter(s => {
     const q = searchQuery.toLowerCase()
     if (!q) return true
@@ -228,13 +255,11 @@ useEffect(() => {
     total: students.length,
     laki: students.filter(s => s.gender === 'Laki-laki').length,
     perempuan: students.filter(s => s.gender === 'Perempuan').length,
-    lengkapBiodata: students.filter(s =>
-      s.birth_date && s.address && s.parent_name
-    ).length,
+    lengkapBiodata: students.filter(s => s.birth_date && s.address && s.parent_name).length,
     adaFoto: students.filter(s => s.photo_url).length,
   }
 
-  // 1. TAMPILAN: DAFTAR KELAS (Jika Belum Pilih Kelas atau selectedClass bernilai null)
+  // 1. TAMPILAN: DAFTAR KELAS
   if (!selectedClass) {
     return (
       <div className="space-y-4">
@@ -258,51 +283,58 @@ useEffect(() => {
             </button>
           </div>
         ) : filteredClasses.length === 0 ? (
-          /* Tampilan jika hasil pencarian kelas di Topbar tidak ditemukan */
           <div className="card p-10 text-center bg-slate-50/50">
             <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
             <p className="text-slate-500 text-sm font-medium">Tidak ada kelas yang cocok dengan pencarian.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredClasses.map(c => (
-              <div
-                key={c.id}
-                onClick={() => setSelectedClassId(c.id)}
-                className="card p-5 hover:border-indigo-500 hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-semibold text-lg text-slate-900 group-hover:text-indigo-600 transition-colors">
-                      Kelas {c.name}
-                    </h3>
-                    <span className="badge bg-indigo-50 text-indigo-700 capitalize text-xs">
-                      {c.status || 'aktif'}
-                    </span>
-                  </div>
-                  <div className="mt-4 space-y-1.5 text-xs text-slate-600">
-                    <p className="flex items-center gap-1.5">
-                      <span className="font-medium text-slate-400 w-16 shrink-0">Wali Kelas:</span>
-                      <span className="text-slate-800 font-medium truncate">{c.homeroom_teacher || '-'}</span>
-                    </p>
-                    <p className="flex items-start gap-1.5">
-                      <span className="font-medium text-slate-400 w-16 shrink-0">Mapel:</span>
-                      <span className="text-slate-700 line-clamp-2">
-                        {c.is_homeroom_only ? 'Semua Mapel (Wali Kelas)' : (c.subjects?.join(', ') || 'Belum ada mapel')}
+            {filteredClasses.map(c => {
+              const method = c.attendance_method || (c.is_homeroom_only ? 'harian_1x' : 'per_mapel')
+              const methodLabels: Record<string, string> = {
+                harian_1x: 'Harian 1x',
+                harian_2x: 'Harian 2x',
+                harian_3x: 'Harian 3x',
+                per_mapel: 'Per Mapel',
+              }
+              return (
+                <div
+                  key={c.id}
+                  onClick={() => setSelectedClassId(c.id)}
+                  className="card p-5 hover:border-indigo-500 hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-semibold text-lg text-slate-900 group-hover:text-indigo-600 transition-colors">
+                        Kelas {c.name}
+                      </h3>
+                      <span className="badge bg-indigo-50 text-indigo-700 capitalize text-xs">
+                        {methodLabels[method] || 'Aktif'}
                       </span>
-                    </p>
+                    </div>
+                    <div className="mt-4 space-y-1.5 text-xs text-slate-600">
+                      <p className="flex items-center gap-1.5">
+                        <span className="font-medium text-slate-400 w-16 shrink-0">Wali Kelas:</span>
+                        <span className="text-slate-800 font-medium truncate">{c.homeroom_teacher || '-'}</span>
+                      </p>
+                      <p className="flex items-start gap-1.5">
+                        <span className="font-medium text-slate-400 w-16 shrink-0">Mapel:</span>
+                        <span className="text-slate-700 line-clamp-2">
+                          {c.subjects?.join(', ') || 'Belum ada mapel'}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                    <span>Klik untuk mengelola</span>
+                    <ChevronDown className="w-4 h-4 -rotate-90 text-slate-300 group-hover:text-indigo-500 transition-colors" />
                   </div>
                 </div>
-                <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-                  <span>Klik untuk mengelola</span>
-                  <ChevronDown className="w-4 h-4 -rotate-90 text-slate-300 group-hover:text-indigo-500 transition-colors" />
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
 
-        {/* Modal: Tambah Kelas */}
         {showAddClassModal && (
           <AddClassModal onClose={() => setShowAddClassModal(false)} onAdd={handleAddClass} />
         )}
@@ -313,7 +345,6 @@ useEffect(() => {
   // 2. TAMPILAN: DETAIL KELAS YANG DIPILIH
   return (
     <div className="space-y-4">
-      {/* DASHBOARD KONTROL UTAMA */}
       <div className="card p-4 bg-white border border-slate-200 shadow-sm space-y-3">
         <div className="flex items-center gap-3">
           <button
@@ -342,19 +373,23 @@ useEffect(() => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Mata Pelajaran</span>
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{dropdownLabel}</span>
             <div className="relative">
               <select
                 className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none pr-9 text-sm py-1.5 h-[38px] w-full font-bold text-slate-800"
                 value={selectedSubject}
                 onChange={e => setSelectedSubject(e.target.value)}
               >
-                <option value="">-- Pilih mapel --</option>
-                {subjectOptions.map(s => (
-                  <option key={s} value={s}>
-                    {s === UMUM_VALUE ? 'Semua Mapel (Wali Kelas)' : s}
-                  </option>
-                ))}
+                {dropdownOptions.length === 0 ? (
+                  <option value="">-- Tidak ada pilihan --</option>
+                ) : (
+                  <>
+                    {activeTab !== 'absensi' && <option value="">-- Pilih mapel --</option>}
+                    {dropdownOptions.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </>
+                )}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
@@ -433,14 +468,13 @@ useEffect(() => {
             </button>
           </div>
 
-          {/* Menampilkan pemilih filter (Kolom Pencarian Lokal telah dihapus) */}
           {students.length > 0 && (
             <div className="flex justify-end">
               <div className="flex items-center gap-1.5 bg-slate-100 px-2.5 py-1.5 rounded-md border border-slate-200">
                 <Filter className="w-4 h-4 text-slate-500" />
-                <select 
-                  className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer p-0" 
-                  value={viewFilter} 
+                <select
+                  className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 cursor-pointer p-0"
+                  value={viewFilter}
                   onChange={e => setViewFilter(e.target.value as ViewFilter)}
                 >
                   {VIEW_OPTIONS.map(v => <option key={v.key} value={v.key}>{v.label}</option>)}
@@ -461,7 +495,6 @@ useEffect(() => {
                 </button>
               </div>
             ) : filteredStudents.length === 0 ? (
-              /* Tampilan jika hasil pencarian siswa di Topbar tidak ditemukan */
               <div className="p-10 text-center bg-slate-50/50">
                 <Search className="w-8 h-8 text-slate-300 mx-auto mb-2" />
                 <p className="text-slate-500 text-sm font-medium">Tidak ada siswa yang cocok dengan pencarian.</p>
@@ -574,8 +607,8 @@ useEffect(() => {
         !selectedSubject ? (
           <div className="card p-8 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
             <GraduationCap className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-            <h3 className="font-bold text-slate-800 text-sm">Pilih mata pelajaran terlebih dahulu</h3>
-            <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Silakan pilih mata pelajaran dan tanggal pada bar kontrol di atas untuk memulai absensi.</p>
+            <h3 className="font-bold text-slate-800 text-sm">Pilih {dropdownLabel.toLowerCase()} terlebih dahulu</h3>
+            <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Silakan pilih {dropdownLabel.toLowerCase()} dan tanggal pada bar kontrol di atas untuk memulai absensi.</p>
           </div>
         ) : (
           <AbsensiTab
@@ -587,24 +620,24 @@ useEffect(() => {
       )}
 
       {/* ── TAB: Nilai ── */}
-{activeTab === 'nilai' && (
-  !selectedSubject ? (
-    <div className="card p-8 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
-      <GraduationCap className="w-10 h-10 text-slate-400 mx-auto mb-3" />
-      <h3 className="font-bold text-slate-800 text-sm">Pilih mata pelajaran terlebih dahulu</h3>
-      <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Silakan pilih mata pelajaran dan tanggal pada bar kontrol di atas untuk mengisi nilai.</p>
-    </div>
-  ) : (
-    <NilaiTab
-      className={selectedClass.name}
-      subject={selectedSubject === UMUM_VALUE ? 'Umum' : selectedSubject}
-      date={date}
-      semester={semester}
-      academicYear={academicYear}
-      inputType={inputType}
-    />
-    )
-  )}
+      {activeTab === 'nilai' && (
+        !selectedSubject ? (
+          <div className="card p-8 text-center border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-xl">
+            <GraduationCap className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+            <h3 className="font-bold text-slate-800 text-sm">Pilih mata pelajaran terlebih dahulu</h3>
+            <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Silakan pilih mata pelajaran dan tanggal pada bar kontrol di atas untuk mengisi nilai.</p>
+          </div>
+        ) : (
+          <NilaiTab
+            className={selectedClass.name}
+            subject={selectedSubject}
+            date={date}
+            semester={semester}
+            academicYear={academicYear}
+            inputType={inputType}
+          />
+        )
+      )}
 
       {/* ── TAB: Catatan ── */}
       {activeTab === 'catatan' && (
@@ -617,7 +650,7 @@ useEffect(() => {
         ) : (
           <CatatanTab
             className={selectedClass.name}
-            subject={selectedSubject === UMUM_VALUE ? 'Umum' : selectedSubject}
+            subject={selectedSubject}
           />
         )
       )}

@@ -585,7 +585,7 @@ export default function LaporanPage() {
                 >
                   <ArrowLeft className="w-4 h-4" />
                 </button>
-                <h1 className="text-xl font-bold text-slate-900">Laporan Rapor Kelas {selectedClass.name}</h1>
+                <h1 className="text-xl font-bold text-slate-900">Manajemen Rapor Kelas {selectedClass.name}</h1>
                 <button
                   onClick={() => {
                     setWeightError('')

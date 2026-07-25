@@ -2,7 +2,12 @@
 
 import { useState } from 'react'
 import { X, Trash2 } from 'lucide-react'
-import { type ClassItem } from '@/types'
+import { type ClassItem as BaseClassItem } from '@/types'
+
+// Memperluas tipe ClassItem lokal agar mendukung kolom baru
+interface ClassItem extends BaseClassItem {
+  attendance_method?: 'harian_1x' | 'harian_2x' | 'harian_3x' | 'per_mapel' | null
+}
 import ClassForm, { type ClassFormData } from './ClassForm'
 import { isValidClassName } from '@/lib/normalizeClassName'
 
@@ -14,11 +19,14 @@ interface Props {
 }
 
 export default function EditClassModal({ classItem, onClose, onSave, onDelete }: Props) {
+  // Melakukan mapping data lama / baru untuk kompatibilitas data di database
+  const defaultMethod = classItem.attendance_method || (classItem.is_homeroom_only ? 'harian_1x' : 'per_mapel')
+
   const [form, setForm] = useState<ClassFormData>({
     name: classItem.name,
     subjects: classItem.subjects ?? [],
     homeroomTeacher: classItem.homeroom_teacher ?? '',
-    isHomeroomOnly: classItem.is_homeroom_only ?? false,
+    attendanceMethod: defaultMethod, // Menggantikan isHomeroomOnly dengan defaultMethod
   })
 
   const [error, setError] = useState('')

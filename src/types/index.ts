@@ -50,15 +50,14 @@ export interface Grade {
 
 export interface ClassItem {
   id: string
-  user_id: string
   name: string
+  normalized_name: string
+  status?: string
+  subjects?: string[]
   homeroom_teacher?: string | null
-  room?: string | null
-  schedule_days?: string | null
-  status: ClassStatus
-  subjects?: string[] | null
   is_homeroom_only?: boolean
-  created_at: string
+  // Tambahkan properti baru di bawah ini:
+  attendance_method?: 'harian_1x' | 'harian_2x' | 'harian_3x' | 'per_mapel' | null
 }
 
 // Daftar mata pelajaran umum sebagai saran/autocomplete saat menambah kelas.

@@ -79,7 +79,10 @@ export default function AbsensiTab({ className, subject, date }: Props) {
       if (!user) { setError('Sesi tidak valid.'); return }
 
       const records = Object.entries(attendance).map(([student_id, status]) => ({
-        user_id: user.id, student_id, date, status,
+        user_id: user.id,
+        student_id,
+        date,
+        status,
         subject: subject || UMUM_VALUE,
       }))
 
@@ -124,10 +127,8 @@ export default function AbsensiTab({ className, subject, date }: Props) {
         </div>
       )}
 
-      {/* BARIS UTAMA TINDAKAN & RINGKASAN DATA (Sejajar dan Compact) */}
+      {/* BARIS UTAMA TINDAKAN & RINGKASAN DATA */}
       <div className="flex flex-wrap items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
-        
-        {/* Sisi Kiri: Tindakan & Progress Pengisian */}
         <div className="flex items-center gap-2.5">
           <button 
             onClick={markAllHadir} 
@@ -140,7 +141,6 @@ export default function AbsensiTab({ className, subject, date }: Props) {
           </span>
         </div>
 
-        {/* Bagian Tengah: Jumlah H, S, I, A, B Berukuran Kecil & Rapi */}
         <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5">
           <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
             H: <span className="font-extrabold">{summary.hadir}</span>
@@ -159,7 +159,6 @@ export default function AbsensiTab({ className, subject, date }: Props) {
           </span>
         </div>
 
-        {/* Sisi Kanan: Tombol Simpan Absensi */}
         <button
           onClick={handleSave}
           disabled={saving}
@@ -176,7 +175,7 @@ export default function AbsensiTab({ className, subject, date }: Props) {
         </button>
       </div>
 
-      {/* TABEL DATA SISWA (Padding baris dipadatkan py-1.5 agar ramping) */}
+      {/* TABEL DATA SISWA */}
       <div className="card overflow-hidden border border-slate-200 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">

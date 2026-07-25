@@ -14,7 +14,7 @@ const emptyForm: ClassFormData = {
   name: '',
   subjects: [],
   homeroomTeacher: '',
-  isHomeroomOnly: false,
+  attendanceMethod: 'per_mapel', // Menggantikan isHomeroomOnly
 }
 
 export default function AddClassModal({ onClose, onAdd }: Props) {

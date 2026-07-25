@@ -41,7 +41,7 @@ function getHeaderContent(pathname: string, userName: string): HeaderContent {
   }
   if (pathname.startsWith('/laporan')) {
     return {
-      title: 'Laporan Rapor',
+      title: 'Manajemen Rapor',
       subtitle: 'Susun, cetak, dan unduh lembar penilaian serta dokumen rapor resmi siswa secara instan.'
     }
   }

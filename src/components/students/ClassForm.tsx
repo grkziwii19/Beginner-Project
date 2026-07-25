@@ -9,7 +9,7 @@ export interface ClassFormData {
   name: string
   subjects: string[]
   homeroomTeacher: string
-  isHomeroomOnly: boolean
+  attendanceMethod: 'harian_1x' | 'harian_2x' | 'harian_3x' | 'per_mapel' // Menggantikan isHomeroomOnly
 }
 
 interface Props {
@@ -25,12 +25,7 @@ export default function ClassForm({
   onClassExistsChange,
   currentClassName,
 }: Props) {
-  // PERBAIKAN: createClient() di-panggil lewat useState lazy initializer,
-  // bukan dipanggil langsung di body komponen. Ini memastikan instance
-  // supabase HANYA dibuat sekali (saat mount pertama), bukan dibuat ulang
-  // setiap kali komponen ini re-render — yang sebelumnya menjadi pemicu
-  // utama bug "tidak bisa tambah mata pelajaran" (lihat komentar di
-  // useEffect loadClasses di bawah).
+  // Mempertahankan perbaikan lazy initializer supabase client agar tidak re-render tak berujung
   const [supabase] = useState(() => createClient())
 
   const [classNames, setClassNames] = useState<string[]>([])
@@ -43,17 +38,7 @@ export default function ClassForm({
   const set = (patch: Partial<ClassFormData>) =>
     onChange({ ...data, ...patch })
 
-  // PERBAIKAN: dependency array dikosongkan ([]), bukan [supabase].
-  // createClient() membuat instance baru setiap render, sehingga
-  // dependency [supabase] menyebabkan efek ini (dan fetch ke Supabase
-  // di dalamnya) berjalan ULANG setiap kali komponen re-render —
-  // termasuk setiap kali pengguna mengetik atau menambah mata pelajaran.
-  // Fetch berulang ini berlomba dengan update state form, dan dalam
-  // kondisi normal (tanpa DevTools memperlambat browser), hasil fetch
-  // yang telat itu bisa "menimpa balik" perubahan yang baru saja dibuat
-  // pengguna — inilah sebabnya menambah mapel tampak gagal kecuali
-  // DevTools terbuka (yang membuat timing fetch jadi lebih lambat,
-  // sehingga tidak lagi sempat menimpa).
+  // Mempertahankan perbaikan dependency array kosong ([])
   useEffect(() => {
     const loadClasses = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -159,44 +144,39 @@ export default function ClassForm({
           )}
       </div>
 
-      {/* Wali kelas mengajar semua */}
-      <label className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 hover:border-indigo-200 cursor-pointer transition-colors">
-        <input
-          type="checkbox"
-          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-          checked={data.isHomeroomOnly}
-          onChange={e => {
-            const isChecked = e.target.checked
-            set({
-              isHomeroomOnly: isChecked,
-              subjects: isChecked ? [] : data.subjects,
-            })
-          }}
-        />
-        <div>
-          <p className="text-sm font-medium text-slate-700">
-            Wali Kelas
-          </p>
-          <p className="mt-0.5 text-xs text-slate-400">
-            Pilih Wali Kelas jika Anda mengajar seluruh Mata Pelajaran di kelas ini.
-          </p>
-        </div>
-      </label>
+      {/* Metode Absensi (Menggantikan Checkbox isHomeroomOnly) */}
+      <div className="flex flex-col gap-1">
+        <label className="label">
+          Metode Absensi <span className="text-red-500">*</span>
+        </label>
+        <select
+          className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-lg text-sm font-medium text-slate-800 h-[38px] px-3 w-full"
+          value={data.attendanceMethod}
+          onChange={e => set({ attendanceMethod: e.target.value as any })}
+        >
+          <option value="per_mapel">Per Mata Pelajaran</option>
+          <option value="harian_1x">Harian (1x Sehari - Utama)</option>
+          <option value="harian_2x">Harian (2x Sehari - Pagi & Sore)</option>
+          <option value="harian_3x">Harian (3x Sehari - Pagi, Siang & Sore)</option>
+        </select>
+        <p className="mt-1 text-xs text-slate-400">
+          Pilih bagaimana presensi kelas ini akan dicatat setiap harinya.
+        </p>
+      </div>
 
-      {/* Mata pelajaran */}
+      {/* Mata pelajaran (Selalu aktif karena diperlukan untuk input Nilai & Catatan) */}
       <div>
         <label className="label">
-          Mata Pelajaran{' '}
-          {data.isHomeroomOnly && (
-            <span className="font-normal text-slate-400">(tidak diperlukan)</span>
-          )}
+          Mata Pelajaran <span className="text-red-500">*</span>
         </label>
 
         <SubjectInput
           value={data.subjects}
           onChange={subjects => set({ subjects })}
-          disabled={data.isHomeroomOnly}
         />
+        <p className="mt-1 text-xs text-slate-400">
+          Daftar mata pelajaran yang diajarkan (wajib diisi untuk pengisian data nilai & catatan siswa).
+        </p>
       </div>
 
       {/* Wali kelas */}
