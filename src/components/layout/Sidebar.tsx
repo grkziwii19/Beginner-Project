@@ -120,8 +120,12 @@ export default function Sidebar() {
         priority
       />
       <div>
-        <p className="font-bold text-white text-base leading-tight">GR Assistant</p>
-        <p className="text-sm text-[#94A3B8] leading-tight">Asisten Digital Guru</p>
+        <p className="font-bold text-white text-[15px] leading-tight">
+          GR Assistant
+        </p>
+        <p className="text-[13px] text-[#94A3B8] leading-tight">
+          Asisten Digital Guru
+        </p>
       </div>
       <button onClick={() => setMobileOpen(false)} className="ml-auto p-1 text-[#94A3B8] lg:hidden">
         <X className="w-4 h-4" />
