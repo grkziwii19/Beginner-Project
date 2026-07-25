@@ -152,11 +152,18 @@ export default function LaporanPage() {
     setError('')
     
     try {
-      // 1. Ambil data siswa di dalam kelas tersebut
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setLoading(false)
+        return
+      }
+
+      // 1. Ambil data siswa di dalam kelas tersebut berdasarkan class_name & user_id (sesuai menu kelas)
       const { data: studentData, error: studentError } = await supabase
         .from('students')
         .select('id, name, nisn')
-        .eq('class_id', cls.id)
+        .eq('user_id', user.id)
+        .eq('class_name', cls.name)
 
       if (studentError) throw studentError
 
@@ -256,7 +263,7 @@ export default function LaporanPage() {
             extra_grade: 'Baik',
             sikap_p5: '',
             teacher_note: '',
-            // Jika ada di pencatatan absensi harian kelas, gunakan itu. Jika tidak, inisialisasi 0.
+            // Jika ada di pencatatan absensi harian kelas, gunakan itu. Jika tidak, gunakan absensi dari tabel attendance harian.
             sakit: dbAtt.sakit,
             izin: dbAtt.izin,
             alpa: dbAtt.alpa
