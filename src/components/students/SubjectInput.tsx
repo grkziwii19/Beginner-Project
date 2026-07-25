@@ -79,7 +79,16 @@ export default function SubjectInput({ value, onChange, disabled = false }: Prop
             {suggestions.map(s => (
               <button
                 key={s}
-                onClick={() => addSubject(s)}
+                type="button"
+                // onMouseDown + preventDefault (bukan onClick biasa) agar input TIDAK
+                // sempat kehilangan fokus saat tombol ini ditekan. Kalau pakai onClick,
+                // urutan event-nya: mousedown -> input blur (dropdown mulai disembunyikan
+                // via timer) -> baru click ke tombol -- dan di beberapa kondisi klik itu
+                // gagal "kena" karena tombolnya keburu hilang dari DOM.
+                onMouseDown={e => {
+                  e.preventDefault()
+                  addSubject(s)
+                }}
                 className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition-colors"
               >
                 {s}

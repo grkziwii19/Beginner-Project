@@ -142,7 +142,10 @@ export default function ClassForm({
               <button
                 key={name}
                 type="button"
-                onClick={() => set({ name })}
+                onMouseDown={e => {
+                  e.preventDefault()
+                  set({ name })
+                }}
                 className="block w-full px-3 py-2 text-left text-sm hover:bg-indigo-50 transition-colors"
               >
                 {name}
