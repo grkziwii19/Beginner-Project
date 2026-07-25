@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   Building2, FileText, ClipboardCheck, Award, GraduationCap, 
   Settings2, Sparkles, Printer, CheckCircle, AlertTriangle, 
-  ChevronRight, CheckCircle2, XCircle, FileBarChart, Save
+  ChevronRight, CheckCircle2, XCircle, FileBarChart, Save, ArrowLeft
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -167,13 +167,13 @@ export default function LaporanPage() {
         // 2. Ambil data absensi riil dari database (Tabel 'attendance')
         let dbAttendanceMap: Record<string, { sakit: number; izin: number; alpa: number }> = {}
         try {
-          const { data: attData } = await supabase
+          const { data: textAttendanceData } = await supabase
             .from('attendance')
             .select('student_id, status')
             .in('student_id', studentIds)
 
-          if (attData) {
-            attData.forEach(row => {
+          if (textAttendanceData) {
+            textAttendanceData.forEach(row => {
               if (!dbAttendanceMap[row.student_id]) {
                 dbAttendanceMap[row.student_id] = { sakit: 0, izin: 0, alpa: 0 }
               }
@@ -353,7 +353,7 @@ export default function LaporanPage() {
     }
   }
 
-  // Fungsi AI untuk menyusun capaian kompetensi dan evaluasi sikap Pancasila [1, 2]
+  // Fungsi AI untuk menyusun capaian kompetensi dan evaluasi sikap Pancasila
   const handleGenerateAI = (studentId: string, studentName: string) => {
     setGeneratingAI(studentId)
     
@@ -386,78 +386,72 @@ export default function LaporanPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* ======================================= */}
       {/* LANGKAH 1: PILIH KELAS TERLEBIH DAHULU */}
       {/* ======================================= */}
       {step === 'select_class' && (
         <div className="space-y-4">
-          <div className="bg-white rounded-xl p-6 border border-slate-200">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
               <GraduationCap className="w-5 h-5 text-indigo-600" />
               Pilih Kelas Terlebih Dahulu
             </h2>
-            <p className="text-sm text-slate-500 mt-1">
-              Silakan pilih rombongan belajar aktif Anda di bawah ini untuk memulai konfigurasi bobot nilai dan penyusunan rapor siswa.
-            </p>
-            
-            {classes.length === 0 ? (
-              <div className="text-center py-12 border border-dashed border-slate-200 rounded-xl mt-6">
-                <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
-                <p className="text-sm text-slate-500 font-medium">Belum ada kelas terdaftar.</p>
-                <p className="text-xs text-slate-400 mt-1">Silakan tambahkan rombongan belajar di menu Kelas terlebih dahulu.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                {classes.map(cls => (
-                  <div
-                    key={cls.id}
-                    onClick={() => handleSelectClass(cls)}
-                    className="bg-white rounded-2xl border border-slate-200/60 p-5 shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:border-indigo-500 hover:shadow-md transition-all duration-200 text-left flex flex-col justify-between h-full group cursor-pointer"
-                  >
-                    <div>
-                      {/* Header Kartu: Nama Kelas & Badge Status */}
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">
-                          Kelas {cls.name}
-                        </h3>
-                        <span className="bg-indigo-50 text-indigo-600 text-[11px] font-semibold px-2.5 py-0.5 rounded-full">
-                          {cls.status === 'aktif' ? 'Aktif' : (cls.status || 'Aktif')}
-                        </span>
-                      </div>
-
-                      {/* Informasi Detail Ringkas */}
-                      <div className="space-y-1.5 mt-4 text-[13px]">
-                        <div className="text-slate-400">
-                          Wali Kelas:
-                          <span className="text-slate-700 font-medium ml-2">
-                            {cls.homeroom_teacher || '-'}
-                          </span>
-                        </div>
-                        
-                        <div className="text-slate-400 line-clamp-2 leading-relaxed">
-                          Mapel:
-                          <span className="text-slate-700 font-medium ml-2">
-                            {cls.is_homeroom_only 
-                              ? 'Semua Mapel (Wali Kelas)' 
-                              : (Array.isArray(cls.subjects) && cls.subjects.length > 0 
-                                  ? cls.subjects.join(', ') 
-                                  : 'Belum ada mapel')}
-                          </span>
-                        </div>
-                      </div>
+          </div>
+          
+          {classes.length === 0 ? (
+            <div className="card p-10 text-center">
+              <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto mb-3" />
+              <h3 className="font-semibold text-slate-700">Belum ada kelas terdaftar</h3>
+              <p className="text-sm text-slate-500 mt-1">Silakan tambahkan rombongan belajar di menu Kelas terlebih dahulu.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {classes.map(cls => (
+                <div
+                  key={cls.id}
+                  onClick={() => handleSelectClass(cls)}
+                  className="card p-5 hover:border-indigo-500 hover:shadow-sm cursor-pointer transition-all flex flex-col justify-between group"
+                >
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="font-semibold text-lg text-slate-900 group-hover:text-indigo-600 transition-colors">
+                        Kelas {cls.name}
+                      </h3>
+                      <span className="badge bg-indigo-50 text-indigo-700 capitalize text-xs">
+                        {cls.status === 'aktif' ? 'Aktif' : (cls.status || 'Aktif')}
+                      </span>
                     </div>
 
-                    {/* Footer Kartu: Klik untuk mengelola */}
-                    <div className="border-t border-slate-100 mt-5 pt-3.5 flex items-center justify-between text-xs text-slate-400 group-hover:text-indigo-600 transition-colors">
-                      <span>Klik untuk mengelola</span>
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all duration-200" />
+                    <div className="mt-4 space-y-1.5 text-xs text-slate-600">
+                      <p className="flex items-center gap-1.5">
+                        <span className="font-medium text-slate-400 w-16 shrink-0">Wali Kelas:</span>
+                        <span className="text-slate-800 font-medium truncate">
+                          {cls.homeroom_teacher || '-'}
+                        </span>
+                      </p>
+                      
+                      <p className="flex items-start gap-1.5">
+                        <span className="font-medium text-slate-400 w-16 shrink-0">Mapel:</span>
+                        <span className="text-slate-700 line-clamp-2">
+                          {cls.is_homeroom_only 
+                            ? 'Semua Mapel (Wali Kelas)' 
+                            : (Array.isArray(cls.subjects) && cls.subjects.length > 0 
+                                ? cls.subjects.join(', ') 
+                                : 'Belum ada mapel')}
+                        </span>
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+
+                  <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                    <span>Klik untuk mengelola</span>
+                    <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-500 transition-colors" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -466,8 +460,8 @@ export default function LaporanPage() {
       {/* ======================================= */}
       {step === 'set_weights' && selectedClass && (
         <div className="space-y-4">
-          <div className="bg-white rounded-xl p-6 border border-slate-200 max-w-2xl mx-auto">
-            <div className="flex items-center gap-3 border-b border-slate-100 pb-4 mb-4">
+          <div className="card p-6 bg-white border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-4">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
               <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
                 <Settings2 className="w-5 h-5 text-indigo-600" />
               </div>
@@ -477,13 +471,13 @@ export default function LaporanPage() {
               </div>
             </div>
 
-            <p className="text-sm text-slate-600 leading-relaxed mb-6">
+            <p className="text-sm text-slate-600 leading-relaxed">
               Sistem membutuhkan acuan distribusi bobot di bawah ini untuk menghitung rata-rata nilai akhir rapor siswa secara otomatis. Anda dapat menggunakan template standar kementerian atau mengubahnya sesuai kebijakan sekolah Anda.
             </p>
 
             <div className="space-y-4">
               {/* Tugas & Harian */}
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="flex justify-between items-center mb-1">
                   <label className="text-sm font-semibold text-slate-800">Tugas, Sikap & Harian (Sumatif Materi)</label>
                   <span className="text-xs font-bold text-indigo-600">60% (Rekomendasi)</span>
@@ -494,16 +488,16 @@ export default function LaporanPage() {
                     type="number"
                     value={weights.formative}
                     onChange={e => setWeights({ ...weights, formative: Number(e.target.value) })}
-                    className="input w-32"
+                    className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm py-1.5 h-[38px] w-32 font-bold text-slate-800"
                     min="0"
                     max="100"
                   />
-                  <span className="text-sm text-slate-500 font-medium">%</span>
+                  <span className="text-sm text-slate-500 font-semibold">%</span>
                 </div>
               </div>
 
               {/* UTS */}
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="flex justify-between items-center mb-1">
                   <label className="text-sm font-semibold text-slate-800">Ujian Tengah Semester (UTS)</label>
                   <span className="text-xs font-bold text-indigo-600">20% (Rekomendasi)</span>
@@ -514,16 +508,16 @@ export default function LaporanPage() {
                     type="number"
                     value={weights.uts}
                     onChange={e => setWeights({ ...weights, uts: Number(e.target.value) })}
-                    className="input w-32"
+                    className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm py-1.5 h-[38px] w-32 font-bold text-slate-800"
                     min="0"
                     max="100"
                   />
-                  <span className="text-sm text-slate-500 font-medium">%</span>
+                  <span className="text-sm text-slate-500 font-semibold">%</span>
                 </div>
               </div>
 
               {/* UAS */}
-              <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="flex justify-between items-center mb-1">
                   <label className="text-sm font-semibold text-slate-800">Ujian Akhir Semester (UAS)</label>
                   <span className="text-xs font-bold text-indigo-600">20% (Rekomendasi)</span>
@@ -534,32 +528,32 @@ export default function LaporanPage() {
                     type="number"
                     value={weights.uas}
                     onChange={e => setWeights({ ...weights, uas: Number(e.target.value) })}
-                    className="input w-32"
+                    className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-sm py-1.5 h-[38px] w-32 font-bold text-slate-800"
                     min="0"
                     max="100"
                   />
-                  <span className="text-sm text-slate-500 font-medium">%</span>
+                  <span className="text-sm text-slate-500 font-semibold">%</span>
                 </div>
               </div>
             </div>
 
             {weightError && (
-              <div className="flex items-start gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 mt-4">
+              <div className="flex items-start gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg p-3">
                 <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>{weightError}</span>
               </div>
             )}
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 pt-4 border-t border-slate-100">
               <button 
                 onClick={() => setStep('select_class')} 
-                className="btn-secondary w-full justify-center"
+                className="btn-secondary flex-1 justify-center"
               >
                 Kembali
               </button>
               <button 
                 onClick={handleSaveWeights} 
-                className="btn-primary w-full justify-center"
+                className="btn-primary flex-1 justify-center"
               >
                 Simpan & Lanjutkan
               </button>
@@ -572,44 +566,60 @@ export default function LaporanPage() {
       {/* LANGKAH 3: DASBOR LAPORAN UTAMA */}
       {/* ======================================= */}
       {step === 'view_reports' && selectedClass && (
-        <div className="space-y-6">
-          {/* FILTER GLOBAL */}
-          <div className="bg-white rounded-xl p-4 border border-slate-200 flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-indigo-600" />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-slate-900">Filter Aktif Rapor</h2>
-                <p className="text-xs text-slate-500">Kelas: {selectedClass.name} · Semester Genap</p>
+        <div className="space-y-4">
+          {/* DASHBOARD KONTROL UTAMA */}
+          <div className="card p-4 bg-white border border-slate-200 shadow-sm space-y-3">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setStep('select_class')}
+                  className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-slate-200 bg-white"
+                  title="Ganti Kelas"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <h1 className="text-xl font-bold text-slate-900">Laporan Rapor Kelas {selectedClass.name}</h1>
+                <button
+                  onClick={() => {
+                    setWeightError('')
+                    setShowWeightModal(true)
+                  }}
+                  className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-slate-200 bg-white"
+                  title="Edit Bobot Nilai"
+                >
+                  <Settings2 className="w-4 h-4" />
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-xs text-slate-400 uppercase font-semibold">Distribusi Bobot Aktif</p>
-                <p className="text-xs font-bold text-slate-700">Harian {weights.formative}% · UTS {weights.uts}% · UAS {weights.uas}%</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-3 border-t border-slate-100">
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Wali Kelas</span>
+                <div className="text-slate-900 font-bold text-sm h-[38px] flex items-center">
+                  {selectedClass.homeroom_teacher || '-'}
+                </div>
               </div>
-              <button 
-                onClick={() => {
-                  setWeightError('')
-                  setShowWeightModal(true)
-                }} 
-                className="btn-secondary text-xs flex items-center gap-1.5 animate-pulse"
-              >
-                <Settings2 className="w-3.5 h-3.5" /> Edit Bobot Nilai
-              </button>
-              <button 
-                onClick={() => setStep('select_class')} 
-                className="btn-secondary text-xs"
-              >
-                Ganti Kelas
-              </button>
+
+              <div className="flex flex-col gap-1 col-span-2">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bobot Nilai Aktif</span>
+                <div className="text-slate-900 font-bold text-sm h-[38px] flex items-center gap-2">
+                  <span className="badge bg-indigo-50 text-indigo-700 text-xs">Formative: {weights.formative}%</span>
+                  <span className="badge bg-amber-50 text-amber-700 text-xs">UTS: {weights.uts}%</span>
+                  <span className="badge bg-emerald-50 text-emerald-700 text-xs">UAS: {weights.uas}%</span>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Semester / Tahun Ajaran</span>
+                <div className="text-slate-900 font-bold text-sm h-[38px] flex items-center">
+                  Genap / 2024-2025
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Navigasi Tab Laporan Rapor */}
-          <div className="flex gap-6 border-b border-slate-200 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {/* TABS UTAMA KELAS */}
+          <div className="flex flex-wrap gap-1.5 border-b border-slate-200 pb-2">
             {[
               { id: 'rekap-absensi', label: 'Rekap Absensi', icon: ClipboardCheck },
               { id: 'rekap-nilai', label: 'Rekap Nilai', icon: Award },
@@ -618,14 +628,15 @@ export default function LaporanPage() {
               { id: 'rapor', label: 'Rapor', icon: FileBarChart },
             ].map(t => {
               const IconComponent = t.icon
+              const isActive = activeTab === t.id
               return (
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id as ReportTab)}
-                  className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 shrink-0 ${
-                    activeTab === t.id 
-                      ? 'border-indigo-600 text-indigo-600' 
-                      : 'border-transparent text-slate-500 hover:text-slate-700'
+                  className={`flex items-center justify-center gap-1.5 py-2 px-3 text-sm font-semibold rounded-lg transition-all flex-1 min-w-[120px] text-center whitespace-nowrap ${
+                    isActive
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50 border border-transparent hover:border-slate-200'
                   }`}
                 >
                   <IconComponent className="w-4 h-4" />
@@ -639,48 +650,54 @@ export default function LaporanPage() {
           {/* TAB 1: REKAP ABSENSI */}
           {/* ======================================= */}
           {activeTab === 'rekap-absensi' && (
-            <div className="card p-5 space-y-4">
+            <div className="space-y-3">
               <div>
-                <h3 className="font-bold text-slate-900 text-base">Rekapitulasi Absensi Siswa</h3>
-                <p className="text-xs text-slate-400 mt-1">
+                <h3 className="font-bold text-slate-900 text-sm">Rekapitulasi Absensi Siswa</h3>
+                <p className="text-xs text-slate-500 mt-1">
                   Menampilkan rekap kumulatif kehadiran asli yang ditarik secara otomatis dari pencatatan absensi kelas.
                 </p>
               </div>
 
               {students.length === 0 ? (
-                <p className="text-sm text-slate-400 py-6 text-center">Belum ada data siswa di kelas ini.</p>
+                <div className="card p-10 text-center bg-slate-50/50">
+                  <p className="text-sm text-slate-500 font-medium">Belum ada data siswa di kelas ini.</p>
+                </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-semibold">
-                      <tr>
-                        <th className="px-4 py-3">Nama Siswa</th>
-                        <th className="px-4 py-3 text-center">Sakit (S)</th>
-                        <th className="px-4 py-3 text-center">Izin (I)</th>
-                        <th className="px-4 py-3 text-center">Alpa (A)</th>
-                        <th className="px-4 py-3 text-center">Persentase Kehadiran</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-slate-700">
-                      {students.map(st => {
-                        const sakit = supportData[st.id]?.sakit || 0
-                        const izin = supportData[st.id]?.izin || 0
-                        const alpa = supportData[st.id]?.alpa || 0
-                        const totalDays = 90 // Hari efektif sekolah
-                        const presencePercent = (((totalDays - alpa) / totalDays) * 100).toFixed(1)
+                <div className="card overflow-hidden border border-slate-200 shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="bg-slate-100 border-b border-slate-200">
+                        <tr>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 w-12 text-center">No</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600">Nama Siswa</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center">Sakit (S)</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center">Izin (I)</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center">Alpa (A)</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center">Persentase Kehadiran</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-150 text-slate-750">
+                        {students.map((st, i) => {
+                          const sakit = supportData[st.id]?.sakit || 0
+                          const izin = supportData[st.id]?.izin || 0
+                          const alpa = supportData[st.id]?.alpa || 0
+                          const totalDays = 90 // Hari efektif sekolah
+                          const presencePercent = (((totalDays - alpa) / totalDays) * 100).toFixed(1)
 
-                        return (
-                          <tr key={st.id} className="hover:bg-slate-50/50">
-                            <td className="px-4 py-3.5 font-medium text-slate-800">{st.name}</td>
-                            <td className="px-4 py-3.5 text-center">{sakit} Hari</td>
-                            <td className="px-4 py-3.5 text-center">{izin} Hari</td>
-                            <td className="px-4 py-3.5 text-center text-red-500">{alpa} Hari</td>
-                            <td className="px-4 py-3.5 text-center font-bold text-indigo-600">{presencePercent}%</td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+                          return (
+                            <tr key={st.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-4 py-3 text-sm text-slate-500 font-medium text-center">{i + 1}</td>
+                              <td className="px-4 py-3 text-sm font-semibold text-slate-900">{st.name}</td>
+                              <td className="px-4 py-3 text-sm font-medium text-center">{sakit} Hari</td>
+                              <td className="px-4 py-3 text-sm font-medium text-center">{izin} Hari</td>
+                              <td className="px-4 py-3 text-sm font-bold text-center text-red-500">{alpa} Hari</td>
+                              <td className="px-4 py-3 text-sm font-bold text-center text-indigo-600">{presencePercent}%</td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -690,45 +707,51 @@ export default function LaporanPage() {
           {/* TAB 2: REKAP NILAI MAPEL */}
           {/* ======================================= */}
           {activeTab === 'rekap-nilai' && (
-            <div className="card p-5 space-y-4">
+            <div className="space-y-3">
               <div>
-                <h3 className="font-bold text-slate-900 text-base">Rekap Nilai Mapel (Akademik)</h3>
-                <p className="text-xs text-slate-400 mt-1">
+                <h3 className="font-bold text-slate-900 text-sm">Rekap Nilai Mapel (Akademik)</h3>
+                <p className="text-xs text-slate-500 mt-1">
                   Ringkasan nilai rata-rata mata pelajaran per komponen asli ditarik otomatis dari data input harian kelas.
                 </p>
               </div>
 
               {students.length === 0 ? (
-                <p className="text-sm text-slate-400 py-6 text-center">Belum ada data siswa di kelas ini.</p>
+                <div className="card p-10 text-center bg-slate-50/50">
+                  <p className="text-sm text-slate-500 font-medium">Belum ada data siswa di kelas ini.</p>
+                </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-semibold">
-                      <tr>
-                        <th className="px-4 py-3">Nama Siswa</th>
-                        <th className="px-4 py-3 text-center">Rata-rata Tugas (Formatif)</th>
-                        <th className="px-4 py-3 text-center">Sumatif Tengah Semester (UTS)</th>
-                        <th className="px-4 py-3 text-center">Sumatif Akhir Semester (UAS)</th>
-                        <th className="px-4 py-3 text-center">Rerata Nilai Akhir</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-slate-700">
-                      {students.map(st => {
-                        const grades = academicGrades[st.id] || { formative: 85, uts: 80, uas: 80 }
-                        const rawAvg = ((grades.formative + grades.uts + grades.uas) / 3).toFixed(1)
+                <div className="card overflow-hidden border border-slate-200 shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="bg-slate-100 border-b border-slate-200">
+                        <tr>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 w-12 text-center">No</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600">Nama Siswa</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center">Rata-rata Tugas (Formatif)</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center">Sumatif Tengah Semester (UTS)</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center">Sumatif Akhir Semester (UAS)</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center">Rerata Nilai Akhir</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-150 text-slate-700">
+                        {students.map((st, i) => {
+                          const grades = academicGrades[st.id] || { formative: 85, uts: 80, uas: 80 }
+                          const rawAvg = ((grades.formative + grades.uts + grades.uas) / 3).toFixed(1)
 
-                        return (
-                          <tr key={st.id} className="hover:bg-slate-50/50">
-                            <td className="px-4 py-3.5 font-medium text-slate-800">{st.name}</td>
-                            <td className="px-4 py-3.5 text-center">{grades.formative}</td>
-                            <td className="px-4 py-3.5 text-center">{grades.uts}</td>
-                            <td className="px-4 py-3.5 text-center">{grades.uas}</td>
-                            <td className="px-4 py-3.5 text-center font-bold text-emerald-600">{rawAvg}</td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+                          return (
+                            <tr key={st.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-4 py-3 text-sm text-slate-500 font-medium text-center">{i + 1}</td>
+                              <td className="px-4 py-3 text-sm font-semibold text-slate-900">{st.name}</td>
+                              <td className="px-4 py-3 text-sm font-medium text-center">{grades.formative}</td>
+                              <td className="px-4 py-3 text-sm font-medium text-center">{grades.uts}</td>
+                              <td className="px-4 py-3 text-sm font-medium text-center">{grades.uas}</td>
+                              <td className="px-4 py-3 text-sm font-bold text-center text-emerald-600">{rawAvg}</td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -738,12 +761,12 @@ export default function LaporanPage() {
           {/* TAB 3: PENILAIAN NON-AKADEMIK & SIKAP */}
           {/* ======================================= */}
           {activeTab === 'penilaian-pendukung' && (
-            <div className="card p-5 space-y-4">
-              <div className="flex justify-between items-center flex-wrap gap-3">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center flex-wrap gap-3 pb-2 border-b border-slate-200">
                 <div>
-                  <h3 className="font-bold text-slate-900 text-base">Penilaian Non-Akademik & Sikap (Karakter) [1]</h3>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Atur ekstrakurikuler, toleransi presensi manual, capaian Profil Pelajar Pancasila (P5), serta gunakan asisten AI untuk menulis evaluasi [1, 2].
+                  <h3 className="font-bold text-slate-900 text-sm">Penilaian Non-Akademik & Sikap (Karakter)</h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Atur ekstrakurikuler, toleransi presensi manual, capaian Profil Pelajar Pancasila (P5), serta gunakan asisten AI untuk menulis evaluasi.
                   </p>
                 </div>
                 
@@ -752,7 +775,7 @@ export default function LaporanPage() {
                   onClick={handleSaveSupportData}
                   disabled={savingSupport}
                   className={clsx(
-                    "btn-primary text-xs flex items-center gap-1.5",
+                    "btn-primary text-xs flex items-center gap-1.5 shadow-sm py-1.5 px-3",
                     savedSupport && "bg-emerald-600 border-0"
                   )}
                 >
@@ -765,9 +788,11 @@ export default function LaporanPage() {
               </div>
 
               {students.length === 0 ? (
-                <p className="text-sm text-slate-400 py-6 text-center">Belum ada data siswa di kelas ini.</p>
+                <div className="card p-10 text-center bg-slate-50/50">
+                  <p className="text-sm text-slate-500 font-medium">Belum ada data siswa di kelas ini.</p>
+                </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {students.map(st => {
                     const data = supportData[st.id] || {
                       student_id: st.id, extracurricular: 'Pramuka', extra_grade: 'Baik',
@@ -775,14 +800,19 @@ export default function LaporanPage() {
                     }
 
                     return (
-                      <div key={st.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-4">
-                        <div className="flex justify-between items-center flex-wrap gap-2">
-                          <span className="font-bold text-slate-800 text-sm">{st.name} (NISN: {st.nisn || '-'})</span>
+                      <div key={st.id} className="card p-5 bg-white border border-slate-200 shadow-sm space-y-4">
+                        <div className="flex justify-between items-center flex-wrap gap-2 pb-3 border-b border-slate-150">
+                          <span className="font-bold text-slate-900 text-sm">
+                            {st.name} 
+                            <span className="text-xs font-medium text-slate-400 ml-1.5">
+                              (NISN: {st.nisn || '-'})
+                            </span>
+                          </span>
                           
                           <button 
                             onClick={() => handleGenerateAI(st.id, st.name)}
                             disabled={generatingAI === st.id}
-                            className="btn-primary text-xs flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 border-0"
+                            className="btn-primary text-xs flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 border-0 py-1.5 px-3"
                           >
                             <Sparkles className="w-3.5 h-3.5" /> 
                             {generatingAI === st.id ? 'Memproses AI...' : 'Tulis Deskripsi via AI'}
@@ -792,11 +822,13 @@ export default function LaporanPage() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           {/* Ekstrakurikuler */}
                           <div>
-                            <label className="label">Ekstrakurikuler & Nilai</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                              Ekstrakurikuler & Nilai
+                            </label>
                             <div className="flex gap-2">
                               <input 
                                 type="text" 
-                                className="input flex-1 py-1 px-2.5 text-xs" 
+                                className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs py-1 px-2.5 h-[36px] flex-1 font-medium text-slate-800" 
                                 value={data.extracurricular}
                                 onChange={e => setSupportData({
                                   ...supportData,
@@ -804,7 +836,7 @@ export default function LaporanPage() {
                                 })}
                               />
                               <select 
-                                className="input py-1 px-2.5 text-xs w-28"
+                                className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs py-1 px-2.5 h-[36px] w-28 font-semibold text-slate-800"
                                 value={data.extra_grade}
                                 onChange={e => setSupportData({
                                   ...supportData,
@@ -821,47 +853,60 @@ export default function LaporanPage() {
 
                           {/* Absensi Ketidakhadiran */}
                           <div className="md:col-span-2">
-                            <label className="label">Presensi Kehadiran Manual (Sakit / Izin / Alpa)</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                              Presensi Kehadiran Manual (Sakit / Izin / Alpa)
+                            </label>
                             <div className="flex gap-2 text-xs">
-                              <input 
-                                type="number" 
-                                placeholder="Sakit" 
-                                className="input py-1 px-2"
-                                value={data.sakit}
-                                onChange={e => setSupportData({
-                                  ...supportData,
-                                  [st.id]: { ...data, sakit: Number(e.target.value) }
-                                })}
-                              />
-                              <input 
-                                type="number" 
-                                placeholder="Izin" 
-                                className="input py-1 px-2"
-                                value={data.izin}
-                                onChange={e => setSupportData({
-                                  ...supportData,
-                                  [st.id]: { ...data, izin: Number(e.target.value) }
-                                })}
-                              />
-                              <input 
-                                type="number" 
-                                placeholder="Alpa" 
-                                className="input py-1 px-2 text-red-500 font-medium"
-                                value={data.alpa}
-                                onChange={e => setSupportData({
-                                  ...supportData,
-                                  [st.id]: { ...data, alpa: Number(e.target.value) }
-                                })}
-                              />
+                              <div className="relative flex-1">
+                                <input 
+                                  type="number" 
+                                  placeholder="Sakit" 
+                                  className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs py-1 px-2.5 h-[36px] w-full font-semibold text-slate-800"
+                                  value={data.sakit}
+                                  onChange={e => setSupportData({
+                                    ...supportData,
+                                    [st.id]: { ...data, sakit: Number(e.target.value) }
+                                  })}
+                                />
+                                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">Sakit</span>
+                              </div>
+                              <div className="relative flex-1">
+                                <input 
+                                  type="number" 
+                                  placeholder="Izin" 
+                                  className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs py-1 px-2.5 h-[36px] w-full font-semibold text-slate-800"
+                                  value={data.izin}
+                                  onChange={e => setSupportData({
+                                    ...supportData,
+                                    [st.id]: { ...data, izin: Number(e.target.value) }
+                                  })}
+                                />
+                                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400 uppercase">Izin</span>
+                              </div>
+                              <div className="relative flex-1">
+                                <input 
+                                  type="number" 
+                                  placeholder="Alpa" 
+                                  className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs py-1 px-2.5 h-[36px] w-full font-bold text-red-500"
+                                  value={data.alpa}
+                                  onChange={e => setSupportData({
+                                    ...supportData,
+                                    [st.id]: { ...data, alpa: Number(e.target.value) }
+                                  })}
+                                />
+                                <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-red-400 uppercase">Alpa</span>
+                              </div>
                             </div>
                           </div>
 
                           {/* Sikap / Karakter P5 */}
-                          <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                          <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <label className="label">Profil Pelajar Pancasila & Sikap [1, 2]</label>
+                              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                Profil Pelajar Pancasila & Sikap
+                              </label>
                               <textarea 
-                                className="input text-xs h-16 resize-none leading-relaxed"
+                                className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs h-20 resize-none leading-relaxed py-2 px-3"
                                 placeholder="Ketik deskripsi capaian dimensi sikap gotong royong, kreatif, atau mandiri siswa..."
                                 value={data.sikap_p5}
                                 onChange={e => setSupportData({
@@ -871,9 +916,11 @@ export default function LaporanPage() {
                               />
                             </div>
                             <div>
-                              <label className="label">Catatan Wali Kelas</label>
+                              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+                                Catatan Wali Kelas
+                              </label>
                               <textarea 
-                                className="input text-xs h-16 resize-none leading-relaxed"
+                                className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs h-20 resize-none leading-relaxed py-2 px-3"
                                 placeholder="Ketik motivasi atau evaluasi perilaku khusus siswa di sini..."
                                 value={data.teacher_note}
                                 onChange={e => setSupportData({
@@ -896,69 +943,75 @@ export default function LaporanPage() {
           {/* TAB 4: TRANSKRIP NILAI AKHIR */}
           {/* ======================================= */}
           {activeTab === 'nilai-akhir' && (
-            <div className="card p-5 space-y-4">
+            <div className="space-y-3">
               <div>
-                <h3 className="font-bold text-slate-900 text-base">Transkrip Nilai Semester Akhir</h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  Kalkulasi nilai rapor murni dari perpaduan harian kelas, UTS, dan UAS menggunakan bobot aktif ({weights.formative}% / {weights.uts}% / {weights.uas}%) [1].
+                <h3 className="font-bold text-slate-900 text-sm">Transkrip Nilai Semester Akhir</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Kalkulasi nilai rapor murni dari perpaduan harian kelas, UTS, dan UAS menggunakan bobot aktif ({weights.formative}% / {weights.uts}% / {weights.uas}%).
                 </p>
               </div>
 
               {students.length === 0 ? (
-                <p className="text-sm text-slate-400 py-6 text-center">Belum ada data siswa di kelas ini.</p>
+                <div className="card p-10 text-center bg-slate-50/50">
+                  <p className="text-sm text-slate-500 font-medium">Belum ada data siswa di kelas ini.</p>
+                </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="bg-slate-50 text-slate-500 uppercase text-xs font-semibold">
-                      <tr>
-                        <th className="px-4 py-3">Nama Siswa</th>
-                        <th className="px-4 py-3 text-center">Persentase Harian ({weights.formative}%)</th>
-                        <th className="px-4 py-3 text-center">Persentase UTS ({weights.uts}%)</th>
-                        <th className="px-4 py-3 text-center">Persentase UAS ({weights.uas}%)</th>
-                        <th className="px-4 py-3 text-center">Nilai Rapor Akhir</th>
-                        <th className="px-4 py-3 text-center">Predikat</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 text-slate-700">
-                      {students.map(st => {
-                        const grades = academicGrades[st.id] || { formative: 85, uts: 80, uas: 80 }
+                <div className="card overflow-hidden border border-slate-200 shadow-sm">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead className="bg-slate-100 border-b border-slate-200">
+                        <tr>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 w-12 text-center">No</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600">Nama Siswa</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center">Persentase Harian ({weights.formative}%)</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center">Persentase UTS ({weights.uts}%)</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center">Persentase UAS ({weights.uas}%)</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center">Nilai Rapor Akhir</th>
+                          <th className="px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-600 text-center w-24">Predikat</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-150 text-slate-700">
+                        {students.map((st, i) => {
+                          const grades = academicGrades[st.id] || { formative: 85, uts: 80, uas: 80 }
 
-                        // Kalkulasi bobot
-                        const harianPortion = (grades.formative * weights.formative) / 100
-                        const utsPortion = (grades.uts * weights.uts) / 100
-                        const uasPortion = (grades.uas * weights.uas) / 100
+                          // Kalkulasi bobot
+                          const harianPortion = (grades.formative * weights.formative) / 100
+                          const utsPortion = (grades.uts * weights.uts) / 100
+                          const uasPortion = (grades.uas * weights.uas) / 100
 
-                        const finalReportScore = Math.round(harianPortion + utsPortion + uasPortion)
+                          const finalReportScore = Math.round(harianPortion + utsPortion + uasPortion)
 
-                        let predicate = 'C'
-                        if (finalReportScore >= 88) predicate = 'A'
-                        else if (finalReportScore >= 80) predicate = 'B'
-                        else if (finalReportScore >= 70) predicate = 'C'
-                        else predicate = 'D'
+                          let predicate = 'C'
+                          if (finalReportScore >= 88) predicate = 'A'
+                          else if (finalReportScore >= 80) predicate = 'B'
+                          else if (finalReportScore >= 70) predicate = 'C'
+                          else predicate = 'D'
 
-                        return (
-                          <tr key={st.id} className="hover:bg-slate-50/50">
-                            <td className="px-4 py-3.5 font-medium text-slate-800">{st.name}</td>
-                            <td className="px-4 py-3.5 text-center text-slate-500">{harianPortion.toFixed(1)}</td>
-                            <td className="px-4 py-3.5 text-center text-slate-500">{utsPortion.toFixed(1)}</td>
-                            <td className="px-4 py-3.5 text-center text-slate-500">{uasPortion.toFixed(1)}</td>
-                            <td className="px-4 py-3.5 text-center font-bold text-indigo-700">{finalReportScore}</td>
-                            <td className="px-4 py-3.5 text-center">
-                              <span className={clsx(
-                                "px-2 py-0.5 rounded-full text-xs font-bold",
-                                predicate === 'A' && "bg-emerald-50 text-emerald-700",
-                                predicate === 'B' && "bg-indigo-50 text-indigo-700",
-                                predicate === 'C' && "bg-amber-50 text-amber-700",
-                                predicate === 'D' && "bg-red-50 text-red-700"
-                              )}>
-                                {predicate}
-                              </span>
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
+                          return (
+                            <tr key={st.id} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-4 py-3 text-sm text-slate-500 font-medium text-center">{i + 1}</td>
+                              <td className="px-4 py-3 text-sm font-semibold text-slate-900">{st.name}</td>
+                              <td className="px-4 py-3 text-sm text-center text-slate-500">{harianPortion.toFixed(1)}</td>
+                              <td className="px-4 py-3 text-sm text-center text-slate-500">{utsPortion.toFixed(1)}</td>
+                              <td className="px-4 py-3 text-sm text-center text-slate-500">{uasPortion.toFixed(1)}</td>
+                              <td className="px-4 py-3 text-sm text-center font-bold text-indigo-700">{finalReportScore}</td>
+                              <td className="px-4 py-3 text-center">
+                                <span className={clsx(
+                                  "badge text-xs font-bold px-2.5 py-1",
+                                  predicate === 'A' && "bg-emerald-50 text-emerald-700",
+                                  predicate === 'B' && "bg-indigo-50 text-indigo-700",
+                                  predicate === 'C' && "bg-amber-50 text-amber-700",
+                                  predicate === 'D' && "bg-red-50 text-red-700"
+                                )}>
+                                  {predicate}
+                                </span>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -972,13 +1025,13 @@ export default function LaporanPage() {
               
               {/* KOLOM KIRI: STATUS KELENGKAPAN & PILIH SISWA */}
               <div className="space-y-4">
-                <div className="card p-4 space-y-3.5">
+                <div className="card p-4 border border-slate-200 shadow-sm space-y-3.5 bg-white">
                   <h4 className="font-bold text-slate-900 text-sm">Verifikasi Kelayakan Rapor</h4>
                   
                   <div className="space-y-2 text-xs">
                     {/* Parameter 1: Profil Sekolah */}
                     <div className="flex items-center gap-2 justify-between p-2 bg-slate-50 rounded-lg">
-                      <span className="text-slate-600 font-medium">Profil Sekolah</span>
+                      <span className="text-slate-600 font-semibold">Profil Sekolah</span>
                       {schoolProfileComplete ? (
                         <span className="flex items-center gap-1 text-emerald-600 font-bold"><CheckCircle2 className="w-3.5 h-3.5" /> Lengkap</span>
                       ) : (
@@ -988,32 +1041,32 @@ export default function LaporanPage() {
 
                     {/* Parameter 2: Pengaturan Bobot */}
                     <div className="flex items-center gap-2 justify-between p-2 bg-slate-50 rounded-lg">
-                      <span className="text-slate-600 font-medium">Bobot Nilai</span>
+                      <span className="text-slate-600 font-semibold">Bobot Nilai</span>
                       <span className="flex items-center gap-1 text-emerald-600 font-bold"><CheckCircle2 className="w-3.5 h-3.5" /> Aktif</span>
                     </div>
 
                     {/* Parameter 3: Akademik */}
                     <div className="flex items-center gap-2 justify-between p-2 bg-slate-50 rounded-lg">
-                      <span className="text-slate-600 font-medium">Nilai Akademik</span>
+                      <span className="text-slate-600 font-semibold">Nilai Akademik</span>
                       <span className="flex items-center gap-1 text-emerald-600 font-bold"><CheckCircle2 className="w-3.5 h-3.5" /> Terisi</span>
                     </div>
 
                     {/* Parameter 4: Non-Akademik */}
                     <div className="flex items-center gap-2 justify-between p-2 bg-slate-50 rounded-lg">
-                      <span className="text-slate-600 font-medium">Non-Akademik & Sikap</span>
+                      <span className="text-slate-600 font-semibold">Non-Akademik & Sikap</span>
                       <span className="flex items-center gap-1 text-emerald-600 font-bold"><CheckCircle2 className="w-3.5 h-3.5" /> Lengkap</span>
                     </div>
                   </div>
 
                   {!schoolProfileComplete && (
                     <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg text-xs leading-normal">
-                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-500" />
                       <p>Rapor tidak dapat dicetak karena Nama Institusi/Kepala Sekolah di menu <strong>Sekolah</strong> belum dilengkapi.</p>
                     </div>
                   )}
                 </div>
 
-                <div className="card p-4 space-y-3">
+                <div className="card p-4 border border-slate-200 shadow-sm space-y-3 bg-white">
                   <h4 className="font-bold text-slate-900 text-sm">Pilih Siswa untuk Preview</h4>
                   <div className="space-y-1.5 max-h-60 overflow-y-auto">
                     {students.map(st => (
@@ -1023,7 +1076,7 @@ export default function LaporanPage() {
                         className={clsx(
                           "w-full text-left px-3 py-2 rounded-lg text-xs font-semibold transition-colors",
                           selectedPreviewStudent === st.id 
-                            ? "bg-indigo-600 text-white" 
+                            ? "bg-indigo-600 text-white shadow-sm" 
                             : "bg-slate-50 hover:bg-slate-100 text-slate-700"
                         )}
                       >
@@ -1037,10 +1090,10 @@ export default function LaporanPage() {
               {/* KOLOM KANAN: PREVIEW DOKUMEN RAPOR */}
               <div className="lg:col-span-2 space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-slate-800 text-sm">Draf Preview Lembar Rapor</h3>
+                  <h3 className="font-bold text-slate-850 text-sm">Draf Preview Lembar Rapor</h3>
                   <button 
                     disabled={!schoolProfileComplete}
-                    className="btn-primary text-xs flex items-center gap-1.5"
+                    className="btn-primary text-xs flex items-center gap-1.5 shadow-sm py-1.5 px-3"
                     onClick={() => window.print()}
                   >
                     <Printer className="w-3.5 h-3.5" /> Cetak Rapor (PDF)
@@ -1067,9 +1120,9 @@ export default function LaporanPage() {
                     </div>
                   </div>
 
-                  {/* 1. Capaian Akademik [1] */}
+                  {/* 1. Capaian Akademik */}
                   <div className="space-y-2">
-                    <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">1. Capaian Pembelajaran Akademik [1]</p>
+                    <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">1. Capaian Pembelajaran Akademik</p>
                     <table className="w-full text-left border border-slate-200">
                       <thead className="bg-slate-50 text-[10px] font-bold text-slate-500 uppercase">
                         <tr className="border-b border-slate-200">
@@ -1093,31 +1146,29 @@ export default function LaporanPage() {
                           else predicate = 'D'
 
                           return (
-                            <>
-                              <tr>
-                                <td className="px-2.5 py-2 font-semibold">Mata Pelajaran Utama (Gabungan)</td>
-                                <td className="px-2.5 py-2 text-center text-indigo-600 font-bold">{finalReportScore}</td>
-                                <td className="px-2.5 py-2 text-center font-bold">{predicate}</td>
-                              </tr>
-                            </>
+                            <tr>
+                              <td className="px-2.5 py-2 font-semibold">Mata Pelajaran Utama (Gabungan)</td>
+                              <td className="px-2.5 py-2 text-center text-indigo-600 font-bold">{finalReportScore}</td>
+                              <td className="px-2.5 py-2 text-center font-bold">{predicate}</td>
+                            </tr>
                           )
                         })()}
                       </tbody>
                     </table>
                   </div>
 
-                  {/* 2. Capaian Karakter & P5 [1, 2] */}
+                  {/* 2. Capaian Karakter & P5 */}
                   <div className="space-y-2">
-                    <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">2. Perkembangan Karakter & Profil Pelajar Pancasila [1, 2]</p>
+                    <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">2. Perkembangan Karakter & Profil Pelajar Pancasila</p>
                     <div className="p-3 bg-slate-50 rounded-lg border border-slate-100 italic">
                       {supportData[selectedPreviewStudent]?.sikap_p5 || 'Karakter belum dikonfigurasi.'}
                     </div>
                   </div>
 
-                  {/* 3. Ekstrakurikuler & Absensi [1] */}
+                  {/* 3. Ekstrakurikuler & Absensi */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">3. Ekstrakurikuler [1]</p>
+                      <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">3. Ekstrakurikuler</p>
                       <table className="w-full text-left border border-slate-200 font-medium">
                         <thead className="bg-slate-50 text-[10px] font-bold text-slate-500">
                           <tr className="border-b border-slate-200">
@@ -1135,7 +1186,7 @@ export default function LaporanPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">4. Kehadiran [1]</p>
+                      <p className="font-bold text-slate-900 uppercase tracking-wider text-[11px]">4. Kehadiran</p>
                       <table className="w-full text-left border border-slate-200 font-medium">
                         <tbody>
                           <tr className="border-b border-slate-200">
@@ -1174,8 +1225,8 @@ export default function LaporanPage() {
       {/* DIALOG MODAL: EDIT BOBOT NILAI RAPOR */}
       {/* ======================================= */}
       {showWeightModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white rounded-xl border border-slate-200 p-6 max-w-md w-full shadow-xl animate-in fade-in zoom-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 max-w-md w-full shadow-xl">
             <div className="flex items-center gap-3 border-b border-slate-100 pb-3 mb-4">
               <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
                 <Settings2 className="w-4 h-4 text-indigo-600" />
@@ -1188,53 +1239,53 @@ export default function LaporanPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Tugas, Sikap & Harian (Sumatif Materi)</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Tugas, Sikap & Harian (Sumatif Materi)</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
                     value={weights.formative}
                     onChange={e => setWeights({ ...weights, formative: Number(e.target.value) })}
-                    className="input py-1.5 px-2.5 text-xs w-24"
+                    className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs py-1.5 px-2.5 h-[36px] w-24 font-bold text-slate-800"
                     min="0"
                     max="100"
                   />
-                  <span className="text-xs text-slate-500">%</span>
+                  <span className="text-xs text-slate-500 font-semibold">%</span>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Ujian Tengah Semester (UTS)</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Ujian Tengah Semester (UTS)</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
                     value={weights.uts}
                     onChange={e => setWeights({ ...weights, uts: Number(e.target.value) })}
-                    className="input py-1.5 px-2.5 text-xs w-24"
+                    className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs py-1.5 px-2.5 h-[36px] w-24 font-bold text-slate-800"
                     min="0"
                     max="100"
                   />
-                  <span className="text-xs text-slate-500">%</span>
+                  <span className="text-xs text-slate-500 font-semibold">%</span>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">Ujian Akhir Semester (UAS)</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Ujian Akhir Semester (UAS)</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
                     value={weights.uas}
                     onChange={e => setWeights({ ...weights, uas: Number(e.target.value) })}
-                    className="input py-1.5 px-2.5 text-xs w-24"
+                    className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs py-1.5 px-2.5 h-[36px] w-24 font-bold text-slate-800"
                     min="0"
                     max="100"
                   />
-                  <span className="text-xs text-slate-500">%</span>
+                  <span className="text-xs text-slate-500 font-semibold">%</span>
                 </div>
               </div>
 
               {weightError && (
                 <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg p-2.5 flex items-start gap-1.5">
-                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5 text-red-500" />
                   <span>{weightError}</span>
                 </div>
               )}
