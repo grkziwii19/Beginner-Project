@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Save, Loader2, CheckCircle2 } from 'lucide-react'
+import { Save, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react'
 
 interface StudentRow {
   studentId: string
@@ -15,7 +15,6 @@ interface StudentRow {
 interface ActivityType {
   id: string
   name: string
-  weight: number | null
 }
 
 interface Props {
@@ -28,11 +27,11 @@ interface Props {
 }
 
 const DEFAULT_ACTIVITY_TYPES = [
-  { name: 'Tugas Harian', weight: 20, sort_order: 0 },
-  { name: 'Ulangan Harian', weight: 25, sort_order: 1 },
-  { name: 'Praktik', weight: 15, sort_order: 2 },
-  { name: 'PTS', weight: 20, sort_order: 3 },
-  { name: 'PAS', weight: 20, sort_order: 4 },
+  { name: 'Tugas Harian', sort_order: 0 },
+  { name: 'Ulangan Harian', sort_order: 1 },
+  { name: 'Praktik', sort_order: 2 },
+  { name: 'PTS', sort_order: 3 },
+  { name: 'PAS', sort_order: 4 },
 ]
 
 export default function NilaiTab({ className, subject, date, semester, academicYear, inputType }: Props) {
@@ -48,6 +47,7 @@ export default function NilaiTab({ className, subject, date, semester, academicY
   const [saving, setSaving] = useState(false)
   const [savedOk, setSavedOk] = useState(false)
   const [error, setError] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false)
 
   // ── Load jenis kegiatan (sekali saat mount) ──
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function NilaiTab({ className, subject, date, semester, academicY
 
       const { data } = await supabase
         .from('activity_types')
-        .select('id, name, weight')
+        .select('id, name')
         .eq('user_id', user.id)
         .order('sort_order')
 
@@ -67,7 +67,7 @@ export default function NilaiTab({ className, subject, date, semester, academicY
         const { data: inserted } = await supabase
           .from('activity_types')
           .insert(DEFAULT_ACTIVITY_TYPES.map(d => ({ ...d, user_id: user.id })))
-          .select('id, name, weight')
+          .select('id, name')
         if (inserted) {
           setActivityTypes(inserted)
         }
@@ -182,6 +182,12 @@ export default function NilaiTab({ className, subject, date, semester, academicY
     loadData()
   }
 
+  const handleConfirmSave = async () => {
+    setShowConfirm(false)
+    await handleSave()
+  }
+
+  const filledCount = rows.filter(r => r.score !== '').length
   const selectedActivity = activityTypes.find(a => a.id === selectedActivityId)
 
   if (loadingTypes) return (
@@ -193,6 +199,43 @@ export default function NilaiTab({ className, subject, date, semester, academicY
       {/* Tampilan Error */}
       {error && (
         <div className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</div>
+      )}
+
+      {/* BARIS ATAS: Ringkasan Kiri + Tombol Simpan di Kanan Atas */}
+      {!loading && rows.length > 0 && (
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+            <span>{rows.length} siswa</span>
+            {selectedActivity?.name && (
+              <>
+                <span>·</span>
+                <span>{selectedActivity.name}</span>
+              </>
+            )}
+            {meetingCount > 0 && (
+              <>
+                <span>·</span>
+                <span className="text-indigo-600">Pertemuan ke-{meetingCount}</span>
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3">
+            {savedOk && (
+              <span className="flex items-center gap-1 text-emerald-600 text-xs font-bold">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Tersimpan
+              </span>
+            )}
+            <button
+              onClick={() => setShowConfirm(true)}
+              disabled={saving}
+              className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-sm rounded-md"
+            >
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+              Simpan Nilai
+            </button>
+          </div>
+        </div>
       )}
 
       {/* TABEL DATA NILAI */}
@@ -253,38 +296,24 @@ export default function NilaiTab({ className, subject, date, semester, academicY
               </tbody>
             </table>
           </div>
+        </div>
+      )}
 
-          {/* Baris Tindakan Bawah yang Ramping (Status Pertemuan ke-X Ditampilkan di Sini) */}
-          <div className="p-2.5 border-t border-slate-150 bg-slate-50 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-              <span>{rows.length} siswa</span>
-              {selectedActivity?.name && (
-                <>
-                  <span>·</span>
-                  <span>{selectedActivity.name}</span>
-                </>
-              )}
-              {meetingCount > 0 && (
-                <>
-                  <span>·</span>
-                  <span className="text-indigo-600">Pertemuan ke-{meetingCount}</span>
-                </>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-3">
-              {savedOk && (
-                <span className="flex items-center gap-1 text-emerald-600 text-xs font-bold">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Tersimpan
-                </span>
-              )}
-              <button 
-                onClick={handleSave} 
-                disabled={saving} 
-                className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-sm rounded-md"
-              >
-                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                Simpan Nilai
+      {/* POPUP KONFIRMASI SIMPAN NILAI */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
+            <AlertTriangle className="w-10 h-10 text-indigo-500 mx-auto mb-3" />
+            <h3 className="font-semibold text-slate-900 mb-1">Simpan nilai sekarang?</h3>
+            <p className="text-sm text-slate-500 mb-5">
+              {filledCount} dari {rows.length} siswa sudah diisi nilainya untuk {selectedActivity?.name || 'kegiatan ini'}.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowConfirm(false)} className="btn-secondary flex-1 justify-center">
+                Batal
+              </button>
+              <button onClick={handleConfirmSave} disabled={saving} className="btn-primary flex-1 justify-center">
+                {saving ? 'Menyimpan...' : 'Ya, Simpan'}
               </button>
             </div>
           </div>

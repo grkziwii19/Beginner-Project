@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { type AttendanceStatus, getStatusColor, getStatusLabel } from '@/types'
-import { CheckCircle, AlertCircle, Save, Users, CheckCheck, ChevronDown } from 'lucide-react'
+import { CheckCircle, AlertCircle, Save, Users, CheckCheck, ChevronDown, AlertTriangle } from 'lucide-react'
 import clsx from 'clsx'
 
 interface StudentRow { id: string; name: string }
@@ -40,6 +40,7 @@ export default function AbsensiTab({ className, subject, date, attendanceMethod 
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
 
   // Sesi absen aktif, hanya relevan untuk metode harian_2x / harian_3x
   const sessionOptions = SESSION_OPTIONS[attendanceMethod] ?? []
@@ -125,6 +126,11 @@ export default function AbsensiTab({ className, subject, date, attendanceMethod 
     }
   }
 
+  const handleConfirmSave = async () => {
+    setShowConfirm(false)
+    await handleSave()
+  }
+
   const filledCount = students.filter(s => attendance[s.id]).length
   const summary = {
     hadir: students.filter(s => attendance[s.id] === 'hadir').length,
@@ -207,7 +213,7 @@ export default function AbsensiTab({ className, subject, date, attendanceMethod 
 
         {/* Sisi Kanan: Tombol Simpan Absensi */}
         <button
-          onClick={handleSave}
+          onClick={() => setShowConfirm(true)}
           disabled={saving}
           className={clsx(
             'btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5 shadow-sm',
@@ -221,6 +227,27 @@ export default function AbsensiTab({ className, subject, date, attendanceMethod 
           )}
         </button>
       </div>
+
+      {/* POPUP KONFIRMASI SIMPAN ABSENSI */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-center">
+            <AlertTriangle className="w-10 h-10 text-indigo-500 mx-auto mb-3" />
+            <h3 className="font-semibold text-slate-900 mb-1">Simpan absensi sekarang?</h3>
+            <p className="text-sm text-slate-500 mb-5">
+              {filledCount} dari {students.length} siswa sudah diisi statusnya.
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowConfirm(false)} className="btn-secondary flex-1 justify-center">
+                Batal
+              </button>
+              <button onClick={handleConfirmSave} disabled={saving} className="btn-primary flex-1 justify-center">
+                {saving ? 'Menyimpan...' : 'Ya, Simpan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* TABEL DATA SISWA (Padding baris dipadatkan py-1.5 agar ramping) */}
       <div className="card overflow-hidden border border-slate-200 shadow-sm">
