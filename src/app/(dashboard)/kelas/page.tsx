@@ -1,15 +1,10 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import dynamic from 'next/dynamic'
 import { useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { type Student, type ClassItem as BaseClassItem, getInitials, formatDateShort } from '@/types'
-
-// Memperluas tipe ClassItem lokal agar mendukung kolom baru
-export interface ClassItem extends BaseClassItem {
-  attendance_method?: 'harian_1x' | 'harian_2x' | 'harian_3x' | 'per_mapel' | null
-}
 import StudentDetailModal from '@/components/students/StudentDetailModal'
 import AddClassModal from '@/components/students/AddClassModal'
 import EditClassModal from '@/components/students/EditClassModal'
@@ -24,6 +19,11 @@ import {
   PieChart, List, ChevronDown, Pencil, Upload,
   ArrowLeft, ClipboardCheck, Award, NotebookPen, GraduationCap
 } from 'lucide-react'
+
+// Memperluas tipe ClassItem lokal agar mendukung kolom metode absensi baru
+export interface ClassItem extends BaseClassItem {
+  attendance_method?: 'harian_1x' | 'harian_2x' | 'harian_3x' | 'per_mapel' | null
+}
 
 type TabType = 'daftar' | 'absensi' | 'nilai' | 'catatan' | 'statistik' | 'import'
 type ViewFilter = 'identitas' | 'akademik' | 'orang_tua'
@@ -84,14 +84,16 @@ function KelasPageContent() {
   const showSessionDropdown = activeTab === 'absensi' && currentMethod !== 'per_mapel'
   const dropdownLabel = showSessionDropdown ? 'Sesi Absen' : 'Mata Pelajaran'
 
-  let dropdownOptions: string[] = []
-  if (showSessionDropdown) {
-    if (currentMethod === 'harian_1x') dropdownOptions = ['Harian']
-    else if (currentMethod === 'harian_2x') dropdownOptions = ['Pagi', 'Sore']
-    else if (currentMethod === 'harian_3x') dropdownOptions = ['Pagi', 'Siang', 'Sore']
-  } else {
-    dropdownOptions = selectedClass?.subjects ?? []
-  }
+  // Menghitung opsi dropdown secara memoized agar mencegah render loop
+  const dropdownOptions = useMemo(() => {
+    if (!selectedClass) return []
+    if (showSessionDropdown) {
+      if (currentMethod === 'harian_1x') return ['Harian']
+      if (currentMethod === 'harian_2x') return ['Pagi', 'Sore']
+      if (currentMethod === 'harian_3x') return ['Pagi', 'Siang', 'Sore']
+    }
+    return selectedClass.subjects ?? []
+  }, [selectedClass, showSessionDropdown, currentMethod])
 
   // ── Ambil daftar kelas ──
   const fetchClasses = async () => {
@@ -126,7 +128,7 @@ function KelasPageContent() {
     setActiveTab('daftar')
   }, [selectedClassId])
 
-  // Sinkronisasi otomatis nilai dropdown saat berganti tab atau kelas
+  // Sinkronisasi otomatis nilai dropdown saat berganti tab atau kelas secara cerdas
   useEffect(() => {
     if (!selectedClass) {
       setSelectedSubject('')
@@ -135,9 +137,13 @@ function KelasPageContent() {
     if (showSessionDropdown) {
       setSelectedSubject(dropdownOptions[0] || '')
     } else {
-      setSelectedSubject(selectedClass.subjects?.[0] || '')
+      const subjects = selectedClass.subjects ?? []
+      // Pertahankan mapel yang dipilih jika beralih antar-tab akademik
+      if (!subjects.includes(selectedSubject)) {
+        setSelectedSubject(subjects[0] || '')
+      }
     }
-  }, [selectedClassId, activeTab, showSessionDropdown])
+  }, [selectedClassId, activeTab, showSessionDropdown, dropdownOptions, selectedClass])
 
   // ── Tambah kelas baru ──
   const handleAddClass = async (form: ClassFormData) => {
@@ -156,7 +162,6 @@ function KelasPageContent() {
         status: 'aktif',
         subjects: form.subjects,
         homeroom_teacher: form.homeroomTeacher.trim() || null,
-        // Menyimpan status untuk backward compatibility & kolom baru
         attendance_method: form.attendanceMethod,
         is_homeroom_only: form.attendanceMethod !== 'per_mapel',
       })
