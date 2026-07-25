@@ -155,9 +155,9 @@ export default function ClassForm({
           onChange={e => set({ attendanceMethod: e.target.value as any })}
         >
           <option value="per_mapel">Per Mata Pelajaran</option>
-          <option value="harian_1x">Harian (1x Sehari - Utama)</option>
-          <option value="harian_2x">Harian (2x Sehari - Pagi & Sore)</option>
-          <option value="harian_3x">Harian (3x Sehari - Pagi, Siang & Sore)</option>
+          <option value="harian_1x">Harian (1x)</option>
+          <option value="harian_2x">Harian (2x)</option>
+          <option value="harian_3x">Harian (3x)</option>
         </select>
         <p className="mt-1 text-xs text-slate-400">
           Pilih bagaimana presensi kelas ini akan dicatat setiap harinya.
