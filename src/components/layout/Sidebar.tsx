@@ -111,16 +111,14 @@ export default function Sidebar() {
     <>
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-4 py-4 shrink-0">
-        <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shrink-0 p-1">
-          <Image
-            src="/icons/icon512P.png"
-            alt="GR Assistant"
-            width={36}
-            height={36}
-            className="w-full h-full object-contain"
-            priority
-          />
-        </div>
+        <Image
+          src="/icons/icon512P.png"
+          alt="GR Assistant"
+          width={36}
+          height={36}
+          className="w-9 h-9 object-contain shrink-0"
+          priority
+        />
         <div>
           <p className="font-bold text-white text-sm leading-tight">GR Assistant</p>
           <p className="text-xs text-[#94A3B8] leading-tight">Asisten Digital Guru</p>
