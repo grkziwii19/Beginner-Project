@@ -3,21 +3,36 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { type AttendanceStatus, getStatusColor, getStatusLabel } from '@/types'
-import { CheckCircle, AlertCircle, Save, Users, CheckCheck } from 'lucide-react'
+import { CheckCircle, AlertCircle, Save, Users, CheckCheck, ChevronDown } from 'lucide-react'
 import clsx from 'clsx'
 
 interface StudentRow { id: string; name: string }
 
 const STATUSES: AttendanceStatus[] = ['hadir', 'sakit', 'izin', 'alpha']
-const UMUM_VALUE = '__umum__'
+
+type AttendanceMethod = 'harian_1x' | 'harian_2x' | 'harian_3x' | 'per_mapel'
 
 interface Props {
   className: string
   subject: string
   date: string
+  attendanceMethod: AttendanceMethod
 }
 
-export default function AbsensiTab({ className, subject, date }: Props) {
+// Opsi sesi absen — hanya dipakai untuk metode harian 2x / 3x
+const SESSION_OPTIONS: Record<string, { value: string; label: string }[]> = {
+  harian_2x: [
+    { value: 'sesi_1', label: 'Absen ke-1' },
+    { value: 'sesi_2', label: 'Absen ke-2' },
+  ],
+  harian_3x: [
+    { value: 'sesi_1', label: 'Absen ke-1' },
+    { value: 'sesi_2', label: 'Absen ke-2' },
+    { value: 'sesi_3', label: 'Absen ke-3' },
+  ],
+}
+
+export default function AbsensiTab({ className, subject, date, attendanceMethod }: Props) {
   const [supabase] = useState(() => createClient())
   const [students, setStudents] = useState<StudentRow[]>([])
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({})
@@ -25,6 +40,19 @@ export default function AbsensiTab({ className, subject, date }: Props) {
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  // Sesi absen aktif, hanya relevan untuk metode harian_2x / harian_3x
+  const sessionOptions = SESSION_OPTIONS[attendanceMethod] ?? []
+  const [session, setSession] = useState('sesi_1')
+
+  // "subject" yang benar-benar dipakai untuk menyimpan/mengambil data absensi:
+  // - per_mapel  -> mapel yang dipilih di bar kontrol
+  // - harian_1x  -> satu sesi generik untuk seluruh kelas
+  // - harian_2x/3x -> sesi yang dipilih lewat dropdown di tab ini
+  const effectiveSubject =
+    attendanceMethod === 'per_mapel' ? subject
+    : attendanceMethod === 'harian_1x' ? 'harian'
+    : session
 
   useEffect(() => {
     const load = async () => {
@@ -34,12 +62,11 @@ export default function AbsensiTab({ className, subject, date }: Props) {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) { setError('Sesi tidak valid.'); return }
 
-        const subjectQuery = subject || UMUM_VALUE
         const [{ data: studentsData, error: studentsError }, { data: attData }] = await Promise.all([
           supabase.from('students').select('id, name')
             .eq('user_id', user.id).eq('class_name', className).order('name'),
           supabase.from('attendance').select('student_id, status')
-            .eq('user_id', user.id).eq('date', date).eq('subject', subjectQuery),
+            .eq('user_id', user.id).eq('date', date).eq('subject', effectiveSubject),
         ])
 
         if (studentsError) throw studentsError
@@ -57,7 +84,7 @@ export default function AbsensiTab({ className, subject, date }: Props) {
       }
     }
     load()
-  }, [className, subject, date])
+  }, [className, effectiveSubject, date])
 
   const setStatus = (id: string, status: AttendanceStatus) => {
     setAttendance(prev => ({ ...prev, [id]: status }))
@@ -79,11 +106,8 @@ export default function AbsensiTab({ className, subject, date }: Props) {
       if (!user) { setError('Sesi tidak valid.'); return }
 
       const records = Object.entries(attendance).map(([student_id, status]) => ({
-        user_id: user.id,
-        student_id,
-        date,
-        status,
-        subject: subject || UMUM_VALUE,
+        user_id: user.id, student_id, date, status,
+        subject: effectiveSubject,
       }))
 
       const { error: saveError } = await supabase
@@ -127,8 +151,29 @@ export default function AbsensiTab({ className, subject, date }: Props) {
         </div>
       )}
 
-      {/* BARIS UTAMA TINDAKAN & RINGKASAN DATA */}
+      {/* DROPDOWN SESI ABSEN — hanya muncul untuk metode Harian (2x) atau Harian (3x) */}
+      {sessionOptions.length > 0 && (
+        <div className="flex items-center gap-2.5 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider shrink-0">Sesi Absen</span>
+          <div className="relative">
+            <select
+              className="input bg-white border border-slate-300 hover:border-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none pr-9 text-sm py-1.5 h-[36px] font-bold text-slate-800"
+              value={session}
+              onChange={e => { setSession(e.target.value); setSaved(false) }}
+            >
+              {sessionOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          </div>
+        </div>
+      )}
+
+      {/* BARIS UTAMA TINDAKAN & RINGKASAN DATA (Sejajar dan Compact) */}
       <div className="flex flex-wrap items-center justify-between gap-2 bg-white p-2.5 rounded-xl border border-slate-200 shadow-sm">
+        
+        {/* Sisi Kiri: Tindakan & Progress Pengisian */}
         <div className="flex items-center gap-2.5">
           <button 
             onClick={markAllHadir} 
@@ -141,6 +186,7 @@ export default function AbsensiTab({ className, subject, date }: Props) {
           </span>
         </div>
 
+        {/* Bagian Tengah: Jumlah H, S, I, A, B Berukuran Kecil & Rapi */}
         <div className="flex items-center gap-2 text-[11px] font-bold text-slate-600 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5">
           <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
             H: <span className="font-extrabold">{summary.hadir}</span>
@@ -159,6 +205,7 @@ export default function AbsensiTab({ className, subject, date }: Props) {
           </span>
         </div>
 
+        {/* Sisi Kanan: Tombol Simpan Absensi */}
         <button
           onClick={handleSave}
           disabled={saving}
@@ -175,7 +222,7 @@ export default function AbsensiTab({ className, subject, date }: Props) {
         </button>
       </div>
 
-      {/* TABEL DATA SISWA */}
+      {/* TABEL DATA SISWA (Padding baris dipadatkan py-1.5 agar ramping) */}
       <div className="card overflow-hidden border border-slate-200 shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
