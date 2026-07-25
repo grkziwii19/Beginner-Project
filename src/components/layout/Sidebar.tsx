@@ -120,7 +120,7 @@ export default function Sidebar() {
         priority
       />
       <div>
-        <p className="font-bold text-white text-[15px] leading-tight">
+        <p className="font-bold text-white text-[17px] leading-tight">
           GR Assistant
         </p>
         <p className="text-[13px] text-[#94A3B8] leading-tight">
