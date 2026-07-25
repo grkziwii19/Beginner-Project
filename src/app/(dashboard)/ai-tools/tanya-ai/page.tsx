@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { ArrowLeft, Send, Trash2, Bot, User, Sparkles } from 'lucide-react'
+import { ArrowLeft, Send, Trash2, Bot, User } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface ChatMessage {
   role: 'user' | 'ai'
@@ -43,8 +44,8 @@ function TanyaAIChat() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: userMsgText,
-          history: messages // Mengirimkan riwayat percakapan untuk konteks Gemini
+        message: userMsgText,
+        history: newHistory
         })
       })
 
@@ -115,7 +116,38 @@ function TanyaAIChat() {
 
                 {/* Balon Chat */}
                 <div className={`p-3.5 rounded-2xl text-sm leading-relaxed ${m.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none font-medium' : 'bg-slate-50 border border-slate-150 text-slate-800 rounded-tl-none font-medium'}`}>
-                  <p className="whitespace-pre-line">{m.text}</p>
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      p: ({children}) => (
+                        <p className="mb-2 last:mb-0">
+                          {children}
+                        </p>
+                      ),
+                      strong: ({children}) => (
+                        <strong className="font-bold">
+                          {children}
+                        </strong>
+                      ),
+                      ul: ({children}) => (
+                        <ul className="list-disc ml-5 space-y-1">
+                          {children}
+                        </ul>
+                      ),
+                      ol: ({children}) => (
+                        <ol className="list-decimal ml-5 space-y-1">
+                          {children}
+                        </ol>
+                      ),
+                      code: ({children}) => (
+                        <code className="bg-slate-200 px-1 rounded text-xs">
+                          {children}
+                        </code>
+                      )
+                    }}
+                  >
+                    {m.text}
+                  </ReactMarkdown>
                 </div>
               </div>
             ))}
@@ -168,5 +200,4 @@ function TanyaAIChat() {
   )
 }
 
-const Page = dynamic(() => Promise.resolve(TanyaAIChat), { ssr: false })
-export default Page
+export default TanyaAIChat

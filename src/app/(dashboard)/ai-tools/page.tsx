@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
-import { Sparkles, MessageSquare, ShieldCheck, AlertCircle, RefreshCw } from 'lucide-react'
+import { 
+ Sparkles,
+ MessageSquare,
+ ShieldCheck,
+ RefreshCw
+} from 'lucide-react'
 
 function AIToolsDashboard() {
   const supabase = createClient()
@@ -15,7 +19,11 @@ function AIToolsDashboard() {
   const fetchUsage = async () => {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+
+    if (!user) {
+      setLoading(false)
+      return
+    }
 
     // Ambil info role
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
@@ -23,11 +31,15 @@ function AIToolsDashboard() {
 
     // Ambil log hari ini
     const today = new Date().toISOString().split('T')[0]
-    const { data: logs } = await supabase
-      .from('ai_usage_logs')
-      .select('feature_name, request_count')
-      .eq('user_id', user.id)
-      .eq('date', today)
+    const { data: logs, error } = await supabase
+  .from('ai_usage_logs')
+  .select('feature_name, request_count')
+  .eq('user_id', user.id)
+  .eq('date', today)
+
+    if (error) {
+      console.error('AI usage error:', error)
+    }
 
     const mapped = { generate_soal: 0, tanya_ai: 0 }
     logs?.forEach(l => {
@@ -131,5 +143,4 @@ function AIToolsDashboard() {
   )
 }
 
-const AIToolsPage = dynamic(() => Promise.resolve(AIToolsDashboard), { ssr: false })
-export default AIToolsPage
+export default AIToolsDashboard
