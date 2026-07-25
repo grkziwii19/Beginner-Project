@@ -124,7 +124,8 @@ ATURAN WAJIB — jangan dilanggar dalam kondisi apa pun:
 4. Bahasa soal WAJIB "${language}".
 5. Soal harus mengikuti standar/kurikulum "${standard}".
 6. Soal WAJIB disesuaikan dengan jenjang "${gradeLabel}" — sesuaikan kompleksitas bahasa, panjang kalimat, dan tingkat kesulitan konsep dengan usia dan kemampuan kognitif siswa di jenjang tersebut. Untuk PAUD/SD kelas awal gunakan bahasa sangat sederhana dan konkret; untuk SMA gunakan bahasa yang lebih akademis dan konsep lebih kompleks.
-7. JANGAN PERNAH menggunakan format markdown apa pun — tidak boleh ada tanda bintang (*, **), garis bawah ganda (__), tanda pagar (#), atau tanda kutip siku backtick (\`). Tulis SEMUA teks (pertanyaan, opsi jawaban, kunci jawaban, pembahasan, rubrik) sebagai teks polos murni tanpa simbol pemformatan apa pun. Kalau ingin menekankan sebuah kata, cukup tulis apa adanya tanpa simbol.
+7. Untuk soal yang melibatkan notasi matematika (pangkat/eksponen, akar, pecahan, dan sejenisnya), WAJIB gunakan notasi matematika baku, JANGAN dieja dengan kata-kata. Contoh yang BENAR: "2³ × 2⁴" — contoh yang SALAH: "2 pangkat 3 dikali 2 pangkat 4". Gunakan karakter superskrip Unicode untuk pangkat (seperti ², ³, ⁴, ⁵, ⁶, ⁷, ⁸, ⁹, ⁰) atau notasi caret (misalnya 2^3) bila superskrip tidak tersedia. Untuk akar gunakan simbol "√" (misalnya "√16" bukan "akar dari 16"). Untuk pecahan gunakan bentuk "a/b" (misalnya "3/4" bukan "tiga per empat").
+8. JANGAN PERNAH menggunakan format markdown apa pun — tidak boleh ada tanda bintang (*, **), garis bawah ganda (__), tanda pagar (#), atau tanda kutip siku backtick (\`). Tulis SEMUA teks (pertanyaan, opsi jawaban, kunci jawaban, pembahasan, rubrik) sebagai teks polos murni tanpa simbol pemformatan apa pun. Kalau ingin menekankan sebuah kata, cukup tulis apa adanya tanpa simbol.
 
 Format output WAJIB berupa ARRAY JSON murni, jangan sertakan teks pembuka, penutup, atau markdown apa pun di luar array JSON tersebut.
 
@@ -182,7 +183,7 @@ Format sesuai tipe soal:
   }
 ]
 
-INGAT SEKALI LAGI: hasilkan TEPAT ${safeCount} soal, SEMUA bertipe "${questionType}", untuk jenjang ${gradeLabel}, TANPA simbol markdown apa pun (tanpa **, tanpa *, tanpa __, tanpa #, tanpa backtick).`
+INGAT SEKALI LAGI: hasilkan TEPAT ${safeCount} soal, SEMUA bertipe "${questionType}", untuk jenjang ${gradeLabel}, gunakan notasi matematika baku (bukan dieja kata-kata) untuk pangkat/akar/pecahan, TANPA simbol markdown apa pun (tanpa **, tanpa *, tanpa __, tanpa #, tanpa backtick).`
 
     let userContent = ''
     if (method === 'upload') {
