@@ -9,8 +9,6 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 
-type SettingsTab = 'profil' | 'keamanan' | 'preferensi'
-
 interface ProfileData {
   full_name: string
   nip: string
@@ -27,7 +25,6 @@ const emptyProfile: ProfileData = {
 export default function PengaturanPage() {
   const supabase = createClient()
   const router = useRouter()
-  const [tab, setTab] = useState<SettingsTab>('profil')
   const [email, setEmail] = useState('')
   const [profile, setProfile] = useState<ProfileData>(emptyProfile)
   const [loading, setLoading] = useState(true)
@@ -58,7 +55,7 @@ export default function PengaturanPage() {
 
         if (!cancelled) setEmail(user.email ?? '')
 
-        // Hanya memuat data profil personal guru
+        // Memuat data profil personal guru
         const { data: profileData } = await supabase
           .from('profiles')
           .select('*')
@@ -171,20 +168,15 @@ export default function PengaturanPage() {
     .join('')
     .toUpperCase()
 
-  const tabs = [
-    { id: 'profil', label: 'Profil Saya', icon: UserCircle },
-    { id: 'keamanan', label: 'Keamanan', icon: Shield },
-    { id: 'preferensi', label: 'Preferensi', icon: Settings },
-  ] as const
-
   if (loading) {
     return <div className="flex items-center justify-center h-64 text-slate-400 text-sm">Memuat...</div>
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* HEADER KONTROL UTAMA */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
+        <h1 className="text-xl font-bold text-slate-900">Pengaturan Sistem</h1>
         <button
           onClick={handleLogout}
           className="flex items-center gap-1.5 py-1.5 px-3 text-xs font-semibold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-all"
@@ -199,52 +191,36 @@ export default function PengaturanPage() {
         </div>
       )}
 
-      {/* TABS UTAMA PENGATURAN */}
-      <div className="flex flex-wrap gap-1.5 border-b border-slate-200 pb-2">
-        {tabs.map(t => {
-          const IconComponent = t.icon
-          const isActive = tab === t.id
-          return (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={clsx(
-                'flex items-center justify-center gap-1.5 py-2 px-3 text-sm font-semibold rounded-lg transition-all flex-1 min-w-[120px] text-center whitespace-nowrap',
-                isActive
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-950 hover:bg-slate-50 border border-transparent hover:border-slate-200'
-              )}
-            >
-              <IconComponent className="w-4 h-4" /> {t.label}
-            </button>
-          )
-        })}
-      </div>
+      {/* GRID UTAMA KONTEN Halaman */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* KOLOM KIRI (Lebar 2/3): PROFIL SAYA */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="card p-6 bg-white border border-slate-200 shadow-sm space-y-6">
+            <div className="border-b border-slate-100 pb-2">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <UserCircle className="w-4 h-4 text-indigo-600" /> Profil Saya
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">Kelola data informasi personal diri Anda di bawah ini.</p>
+            </div>
 
-      {/* KONTEN MENU PENGATURAN */}
-      <div className="space-y-4">
-        {/* TAB: Profil Guru */}
-        {tab === 'profil' && (
-          <div className="card p-6">
-            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xl font-bold overflow-hidden">
-                    {profile.avatar_url ? (
-                      <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      initials
-                    )}
-                  </div>
-                  <label className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full border border-slate-200 flex items-center justify-center cursor-pointer shadow-sm hover:border-slate-350 transition-colors">
-                    <Camera className="w-3 h-3 text-slate-500" />
-                    <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} disabled={uploadingPhoto} />
-                  </label>
+            <div className="flex items-center gap-4 border-b border-slate-100 pb-5">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xl font-bold overflow-hidden shadow-sm">
+                  {profile.avatar_url ? (
+                    <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    initials
+                  )}
                 </div>
-                <div>
-                  <h2 className="font-semibold text-slate-900">{profile.full_name || 'Guru'}</h2>
-                  <p className="text-sm text-slate-500">{profile.position}</p>
-                </div>
+                <label className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full border border-slate-200 flex items-center justify-center cursor-pointer shadow-sm hover:border-slate-350 transition-colors">
+                  <Camera className="w-3 h-3 text-slate-500" />
+                  <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} disabled={uploadingPhoto} />
+                </label>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900 text-sm">{profile.full_name || 'Guru'}</h3>
+                <p className="text-xs text-slate-500 mt-0.5">{profile.position}</p>
               </div>
             </div>
 
@@ -281,22 +257,34 @@ export default function PengaturanPage() {
             </div>
 
             <button onClick={handleSaveProfile} disabled={savingProfile} className={`btn-primary w-full justify-center mt-5 ${savedProfile ? 'bg-emerald-600' : ''}`}>
-              {savedProfile ? <><CheckCircle className="w-4 h-4" /> Tersimpan!</> : <><Save className="w-4 h-4" /> {savingProfile ? 'Menyimpan...' : 'Simpan Profil'}</>}
+              {savedProfile ? (
+                <><CheckCircle className="w-4 h-4" /> Tersimpan!</>
+              ) : (
+                <><Save className="w-4 h-4" /> {savingProfile ? 'Menyimpan...' : 'Simpan Profil'}</>
+              )}
             </button>
           </div>
-        )}
+        </div>
 
-        {/* TAB: Keamanan Akun */}
-        {tab === 'keamanan' && (
-          <div className="card p-6">
-            <h2 className="font-semibold text-slate-900 mb-4">Ubah Kata Sandi</h2>
-            <div className="space-y-4 max-w-md">
+        {/* KOLOM KANAN (Lebar 1/3): KEAMANAN & PREFERENSI */}
+        <div className="space-y-6">
+          
+          {/* SEKSI: KEAMANAN AKUN */}
+          <div className="card p-6 bg-white border border-slate-200 shadow-sm space-y-4">
+            <div className="border-b border-slate-100 pb-2">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-indigo-600" /> Keamanan Akun
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">Lakukan pembaruan kata sandi akun Anda secara berkala.</p>
+            </div>
+
+            <div className="space-y-4">
               <div>
                 <label className="label">Kata Sandi Baru</label>
                 <div className="relative">
                   <input 
                     type={showPass ? 'text' : 'password'} 
-                    className="input pr-10" 
+                    className="input pr-10 text-sm h-[38px]" 
                     placeholder="Minimal 6 karakter"
                     value={newPass} 
                     onChange={e => setNewPass(e.target.value)} 
@@ -310,7 +298,7 @@ export default function PengaturanPage() {
                 <label className="label">Konfirmasi Kata Sandi Baru</label>
                 <input 
                   type="password" 
-                  className="input" 
+                  className="input text-sm h-[38px]" 
                   placeholder="Ulangi kata sandi baru" 
                   value={confirmPass} 
                   onChange={e => setConfirmPass(e.target.value)} 
@@ -319,51 +307,55 @@ export default function PengaturanPage() {
               
               {passMsg && (
                 <div className={clsx(
-                  "text-sm px-3 py-2 rounded-lg",
+                  "text-xs px-3 py-2 rounded-lg",
                   passMsg.includes('berhasil') ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
                 )}>
                   {passMsg}
                 </div>
               )}
 
-              <button onClick={handleChangePassword} disabled={passSaving} className="btn-primary w-full justify-center">
-                <Shield className="w-4 h-4" /> {passSaving ? 'Mengubah...' : 'Perbarui Kata Sandi'}
+              <button onClick={handleChangePassword} disabled={passSaving} className="btn-primary w-full justify-center text-xs h-[38px]">
+                <Shield className="w-3.5 h-3.5" /> {passSaving ? 'Mengubah...' : 'Perbarui Kata Sandi'}
               </button>
-              <p className="text-xs text-slate-400 leading-normal mt-2">
+              
+              <p className="text-[11px] text-slate-400 leading-normal">
                 Catatan: Jika Anda masuk menggunakan Google, fitur ubah kata sandi ini tidak berlaku untuk akun Anda.
               </p>
             </div>
           </div>
-        )}
 
-        {/* TAB: Preferensi Sistem */}
-        {tab === 'preferensi' && (
-          <div className="card p-6 space-y-6">
-            <div>
-              <h2 className="font-semibold text-slate-900 mb-4">Bahasa & Zona Waktu</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Bahasa Antarmuka</label>
-                  <select className="input" value={lang} onChange={e => setLang(e.target.value)}>
-                    <option>Bahasa Indonesia</option>
-                    <option>English</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="label">Zona Waktu</label>
-                  <select className="input" value={timezone} onChange={e => setTimezone(e.target.value)}>
-                    <option>WIB (UTC+7)</option>
-                    <option>WITA (UTC+8)</option>
-                    <option>WIT (UTC+9)</option>
-                  </select>
-                </div>
-              </div>
+          {/* SEKSI: PREFERENSI SISTEM */}
+          <div className="card p-6 bg-white border border-slate-200 shadow-sm space-y-4">
+            <div className="border-b border-slate-100 pb-2">
+              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Settings className="w-4 h-4 text-indigo-600" /> Preferensi Sistem
+              </h2>
+              <p className="text-xs text-slate-400 mt-1">Konfigurasikan bahasa antarmuka dan zona waktu Anda.</p>
             </div>
-            <p className="text-xs text-slate-400 leading-normal">
-              Preferensi antarmuka ini akan disimpan dan disinkronkan secara lokal untuk kenyamanan navigasi Anda.
-            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="label">Bahasa Antarmuka</label>
+                <select className="input text-sm h-[38px]" value={lang} onChange={e => setLang(e.target.value)}>
+                  <option>Bahasa Indonesia</option>
+                  <option>English</option>
+                </select>
+              </div>
+              <div>
+                <label className="label">Zona Waktu</label>
+                <select className="input text-sm h-[38px]" value={timezone} onChange={e => setTimezone(e.target.value)}>
+                  <option>WIB (UTC+7)</option>
+                  <option>WITA (UTC+8)</option>
+                  <option>WIT (UTC+9)</option>
+                </select>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-normal">
+                Pengaturan preferensi ini disinkronkan secara lokal untuk mempermudah navigasi Anda di sistem.
+              </p>
+            </div>
           </div>
-        )}
+
+        </div>
       </div>
     </div>
   )
