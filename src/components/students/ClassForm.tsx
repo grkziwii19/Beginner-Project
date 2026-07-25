@@ -29,6 +29,7 @@ export default function ClassForm({
   const [supabase] = useState(() => createClient())
 
   const [classNames, setClassNames] = useState<string[]>([])
+  const [nameFocused, setNameFocused] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -95,6 +96,13 @@ export default function ClassForm({
 
   const showFormatWarning = data.name.trim().length > 0 && !isValidClassName(data.name)
 
+  // Dropdown saran nama kelas hanya tampil selagi field-nya sedang fokus.
+  // Tanpa ini, dropdown (tinggi hingga 224px) bisa tetap terbuka dan menimpa
+  // field Metode Absensi / Mata Pelajaran di bawahnya, menangkap klik yang
+  // seharusnya jatuh ke field tersebut.
+  const showNameSuggestions =
+    nameFocused && !classExists && data.name.trim() && suggestions.length > 0
+
   return (
     <div className="space-y-4">
       {/* Nama kelas */}
@@ -111,6 +119,8 @@ export default function ClassForm({
           placeholder="Contoh: VI A, 8 A"
           value={data.name}
           autoComplete="off"
+          onFocus={() => setNameFocused(true)}
+          onBlur={() => setTimeout(() => setNameFocused(false), 150)}
           onChange={e => set({ name: e.target.value })}
         />
 
@@ -126,22 +136,20 @@ export default function ClassForm({
           </p>
         )}
 
-        {!classExists &&
-          data.name.trim() &&
-          suggestions.length > 0 && (
-            <div className="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg max-h-56 overflow-y-auto">
-              {suggestions.map(name => (
-                <button
-                  key={name}
-                  type="button"
-                  onClick={() => set({ name })}
-                  className="block w-full px-3 py-2 text-left text-sm hover:bg-indigo-50 transition-colors"
-                >
-                  {name}
-                </button>
-              ))}
-            </div>
-          )}
+        {showNameSuggestions && (
+          <div className="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg max-h-56 overflow-y-auto">
+            {suggestions.map(name => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => set({ name })}
+                className="block w-full px-3 py-2 text-left text-sm hover:bg-indigo-50 transition-colors"
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Metode Absensi (Menggantikan Checkbox isHomeroomOnly) */}
