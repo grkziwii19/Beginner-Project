@@ -297,7 +297,7 @@ export default function Sidebar() {
           boxShadow: '8px 0 24px rgba(0,0,0,.18)'
         }}
         className={clsx(
-          'fixed inset-y-0 left-0 z-50 w-56 flex flex-col overflow-hidden transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto',
+          'fixed inset-y-0 left-0 z-50 w-52 flex flex-col overflow-hidden transition-transform duration-200 lg:translate-x-0 lg:static lg:z-auto',
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
