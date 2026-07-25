@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
   Building2, FileText, ClipboardCheck, Award, GraduationCap, 
   Settings2, Sparkles, Printer, CheckCircle, AlertTriangle, 
-  ChevronRight, CheckCircle2, XCircle, Save
+  ChevronRight, CheckCircle2, XCircle, FileBarChart, Save
 } from 'lucide-react'
 import clsx from 'clsx'
 
@@ -612,10 +612,10 @@ export default function LaporanPage() {
           <div className="flex gap-6 border-b border-slate-200 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {[
               { id: 'rekap-absensi', label: 'Rekap Absensi', icon: ClipboardCheck },
-              { id: 'rekap-nilai', label: 'Rekap Nilai Mapel', icon: Award },
-              { id: 'penilaian-pendukung', label: 'Penilaian Non-Akademik & Sikap', icon: Sparkles },
-              { id: 'nilai-akhir', label: 'Transkrip Nilai Akhir', icon: FileText },
-              { id: 'rapor', label: 'Cetak Rapor & Preview', icon: Printer },
+              { id: 'rekap-nilai', label: 'Rekap Nilai', icon: Award },
+              { id: 'penilaian-pendukung', label: 'Nilai Non-Akademik', icon: Sparkles },
+              { id: 'nilai-akhir', label: 'Nilai Akhir', icon: FileText },
+              { id: 'rapor', label: 'Rapor', icon: FileBarChart },
             ].map(t => {
               const IconComponent = t.icon
               return (
