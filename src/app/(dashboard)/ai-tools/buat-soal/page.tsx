@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import mammoth from 'mammoth'
 import jsPDF from 'jspdf'
 import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx'
 import {
   ArrowLeft, FileText, UploadCloud, HelpCircle,
-  Settings2, Sparkles, Download, Database, CheckCircle2, AlertTriangle
+  Settings2, Sparkles, Download, Database, CheckCircle2, AlertTriangle, ChevronDown
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -61,6 +61,20 @@ function BuatSoalAI() {
   const [error, setError] = useState('')
   const [questions, setQuestions] = useState<Question[]>([])
   const [successMsg, setSuccessMsg] = useState('')
+
+  // Dropdown menu unduh
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false)
+  const downloadMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (downloadMenuRef.current && !downloadMenuRef.current.contains(e.target as Node)) {
+        setShowDownloadMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const finalizeExtractedText = (text: string) => {
     if (!text.trim()) {
@@ -528,18 +542,42 @@ function BuatSoalAI() {
           <div className="card p-5 bg-white border border-slate-200 rounded-2xl shadow-sm min-h-[400px] flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between border-b border-slate-150 pb-3 mb-4">
-                <h3 className="font-bold text-slate-900 text-sm">Pratinjau Soal Tergenerate</h3>
+                <h3 className="font-bold text-slate-900 text-sm">Pratinjau Soal</h3>
                 {questions.length > 0 && (
                   <div className="flex flex-wrap gap-2">
-                    <button onClick={downloadPDF} className="btn-secondary py-1.5 px-3 text-xs font-semibold">
-                      <Download className="w-3.5 h-3.5 mr-1" /> Unduh (.PDF)
-                    </button>
-                    <button onClick={downloadDOCX} className="btn-secondary py-1.5 px-3 text-xs font-semibold">
-                      <Download className="w-3.5 h-3.5 mr-1" /> Unduh (.DOCX)
-                    </button>
-                    <button onClick={downloadJSON} className="btn-secondary py-1.5 px-3 text-xs font-semibold">
-                      <Download className="w-3.5 h-3.5 mr-1" /> Unduh (.JSON)
-                    </button>
+                    <div className="relative" ref={downloadMenuRef}>
+                      <button
+                        onClick={() => setShowDownloadMenu(prev => !prev)}
+                        className="btn-secondary py-1.5 px-3 text-xs font-semibold"
+                      >
+                        <Download className="w-3.5 h-3.5 mr-1" /> Unduh
+                        <ChevronDown className={`w-3.5 h-3.5 ml-1 transition-transform ${showDownloadMenu ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {showDownloadMenu && (
+                        <div className="absolute right-0 mt-1.5 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-20 overflow-hidden max-h-48 overflow-y-auto">
+                          <button
+                            onClick={() => { downloadPDF(); setShowDownloadMenu(false) }}
+                            className="flex items-center gap-2 w-full px-3 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-red-500" /> Format PDF
+                          </button>
+                          <button
+                            onClick={() => { downloadDOCX(); setShowDownloadMenu(false) }}
+                            className="flex items-center gap-2 w-full px-3 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-blue-500" /> Format Word (.docx)
+                          </button>
+                          <button
+                            onClick={() => { downloadJSON(); setShowDownloadMenu(false) }}
+                            className="flex items-center gap-2 w-full px-3 py-2.5 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors border-t border-slate-100"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-amber-500" /> Format JSON
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     <button onClick={handleSaveToBank} className="btn-primary py-1.5 px-3 text-xs font-semibold">
                       <Database className="w-3.5 h-3.5 mr-1" /> Simpan ke Bank Soal
                     </button>
